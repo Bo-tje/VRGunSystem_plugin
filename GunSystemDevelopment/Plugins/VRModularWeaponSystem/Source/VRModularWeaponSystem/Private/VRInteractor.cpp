@@ -65,7 +65,7 @@ UVRGrabComponent* UVRInteractor::GetBestGrabTarget() const
 			UVRGrabComponent* CurrentGrab = GrabPtr.Get();
             
 			// Calculate Squared Distance
-			float CurrentDistSq = FVector::DistSquared(InteractorLocation, CurrentGrab->GetComponentLocation());
+			float CurrentDistSq = FVector::DistSquared(InteractorLocation, CurrentGrab->GetOwner()->GetActorLocation());
 
 			// If this is closer than our current best, update it
 			if (CurrentDistSq < ClosestDistanceSq)

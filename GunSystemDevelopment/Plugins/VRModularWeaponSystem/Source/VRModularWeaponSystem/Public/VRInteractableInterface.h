@@ -23,8 +23,8 @@ class IVRInteractableInterface
 public:
 	// Add interface functions 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "VR Plugin | Interaction")
-	void OnHoverStart(USceneComponent* CallingComponent);
+	void OnHoverStart(UObject* Interactor);
 	
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "VR Plugin | Interaction")
-	void OnHoverEnd(USceneComponent* CallingComponent);
+	void OnHoverEnd(UObject* Interactor);
 };

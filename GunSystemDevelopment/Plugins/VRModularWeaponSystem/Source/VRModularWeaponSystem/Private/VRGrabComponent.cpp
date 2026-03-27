@@ -60,7 +60,7 @@ void UVRGrabComponent::TryGrab(UVRInteractor* Interactor)
     
 	// Velocity tracking setup
 	SetComponentTickEnabled(true);
-	LastPosition = GetComponentLocation();
+	LastPosition = GetOwner()->GetActorLocation();
 	VelocityBuffer.Empty();
     
 	if (OnGrabbed.IsBound())
@@ -122,7 +122,7 @@ void UVRGrabComponent::CalculateVelocity(float DeltaTime)
 	// Safety check for DeltaTime
 	if (bIsHeld && DeltaTime > 0.0f)
 	{
-		FVector NewPosition = GetComponentLocation();
+		FVector NewPosition = GetOwner()->GetActorLocation();
        
 		// Calculate velocity
 		FVector CalculatedVelocity = (NewPosition - LastPosition) / DeltaTime;

@@ -10,7 +10,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGrabbed, AActor*, InteractingHand
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnReleased);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class VRMODULARWEAPONSYSTEM_API UVRGrabComponent : public USceneComponent
+class VRMODULARWEAPONSYSTEM_API UVRGrabComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
