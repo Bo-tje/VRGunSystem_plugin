@@ -71,8 +71,9 @@ protected:
 	
 private:
 	FVector LastPosition;
-	FVector CurrentVelocity;
-	TArray<FVector> VelocityBuffer;
+    FVector VelocityBuffer[10]; // Fixed-size array for Circular Buffer
+    int32 BufferIndex = 0;
+    int32 SampleCount = 0;
 	
 	void Attach(AActor* MyOwner, USceneComponent* TargetComponent) const;
 	void CalculateVelocity(float DeltaTime);

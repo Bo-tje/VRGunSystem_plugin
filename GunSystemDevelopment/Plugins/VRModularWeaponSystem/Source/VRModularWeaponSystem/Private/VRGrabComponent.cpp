@@ -119,22 +119,18 @@ void UVRGrabComponent::Attach(AActor* MyOwner, USceneComponent* TargetComponent)
 
 void UVRGrabComponent::CalculateVelocity(float DeltaTime)
 {
-	// Safety check for DeltaTime
 	if (bIsHeld && DeltaTime > 0.0f)
 	{
 		FVector NewPosition = GetOwner()->GetActorLocation();
-       
-		// Calculate velocity
 		FVector CalculatedVelocity = (NewPosition - LastPosition) / DeltaTime;
-       
-		// Safety check: ignore massive spikes (teleports)
+
 		if (CalculatedVelocity.Size() < 5000.0f) 
 		{
-			CurrentVelocity = CalculatedVelocity;
-			VelocityBuffer.Add(CurrentVelocity);
-			if (VelocityBuffer.Num() > 10) VelocityBuffer.RemoveAt(0); // Increased buffer to 10 for better smoothing
+			// CIRCULAR BUFFER LOGIC: O(1) performance
+			VelocityBuffer[BufferIndex] = CalculatedVelocity;
+			BufferIndex = (BufferIndex + 1) % 10;
+			SampleCount = FMath::Min(SampleCount + 1, 10);
 		}
-
 		LastPosition = NewPosition;
 	}
 }
