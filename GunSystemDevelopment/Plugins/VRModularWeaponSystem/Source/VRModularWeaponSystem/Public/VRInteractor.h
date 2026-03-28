@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "VRInteractorInterface.h"
 #include "Components/SceneComponent.h"
+#include "EVRInteractableAction.h"
 #include "VRInteractor.generated.h"
 
 class UHapticFeedbackEffect_Base;
@@ -27,10 +28,10 @@ public:
 	void IntendRelease();
 
 	UFUNCTION(BlueprintCallable, Category = "VR Plugin | Input")
-	void IntendActionStart();
+	void IntendActionStart(EVRInteractableAction Action, float Value);
 
 	UFUNCTION(BlueprintCallable, Category = "VR Plugin | Input")
-	void IntendActionStop();
+	void IntendActionStop(EVRInteractableAction Action, float Value);
 
 #pragma endregion 
 

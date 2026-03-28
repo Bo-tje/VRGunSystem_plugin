@@ -28,8 +28,8 @@ public:
 	bool IsHeld() const {return bIsHeld; }
 	
 	// IVRInteractableInterface implementation
-	virtual void StartAction_Implementation(UObject* Interactor) override;
-	virtual void StopAction_Implementation(UObject* Interactor) override;
+	virtual void StartAction_Implementation(UObject* Interactor, EVRInteractableAction Action, float Value) override;
+	virtual void StopAction_Implementation(UObject* Interactor, EVRInteractableAction Action, float Value) override;
 
 #pragma region events for designers to bind to
 	

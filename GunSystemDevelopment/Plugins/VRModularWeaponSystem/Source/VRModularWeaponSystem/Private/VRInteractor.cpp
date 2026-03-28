@@ -41,19 +41,19 @@ void UVRInteractor::IntendRelease()
 	ActiveGrabComponent = nullptr;
 }
 
-void UVRInteractor::IntendActionStart()
+void UVRInteractor::IntendActionStart(EVRInteractableAction Action, float Value)
 {
 	if (ActiveGrabComponent)
 	{
-		IVRInteractableInterface::Execute_StartAction(ActiveGrabComponent, this);
+		IVRInteractableInterface::Execute_StartAction(ActiveGrabComponent, this, Action, Value);
 	}
 }
 
-void UVRInteractor::IntendActionStop()
+void UVRInteractor::IntendActionStop(EVRInteractableAction Action, float Value)
 {
 	if (ActiveGrabComponent)
 	{
-		IVRInteractableInterface::Execute_StopAction(ActiveGrabComponent, this);
+		IVRInteractableInterface::Execute_StopAction(ActiveGrabComponent, this, Action, Value);
 	}
 }
 

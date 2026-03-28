@@ -83,14 +83,14 @@ void UVRGrabComponent::TryRelease()
 	SetComponentTickEnabled(false);
 }
 
-void UVRGrabComponent::StartAction_Implementation(UObject* Interactor)
+void UVRGrabComponent::StartAction_Implementation(UObject* Interactor, EVRInteractableAction Action, float Value)
 {
-	// called when a trigger is pressed
+	// called when an action is started (e.g. trigger pressed)
 }
 
-void UVRGrabComponent::StopAction_Implementation(UObject* Interactor)
+void UVRGrabComponent::StopAction_Implementation(UObject* Interactor, EVRInteractableAction Action, float Value)
 {
-	// called when a trigger is released
+	// called when an action is stopped (e.g. trigger released)
 }
 
 void UVRGrabComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)

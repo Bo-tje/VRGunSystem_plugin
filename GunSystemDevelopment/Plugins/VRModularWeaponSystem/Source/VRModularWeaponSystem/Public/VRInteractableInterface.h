@@ -4,12 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
+#include "EVRInteractableAction.h"
 #include "VRInteractableInterface.generated.h"
 
 /**
  * 
  */
-UINTERFACE(MinimalAPI)
+UINTERFACE(BlueprintType, MinimalAPI)
 class UVRInteractableInterface : public UInterface
 {
 	GENERATED_BODY()
@@ -29,8 +30,8 @@ public:
 	void OnHoverEnd(UObject* Interactor);
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "VR Plugin | Interaction")
-	void StartAction(UObject* Interactor);
+	void StartAction(UObject* Interactor, EVRInteractableAction Action, float Value);
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "VR Plugin | Interaction")
-	void StopAction(UObject* Interactor);
+	void StopAction(UObject* Interactor, EVRInteractableAction Action, float Value);
 };
