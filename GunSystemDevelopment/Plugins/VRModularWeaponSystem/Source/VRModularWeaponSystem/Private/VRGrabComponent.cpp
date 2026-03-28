@@ -1,15 +1,9 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "VRGrabComponent.h"
-
 #include "VRInteractor.h"
-#include "BehaviorTree/Blackboard/BlackboardKeyEnums.h"
 #include "GameFramework/Actor.h"
 #include "VRInteractorInterface.h"
 #include "GameFramework/PlayerController.h"
 
-// Sets default values for this component's properties
 UVRGrabComponent::UVRGrabComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
@@ -21,54 +15,52 @@ UVRGrabComponent::UVRGrabComponent()
 void UVRGrabComponent::BeginPlay()
 {
 	Super::BeginPlay();
-	
 	SetComponentTickEnabled(false);
-	
-	if (AActor* MyOwner = GetOwner())
-	{
-		// Set the root to movable so it doesn't fail the attachment
-		if (USceneComponent* Root = MyOwner->GetRootComponent())
-		{
-			Root->SetMobility(EComponentMobility::Movable);
-		}
-        
-		// Ensure the object generates overlap events so the Hand can find it
-		MyOwner->SetActorEnableCollision(true);
-	}
 }
 
 void UVRGrabComponent::TryGrab(UVRInteractor* Interactor)
 {
-	if (bIsHeld || !Interactor) return;
+	if (!Interactor) return;
 
-	bIsHeld = true;
-    
-	// We store the Actor that owns the interactor (The Hand/Pawn)
-	HoldingHand = Interactor->GetOwner(); 
+	// If already held, tell the old interactor to let go so you can pass objects between hands
+	if (bIsHeld && CurrentInteractor.IsValid())
+	{
+		CurrentInteractor->RequestRelease(); 
+	}
 
 	AActor* MyOwner = GetOwner();
-
-	// Physics Handling
+	
+#pragma region Set physics
+	
 	if (UPrimitiveComponent* RootPrim = Cast<UPrimitiveComponent>(MyOwner->GetRootComponent()))
 	{
-		bWasSimulating = RootPrim->IsSimulatingPhysics();
+		if (!bIsHeld)
+		{
+			bWasSimulating = RootPrim->IsSimulatingPhysics();
+		}
 		RootPrim->SetSimulatePhysics(false);
 	}
+	
+#pragma endregion 
+	
+	bIsHeld = true;
+	CurrentInteractor = Interactor;
     
-	// Use the Interactor itself as the attachment target
 	Attach(MyOwner, Interactor);
     
-	// Velocity tracking setup
+#pragma region Initialize velocity tracking
+	
 	SetComponentTickEnabled(true);
-	LastPosition = GetOwner()->GetActorLocation();
+	LastPosition = MyOwner->GetActorLocation();
 	VelocityBuffer.Empty();
     
+#pragma endregion 
+	
 	if (OnGrabbed.IsBound())
 	{
 		OnGrabbed.Broadcast(Interactor->GetOwner());
 	}
     
-	// Pass the side stored inside the interactor
 	PlayHaptics(Interactor->HandSide);
 }
 
@@ -76,45 +68,60 @@ void UVRGrabComponent::TryRelease()
 {
 	if (!bIsHeld) return;
 
-	// References
 	AActor* MyOwner = GetOwner();
 	UPrimitiveComponent* RootPrim = Cast<UPrimitiveComponent>(MyOwner->GetRootComponent());
 
-	// Detach
 	const FDetachmentTransformRules DetachmentRules(EDetachmentRule::KeepWorld, true);
 	MyOwner->DetachFromActor(DetachmentRules);
     
 	bIsHeld = false;
-	
 	Throw(RootPrim);
     
-	HoldingHand.Reset();
+	CurrentInteractor.Reset();
 	OnReleased.Broadcast();
 	
 	SetComponentTickEnabled(false);
-	
+}
+
+void UVRGrabComponent::StartAction_Implementation(UObject* Interactor)
+{
+	// called when a trigger is pressed
+}
+
+void UVRGrabComponent::StopAction_Implementation(UObject* Interactor)
+{
+	// called when a trigger is released
 }
 
 void UVRGrabComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-	
 	CalculateVelocity(DeltaTime);
 }
 
-void UVRGrabComponent::Attach(AActor* MyOwner, USceneComponent* TargetComponent) const
+void UVRGrabComponent::Attach(AActor* MyOwner, UVRInteractor* TargetInteractor) const
 {
+	// Calculate the relative transform from the GrabComponent to the Actor Root
+	FTransform GrabRelativeTransform = GetRelativeTransform();
+	FVector GrabRelativeLocation = GrabRelativeTransform.GetLocation();
+	FRotator GrabRelativeRotation = GrabRelativeTransform.Rotator();
+
+	// If socket snap is not enabled, we keep the offset the player had when they grabbed
 	FAttachmentTransformRules AttachmentRules(EAttachmentRule::KeepWorld, true);
 	
 	if (bUseSocketSnap)
 	{
-		// Snapping to a specific socket
 		AttachmentRules.LocationRule = EAttachmentRule::SnapToTarget;
 		AttachmentRules.RotationRule = EAttachmentRule::SnapToTarget;
-		AttachmentRules.ScaleRule = EAttachmentRule::KeepWorld; 
 	}
 	
-	MyOwner->AttachToComponent(TargetComponent, AttachmentRules, bUseSocketSnap ? GrabSocketName : NAME_None);
+	MyOwner->AttachToComponent(TargetInteractor, AttachmentRules, bUseSocketSnap ? GrabSocketName : NAME_None);
+
+	if (bUseSocketSnap)
+	{
+		MyOwner->AddActorLocalOffset(-GrabRelativeLocation);
+		MyOwner->AddActorLocalRotation(GrabRelativeRotation.GetInverse());
+	}
 }
 
 void UVRGrabComponent::CalculateVelocity(float DeltaTime)
@@ -123,14 +130,13 @@ void UVRGrabComponent::CalculateVelocity(float DeltaTime)
 	{
 		FVector NewPosition = GetOwner()->GetActorLocation();
 		FVector CalculatedVelocity = (NewPosition - LastPosition) / DeltaTime;
-
+       
 		if (CalculatedVelocity.Size() < 5000.0f) 
 		{
-			// CIRCULAR BUFFER LOGIC: O(1) performance
-			VelocityBuffer[BufferIndex] = CalculatedVelocity;
-			BufferIndex = (BufferIndex + 1) % 10;
-			SampleCount = FMath::Min(SampleCount + 1, 10);
+			VelocityBuffer.Add(CalculatedVelocity);
+			if (VelocityBuffer.Num() > 10) VelocityBuffer.RemoveAt(0);
 		}
+
 		LastPosition = NewPosition;
 	}
 }
@@ -149,18 +155,17 @@ void UVRGrabComponent::Throw(UPrimitiveComponent* RootPrim)
 			AverageVelocity /= VelocityBuffer.Num();
 		}
 
-		// Overwrite any zero-velocity the engine just set during "SetSimulatePhysics"
 		RootPrim->SetAllPhysicsLinearVelocity(AverageVelocity * ThrowMultiplier);
-		
-		UE_LOG(LogTemp, Warning, TEXT("Final Throw Velocity: %s | Buffer Count: %d"), *AverageVelocity.ToString(), VelocityBuffer.Num());
 	}
 }
 
-
 void UVRGrabComponent::PlayHaptics(const EControllerHand Side) const
 {
-	if (IVRInteractorInterface* Interactor = Cast<IVRInteractorInterface>(HoldingHand->FindComponentByClass<UVRInteractor>()))
+	if (CurrentInteractor.IsValid())
 	{
-		Interactor->GetProvidingPlayerController()->PlayHapticEffect(GrabHapticEffect, Side, HapticScale, bLoopHaptics);
+		if (APlayerController* PC = CurrentInteractor->GetProvidingPlayerController())
+		{
+			PC->PlayHapticEffect(GrabHapticEffect, Side, HapticScale, bLoopHaptics);
+		}
 	}
 }

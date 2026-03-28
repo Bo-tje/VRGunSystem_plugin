@@ -1,26 +1,23 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
-
-#pragma once
+﻿#pragma once
 
 #include "CoreMinimal.h"
+#include "VRInteractableInterface.h"
 #include "Components/SceneComponent.h"
 #include "VRGrabComponent.generated.h"
+
+class UVRInteractor;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGrabbed, AActor*, InteractingHand);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnReleased);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class VRMODULARWEAPONSYSTEM_API UVRGrabComponent : public UActorComponent
+class VRMODULARWEAPONSYSTEM_API UVRGrabComponent : public USceneComponent, public IVRInteractableInterface
 {
 	GENERATED_BODY()
 
 public:	
 	UVRGrabComponent();
 	
-	// Change this:
-	// void TryGrab(USceneComponent* TargetComponent, EControllerHand Side);
-
-	// To this:
 	UFUNCTION(BlueprintCallable, Category = "VR Plugin | VR Interaction")
 	void TryGrab(UVRInteractor* Interactor);
 	
@@ -30,12 +27,19 @@ public:
 	UFUNCTION(BlueprintCallable, Category = " VR Plugin | VR Interaction")
 	bool IsHeld() const {return bIsHeld; }
 	
-	//events for designers to bind to
+	// IVRInteractableInterface implementation
+	virtual void StartAction_Implementation(UObject* Interactor) override;
+	virtual void StopAction_Implementation(UObject* Interactor) override;
+
+#pragma region events for designers to bind to
+	
 	UPROPERTY(BlueprintAssignable, Category = "VR Interaction")
 	FOnGrabbed OnGrabbed;
 
 	UPROPERTY(BlueprintAssignable, Category = " VR Plugin | VR Interaction")
 	FOnReleased OnReleased;
+	
+#pragma endregion
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = " VR Plugin | VR Interaction")
 	UHapticFeedbackEffect_Base* GrabHapticEffect;
@@ -67,15 +71,13 @@ protected:
 	bool bWasSimulating;
 	
 	UPROPERTY()
-	TWeakObjectPtr<AActor> HoldingHand;
+	TWeakObjectPtr<UVRInteractor> CurrentInteractor;
 	
 private:
 	FVector LastPosition;
-    FVector VelocityBuffer[10]; // Fixed-size array for Circular Buffer
-    int32 BufferIndex = 0;
-    int32 SampleCount = 0;
+	TArray<FVector> VelocityBuffer;
 	
-	void Attach(AActor* MyOwner, USceneComponent* TargetComponent) const;
+	void Attach(AActor* MyOwner, UVRInteractor* TargetInteractor) const;
 	void CalculateVelocity(float DeltaTime);
 	void Throw(UPrimitiveComponent* RootPrim);
 	void PlayHaptics(EControllerHand Side) const;

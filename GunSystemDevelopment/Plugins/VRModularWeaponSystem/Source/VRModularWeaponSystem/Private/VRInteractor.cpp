@@ -1,12 +1,9 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "VRInteractor.h"
 #include "VRGrabComponent.h"
 #include "VRInteractableInterface.h"
 #include "Components/SphereComponent.h"
+#include "GameFramework/PlayerController.h"
 
-// Sets default values for this component's properties
 UVRInteractor::UVRInteractor()
 {
 	PrimaryComponentTick.bCanEverTick = false;
@@ -17,16 +14,12 @@ UVRInteractor::UVRInteractor()
 	DetectionSphereComponent->SetCollisionProfileName(TEXT("Trigger"));	
 }
 
-// Called when the game starts
 void UVRInteractor::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// ...
 	DetectionSphereComponent->OnComponentBeginOverlap.AddDynamic(this, &UVRInteractor::OnSphereOverlapBegin);
 	DetectionSphereComponent->OnComponentEndOverlap.AddDynamic(this, &UVRInteractor::OnSphereOverlapEnd);
-
-	
 }
 
 void UVRInteractor::IntendGrab()
@@ -35,8 +28,6 @@ void UVRInteractor::IntendGrab()
 
 	if (UVRGrabComponent* TargetGrabComponent = GetBestGrabTarget())
 	{
-		if (TargetGrabComponent->IsHeld()) return;
-		
 		TargetGrabComponent->TryGrab(this);
 		ActiveGrabComponent = TargetGrabComponent;
 	}
@@ -50,24 +41,40 @@ void UVRInteractor::IntendRelease()
 	ActiveGrabComponent = nullptr;
 }
 
+void UVRInteractor::IntendActionStart()
+{
+	if (ActiveGrabComponent)
+	{
+		IVRInteractableInterface::Execute_StartAction(ActiveGrabComponent, this);
+	}
+}
+
+void UVRInteractor::IntendActionStop()
+{
+	if (ActiveGrabComponent)
+	{
+		IVRInteractableInterface::Execute_StopAction(ActiveGrabComponent, this);
+	}
+}
+
+void UVRInteractor::RequestRelease()
+{
+	ActiveGrabComponent = nullptr;
+}
+
 UVRGrabComponent* UVRInteractor::GetBestGrabTarget() const
 {
 	UVRGrabComponent* BestCandidate = nullptr;
-	float ClosestDistanceSq = TNumericLimits<float>::Max(); // Start at infinity
+	float ClosestDistanceSq = TNumericLimits<float>::Max();
 	FVector InteractorLocation = GetComponentLocation();
 
-	// Loop through our list from the Overlap Events
 	for (const TWeakObjectPtr<UVRGrabComponent>& GrabPtr : OverlappingGrabs)
 	{
-		// Safety check for the Weak Pointer
 		if (GrabPtr.IsValid())
 		{
 			UVRGrabComponent* CurrentGrab = GrabPtr.Get();
-            
-			// Calculate Squared Distance
-			float CurrentDistSq = FVector::DistSquared(InteractorLocation, CurrentGrab->GetOwner()->GetActorLocation());
+			float CurrentDistSq = FVector::DistSquared(InteractorLocation, CurrentGrab->GetComponentLocation());
 
-			// If this is closer than our current best, update it
 			if (CurrentDistSq < ClosestDistanceSq)
 			{
 				ClosestDistanceSq = CurrentDistSq;
@@ -82,11 +89,18 @@ UVRGrabComponent* UVRInteractor::GetBestGrabTarget() const
 void UVRInteractor::OnSphereOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (UVRGrabComponent* FoundGrab = OtherActor->FindComponentByClass<UVRGrabComponent>())
+	if (!OtherActor) return;
+
+	TArray<UVRGrabComponent*> GrabComponents;
+	OtherActor->GetComponents<UVRGrabComponent>(GrabComponents);
+
+	if (GrabComponents.Num() > 0)
 	{
-		OverlappingGrabs.AddUnique(FoundGrab);
+		for (UVRGrabComponent* Grab : GrabComponents)
+		{
+			OverlappingGrabs.AddUnique(Grab);
+		}
         
-		// Start a low-frequency Timer (e.g., every 0.1s) ONLY when the list isn't empty
 		if (!GetWorld()->GetTimerManager().IsTimerActive(HoverTimerHandle))
 		{
 			GetWorld()->GetTimerManager().SetTimer(HoverTimerHandle, this, &UVRInteractor::UpdateBestHoverTarget, 0.1f, true);
@@ -97,14 +111,19 @@ void UVRInteractor::OnSphereOverlapBegin(UPrimitiveComponent* OverlappedComp, AA
 void UVRInteractor::OnSphereOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	if (UVRGrabComponent* FoundGrab = OtherActor->FindComponentByClass<UVRGrabComponent>())
+	if (!OtherActor) return;
+	
+	if (DetectionSphereComponent && !DetectionSphereComponent->IsOverlappingActor(OtherActor))
 	{
-		OverlappingGrabs.RemoveSingleSwap(FoundGrab);
-		
-		if (FoundGrab == HoverTarget)
+		TArray<UVRGrabComponent*> GrabComponents;
+		OtherActor->GetComponents<UVRGrabComponent>(GrabComponents);
+
+		for (UVRGrabComponent* Grab : GrabComponents)
 		{
-			UpdateBestHoverTarget();
+			OverlappingGrabs.RemoveSingleSwap(Grab);
 		}
+		
+		UpdateBestHoverTarget();
 	}
 }
 
@@ -123,15 +142,21 @@ void UVRInteractor::UpdateBestHoverTarget()
     
 	if (NewBest != HoverTarget)
 	{
-		// No "if implements" check needed! Execute handles the "null" check internally.
 		if (HoverTarget.IsValid())
 		{
+			IVRInteractableInterface::Execute_OnHoverEnd(HoverTarget.Get(), this);
 			IVRInteractableInterface::Execute_OnHoverEnd(HoverTarget->GetOwner(), this);
 		}
 
 		if (NewBest)
 		{
+			IVRInteractableInterface::Execute_OnHoverStart(NewBest, this);
 			IVRInteractableInterface::Execute_OnHoverStart(NewBest->GetOwner(), this);
+			
+			if (APlayerController* PC = GetProvidingPlayerController())
+			{
+				PC->PlayHapticEffect(HoverHapticEffect, HandSide, 0.5f);
+			}
 		}
 
 		HoverTarget = NewBest;

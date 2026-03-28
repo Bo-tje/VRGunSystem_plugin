@@ -12,6 +12,5 @@ class IVRInteractorInterface
     GENERATED_BODY()
 
 public:
-    // This allows any component to get the PC from the hand
     virtual APlayerController* GetProvidingPlayerController() const = 0;
 };

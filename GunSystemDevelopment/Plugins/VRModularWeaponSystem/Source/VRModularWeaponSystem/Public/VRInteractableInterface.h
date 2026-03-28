@@ -27,4 +27,10 @@ public:
 	
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "VR Plugin | Interaction")
 	void OnHoverEnd(UObject* Interactor);
+
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "VR Plugin | Interaction")
+	void StartAction(UObject* Interactor);
+
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "VR Plugin | Interaction")
+	void StopAction(UObject* Interactor);
 };
