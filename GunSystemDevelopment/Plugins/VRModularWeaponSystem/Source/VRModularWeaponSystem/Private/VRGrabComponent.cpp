@@ -83,6 +83,16 @@ void UVRGrabComponent::TryRelease()
 	SetComponentTickEnabled(false);
 }
 
+EControllerHand UVRGrabComponent::GetHoldingHand() const
+{
+	if (CurrentInteractor.IsValid())
+	{
+		return CurrentInteractor->HandSide;
+	}
+	return EControllerHand::AnyHand;
+}
+
+#pragma region Interface functions
 void UVRGrabComponent::OnHoverStart_Implementation(UObject* Interactor)
 {
 	IVRInteractableInterface::OnHoverStart_Implementation(Interactor);
@@ -106,6 +116,9 @@ void UVRGrabComponent::StopAction_Implementation(UObject* Interactor, EVRInterac
 	// called when a trigger is released
 	StopAction.Broadcast(Interactor, ActionType);
 }
+
+#pragma endregion
+
 
 void UVRGrabComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {

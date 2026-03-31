@@ -25,11 +25,16 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "VR Plugin | VR Interaction")
 	void TryGrab(UVRInteractor* Interactor);
 	
-	UFUNCTION(BlueprintCallable, Category = " VR Plugin | VR Interaction") 
+	UFUNCTION(BlueprintCallable, Category = "VR Plugin | VR Interaction")
 	void TryRelease();
 	
 	UFUNCTION(BlueprintCallable, Category = " VR Plugin | VR Interaction")
 	bool IsHeld() const {return bIsHeld; }
+
+	UFUNCTION(BlueprintPure, Category = "VR Plugin | VR Interaction")
+	EControllerHand GetHoldingHand() const;
+	
+
 	
 	// IVRInteractableInterface implementation
 	virtual void OnHoverStart_Implementation(UObject* Interactor) override;
