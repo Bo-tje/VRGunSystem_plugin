@@ -83,14 +83,28 @@ void UVRGrabComponent::TryRelease()
 	SetComponentTickEnabled(false);
 }
 
-void UVRGrabComponent::StartAction_Implementation(UObject* Interactor)
+void UVRGrabComponent::OnHoverStart_Implementation(UObject* Interactor)
 {
-	// called when a trigger is pressed
+	IVRInteractableInterface::OnHoverStart_Implementation(Interactor);
+	OnHoverStart.Broadcast(Interactor);
 }
 
-void UVRGrabComponent::StopAction_Implementation(UObject* Interactor)
+void UVRGrabComponent::OnHoverEnd_Implementation(UObject* Interactor)
+{
+	IVRInteractableInterface::OnHoverEnd_Implementation(Interactor);
+	OnHoverEnd.Broadcast(Interactor);
+}
+
+void UVRGrabComponent::StartAction_Implementation(UObject* Interactor, float ActionValue, EVRInteractableActions ActionType)
+{
+	// called when a trigger is pressed
+	StartAction.Broadcast(Interactor, ActionValue, ActionType);
+}
+
+void UVRGrabComponent::StopAction_Implementation(UObject* Interactor, EVRInteractableActions ActionType)
 {
 	// called when a trigger is released
+	StopAction.Broadcast(Interactor, ActionType);
 }
 
 void UVRGrabComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)

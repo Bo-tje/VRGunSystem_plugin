@@ -27,10 +27,10 @@ public:
 	void IntendRelease();
 
 	UFUNCTION(BlueprintCallable, Category = "VR Plugin | Input")
-	void IntendActionStart();
+	void IntendActionStart(float ActionValue, EVRInteractableActions ActionType);
 
 	UFUNCTION(BlueprintCallable, Category = "VR Plugin | Input")
-	void IntendActionStop();
+	void IntendActionStop(EVRInteractableActions ActionType);
 
 #pragma endregion 
 

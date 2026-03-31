@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "EVRInteractableActions.h"
 #include "UObject/Interface.h"
 #include "VRInteractableInterface.generated.h"
 
@@ -29,8 +30,8 @@ public:
 	void OnHoverEnd(UObject* Interactor);
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "VR Plugin | Interaction")
-	void StartAction(UObject* Interactor);
+	void StartAction(UObject* Interactor, float ActionValue, EVRInteractableActions ActionType);
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "VR Plugin | Interaction")
-	void StopAction(UObject* Interactor);
+	void StopAction(UObject* Interactor, EVRInteractableActions ActionType);
 };
