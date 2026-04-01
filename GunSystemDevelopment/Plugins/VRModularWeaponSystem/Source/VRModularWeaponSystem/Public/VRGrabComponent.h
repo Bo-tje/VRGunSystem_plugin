@@ -9,8 +9,8 @@ class UVRInteractor;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnHoverStart, UObject*, Interactor);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnHoverEnd, UObject*, Interactor);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FStartAction, UObject*, Interactor, float, Value,  EVRInteractableActions, ActionType);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FStopAction, UObject*, Interactor, EVRInteractableActions, ActionType);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FStartAction, UObject*, Interactor, float, Value,  FGameplayTag, ActionTag);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FStopAction, UObject*, Interactor, FGameplayTag, ActionTag);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGrabbed, AActor*, InteractingHand);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnReleased);
 
@@ -39,8 +39,8 @@ public:
 	// IVRInteractableInterface implementation
 	virtual void OnHoverStart_Implementation(UObject* Interactor) override;
 	virtual void OnHoverEnd_Implementation(UObject* Interactor) override;
-	virtual void StartAction_Implementation(UObject* Interactor, float ActionValue, EVRInteractableActions ActionType) override;
-	virtual void StopAction_Implementation(UObject* Interactor, EVRInteractableActions ActionType) override;
+	virtual void StartAction_Implementation(UObject* Interactor, float ActionValue, FGameplayTag ActionTag) override;
+	virtual void StopAction_Implementation(UObject* Interactor, FGameplayTag ActionTag) override;
 
 #pragma region events for designers to bind to
 	

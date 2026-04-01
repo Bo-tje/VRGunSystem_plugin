@@ -27,10 +27,10 @@ public:
 	void IntendRelease();
 
 	UFUNCTION(BlueprintCallable, Category = "VR Plugin | Input")
-	void IntendActionStart(float ActionValue, EVRInteractableActions ActionType);
+	void IntendActionStart(float ActionValue, UPARAM(meta = (Categories = "VRModularWeaponSystem.Interaction")) FGameplayTag ActionTag);
 
 	UFUNCTION(BlueprintCallable, Category = "VR Plugin | Input")
-	void IntendActionStop(EVRInteractableActions ActionType);
+	void IntendActionStop(UPARAM(meta = (Categories = "VRModularWeaponSystem.Interaction")) FGameplayTag ActionTag);
 
 #pragma endregion 
 

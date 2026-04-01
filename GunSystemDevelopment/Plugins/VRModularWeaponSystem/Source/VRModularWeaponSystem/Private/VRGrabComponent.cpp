@@ -105,16 +105,16 @@ void UVRGrabComponent::OnHoverEnd_Implementation(UObject* Interactor)
 	OnHoverEnd.Broadcast(Interactor);
 }
 
-void UVRGrabComponent::StartAction_Implementation(UObject* Interactor, float ActionValue, EVRInteractableActions ActionType)
+void UVRGrabComponent::StartAction_Implementation(UObject* Interactor, float ActionValue, FGameplayTag ActionTag)
 {
 	// called when a trigger is pressed
-	StartAction.Broadcast(Interactor, ActionValue, ActionType);
+	StartAction.Broadcast(Interactor, ActionValue, ActionTag);
 }
 
-void UVRGrabComponent::StopAction_Implementation(UObject* Interactor, EVRInteractableActions ActionType)
+void UVRGrabComponent::StopAction_Implementation(UObject* Interactor, FGameplayTag ActionTag)
 {
 	// called when a trigger is released
-	StopAction.Broadcast(Interactor, ActionType);
+	StopAction.Broadcast(Interactor, ActionTag);
 }
 
 #pragma endregion

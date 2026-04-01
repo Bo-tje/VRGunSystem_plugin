@@ -41,19 +41,19 @@ void UVRInteractor::IntendRelease()
 	ActiveGrabComponent = nullptr;
 }
 
-void UVRInteractor::IntendActionStart(float ActionValue, EVRInteractableActions ActionType)
+void UVRInteractor::IntendActionStart(float ActionValue, FGameplayTag ActionTag)
 {
 	if (ActiveGrabComponent)
 	{
-		IVRInteractableInterface::Execute_StartAction(ActiveGrabComponent, this, ActionValue, ActionType);
+		IVRInteractableInterface::Execute_StartAction(ActiveGrabComponent, this, ActionValue, ActionTag);
 	}
 }
 
-void UVRInteractor::IntendActionStop(EVRInteractableActions ActionType)
+void UVRInteractor::IntendActionStop(FGameplayTag ActionTag)
 {
 	if (ActiveGrabComponent)
 	{
-		IVRInteractableInterface::Execute_StopAction(ActiveGrabComponent, this, ActionType);
+		IVRInteractableInterface::Execute_StopAction(ActiveGrabComponent, this, ActionTag);
 	}
 }
 

@@ -3,8 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "EVRInteractableActions.h"
 #include "UObject/Interface.h"
+#include "GameplayTagContainer.h"
 #include "VRInteractableInterface.generated.h"
 
 /**
@@ -30,8 +30,8 @@ public:
 	void OnHoverEnd(UObject* Interactor);
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "VR Plugin | Interaction")
-	void StartAction(UObject* Interactor, float ActionValue, EVRInteractableActions ActionType);
+	void StartAction(UObject* Interactor, float ActionValue, UPARAM(meta = (Categories = "VRModularWeaponSystem.Interaction")) FGameplayTag ActionTag);
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "VR Plugin | Interaction")
-	void StopAction(UObject* Interactor, EVRInteractableActions ActionType);
+	void StopAction(UObject* Interactor, UPARAM(meta = (Categories = "VRModularWeaponSystem.Interaction")) FGameplayTag ActionTag);
 };
