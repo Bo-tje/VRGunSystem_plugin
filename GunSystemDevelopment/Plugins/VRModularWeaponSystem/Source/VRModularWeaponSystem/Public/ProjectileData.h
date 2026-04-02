@@ -41,6 +41,9 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Ammo Visuals")
 	class UStaticMesh* ProjectileMesh;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Ammo Visuals")
+	class UStaticMesh* SpentCasingMesh;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Ammo Visuals")
 	class UParticleSystem* ProjectileTrail;
