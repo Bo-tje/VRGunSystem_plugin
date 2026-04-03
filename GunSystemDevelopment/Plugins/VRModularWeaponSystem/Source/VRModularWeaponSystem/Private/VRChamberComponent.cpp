@@ -17,7 +17,7 @@ void UVRChamberComponent::BeginPlay()
 	UpdateVisuals();
 }
 
-bool UVRChamberComponent::TryFire()
+bool UVRChamberComponent::TryGiveBullet()
 {
 	if (IsRoundReady())
 	{

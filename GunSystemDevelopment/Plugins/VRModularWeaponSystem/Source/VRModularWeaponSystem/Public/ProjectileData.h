@@ -19,7 +19,7 @@ class VRMODULARWEAPONSYSTEM_API UProjectileData : public UPrimaryDataAsset
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Ammo Type")
-	FText DisplayName;
+	FString ProjectileName;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Ammo Type")
 	float ProjectileSpeed = 40000.f;
@@ -50,5 +50,11 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Ammo Visuals")
 	class UParticleSystem* ProjectileExplosion;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Ammo Sounds")
+	class USoundBase* ProjectileSound;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Ammo Sounds")
+	class USoundBase* ProjectileImpactSound;
 	
 };

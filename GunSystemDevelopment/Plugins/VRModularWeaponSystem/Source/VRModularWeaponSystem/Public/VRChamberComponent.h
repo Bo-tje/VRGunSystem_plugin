@@ -39,7 +39,7 @@ public:
 #pragma region Actions
 	
 	UFUNCTION(BlueprintCallable, Category = "VR Weapon | Chamber")
-	bool TryFire();
+	bool TryGiveBullet();
 
 	
 	UFUNCTION(BlueprintCallable, Category = "VR Weapon | Chamber")
