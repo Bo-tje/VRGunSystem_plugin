@@ -1,6 +1,7 @@
 #include "VRChamberComponent.h"
 #include "VRNativeTags.h"
 #include "ProjectileData.h"
+#include "VRWeaponData.h"
 #include "Components/StaticMeshComponent.h"
 
 UVRChamberComponent::UVRChamberComponent()
@@ -9,6 +10,17 @@ UVRChamberComponent::UVRChamberComponent()
 	CurrentChamberState = VRNativeTags::Chamber_Empty;
 	LoadedProjectile = nullptr;
 	RoundVisualMesh = nullptr;
+}
+
+void UVRChamberComponent::InitializeComponent_Implementation(UVRWeaponData* InData)
+{
+	WeaponData = InData;
+}
+
+bool UVRChamberComponent::GetRound_Implementation(UProjectileData*& OutRound)
+{
+	OutRound = LoadedProjectile;
+	return TryGiveBullet();
 }
 
 void UVRChamberComponent::BeginPlay()
@@ -21,14 +33,11 @@ bool UVRChamberComponent::TryGiveBullet()
 {
 	if (IsRoundReady())
 	{
-		// Fire the round
 		OnRoundFired.Broadcast(LoadedProjectile);
 		
-		// Transition to spent casing state
 		SetChamberState(VRNativeTags::Chamber_SpentCasing);
 		return true;
 	}
-	
 	return false;
 }
 
@@ -52,10 +61,8 @@ UProjectileData* UVRChamberComponent::TryEject()
 	if (IsEmpty()) return nullptr;
 
 	UProjectileData* EjectedRound = LoadedProjectile;
-	
 	OnRoundEjected.Broadcast(EjectedRound);
 	
-	// Reset state
 	LoadedProjectile = nullptr;
 	SetChamberState(VRNativeTags::Chamber_Empty);
 
@@ -93,8 +100,6 @@ void UVRChamberComponent::UpdateVisuals()
 	else
 	{
 		RoundVisualMesh->SetVisibility(true);
-		
-
 		if (LoadedProjectile && LoadedProjectile->ProjectileMesh)
 		{
 			RoundVisualMesh->SetStaticMesh(LoadedProjectile->ProjectileMesh);

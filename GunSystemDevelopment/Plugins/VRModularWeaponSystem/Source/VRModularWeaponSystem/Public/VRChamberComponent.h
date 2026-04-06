@@ -3,9 +3,12 @@
 #include "CoreMinimal.h"
 #include "Components/SceneComponent.h"
 #include "GameplayTagContainer.h"
+#include "VRWeaponComponentInterface.h"
+#include "VRRoundProvider.h"
 #include "VRChamberComponent.generated.h"
 
 class UProjectileData;
+class UVRWeaponData;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnChamberStateChanged, FGameplayTag, NewState);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnRoundLoaded, UProjectileData*, LoadedRound);
@@ -13,12 +16,18 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnRoundFired, UProjectileData*, Fir
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnRoundEjected, UProjectileData*, EjectedRound);
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
-class VRMODULARWEAPONSYSTEM_API UVRChamberComponent : public USceneComponent
+class VRMODULARWEAPONSYSTEM_API UVRChamberComponent : public USceneComponent, public IVRWeaponComponentInterface, public IVRRoundProvider
 {
 	GENERATED_BODY()
 
 public:
 	UVRChamberComponent();
+
+	// --- IVRRoundProvider ---
+	virtual bool GetRound_Implementation(UProjectileData*& OutRound) override;
+
+	// --- IVRWeaponComponentInterface ---
+	virtual void InitializeComponent_Implementation(UVRWeaponData* InData) override;
 
 #pragma region events for designers to bind to
 
@@ -38,14 +47,14 @@ public:
 	
 #pragma region Actions
 	
+	/** Used by the FireComponent to take a bullet for firing. */
 	UFUNCTION(BlueprintCallable, Category = "VR Weapon | Chamber")
 	bool TryGiveBullet();
 
-	
 	UFUNCTION(BlueprintCallable, Category = "VR Weapon | Chamber")
 	bool TryLoad(UProjectileData* NewRound);
 
-	// Ejects whatever is currently in the chamber 
+	/** Ejects whatever is currently in the chamber. */
 	UFUNCTION(BlueprintCallable, Category = "VR Weapon | Chamber")
 	UProjectileData* TryEject();
 	
@@ -79,4 +88,7 @@ protected:
 
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "VR Weapon | Chamber")
 	UProjectileData* LoadedProjectile;
+
+	UPROPERTY(BlueprintReadOnly, Category = "VR Weapon | Chamber")
+	UVRWeaponData* WeaponData;
 };

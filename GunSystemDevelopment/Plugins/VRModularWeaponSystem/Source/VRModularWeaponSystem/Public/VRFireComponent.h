@@ -32,13 +32,16 @@ protected:
 */
 	
 public:	
+	
+	// --- IVRWeaponComponentInterface ---
+	virtual void InitializeComponent(UVRWeaponData* InData);
 
 	// The point from which projectiles/hitscans originate
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VR Weapon | Visuals")
 	USceneComponent* MuzzleLocation;
 	
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Weapon | Config")
+	UPROPERTY()
 	UVRWeaponData* WeaponData;
 	
 	UPROPERTY(BlueprintAssignable, Category = "VR Weapon | Events")

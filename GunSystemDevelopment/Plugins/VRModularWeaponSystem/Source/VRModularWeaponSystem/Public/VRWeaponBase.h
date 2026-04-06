@@ -3,10 +3,12 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "VRWeaponInterface.h"
+#include "GameplayTagContainer.h"
 #include "VRWeaponBase.generated.h"
 
 class UVRWeaponData;
 class UStaticMeshComponent;
+class UVRGrabComponent;
 
 /**
  * AVRWeaponBase is a container actor that holds modular components together.
@@ -25,20 +27,13 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VR Weapon | Parts")
 	USceneComponent* WeaponRoot;
 
+	/** The root of the part hierarchy (usually the Grip). */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VR Weapon | Parts")
-	UStaticMeshComponent* FrameMesh;
+	USceneComponent* PartRoot;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VR Weapon | Parts")
-	UStaticMeshComponent* BarrelMesh;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VR Weapon | Parts")
-	UStaticMeshComponent* MuzzleMesh;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VR Weapon | Parts")
-	UStaticMeshComponent* TriggerMesh;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VR Weapon | Parts")
-	UStaticMeshComponent* SliderMesh;
+	/** A map of all dynamic meshes spawned from WeaponData. */
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "VR Weapon | Parts")
+	TMap<FGameplayTag, UStaticMeshComponent*> PartMeshes;
 
 	// --- Data ---
 
@@ -53,10 +48,32 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void OnConstruction(const FTransform& Transform) override;
 
-	/** Distributes WeaponData to all components that implement IVRWeaponComponentInterface. */
+	/** Spawns and attaches meshes defined in WeaponData. */
+	UFUNCTION(BlueprintCallable, Category = "VR Weapon")
+	void ApplyWeaponDataVisuals();
+
+	/** Distributes WeaponData to all components. */
 	UFUNCTION(BlueprintCallable, Category = "VR Weapon")
 	void InitializeWeapon();
 
-	/** Updates the static meshes based on the WeaponData asset. */
-	void ApplyWeaponDataVisuals();
+	// --- Input Handling ---
+
+	/** Reference to the grab component on this weapon. */
+	UPROPERTY(BlueprintReadOnly, Category = "VR Weapon | Interaction")
+	UVRGrabComponent* GrabComponent;
+
+	UFUNCTION()
+	virtual void OnGrabbed(AActor* InteractingHand);
+
+	UFUNCTION()
+	virtual void OnReleased();
+
+	UFUNCTION()
+	virtual void HandleActionStart(UObject* Interactor, float Value, FGameplayTag ActionTag);
+
+	UFUNCTION()
+	virtual void HandleActionStop(UObject* Interactor, FGameplayTag ActionTag);
+
+private:
+	void ClearOldParts();
 };

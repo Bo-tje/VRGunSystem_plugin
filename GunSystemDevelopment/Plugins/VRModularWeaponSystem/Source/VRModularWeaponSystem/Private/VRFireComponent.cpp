@@ -18,6 +18,11 @@ void UVRFireComponent::OnRegister()
 	Super::OnRegister();
 }
 
+void UVRFireComponent::InitializeComponent(UVRWeaponData* InData)
+{
+	WeaponData = InData;
+}
+
 /*
 void UVRFireComponent::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {
@@ -56,6 +61,7 @@ void UVRFireComponent::PerformHitscan(const UVRWeaponData* ProjectileInfo) const
 		LineTraceEnd, 
 		ECC_Visibility, QueryParams);
 	
+	DrawDebugLine(GetWorld(), StartLocation, LineTraceEnd, FColor::Red, false, 2.0f);
 	if (bIsHit)
 	{
 		LineTraceEnd = HitResult.Location;

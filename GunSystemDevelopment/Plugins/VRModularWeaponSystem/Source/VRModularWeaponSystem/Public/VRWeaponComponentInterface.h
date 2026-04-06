@@ -21,6 +21,6 @@ class VRMODULARWEAPONSYSTEM_API IVRWeaponComponentInterface
 
 public:
 	/** Called by the Weapon Base to pass data to the component. */
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "VR Weapon")
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "VR Weapon Component")
 	void InitializeComponent(UVRWeaponData* InData);
 };
