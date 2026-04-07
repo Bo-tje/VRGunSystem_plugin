@@ -144,14 +144,35 @@ void UVRInteractor::UpdateBestHoverTarget()
 	{
 		if (HoverTarget.IsValid())
 		{
-			IVRInteractableInterface::Execute_OnHoverEnd(HoverTarget.Get(), this);
-			IVRInteractableInterface::Execute_OnHoverEnd(HoverTarget->GetOwner(), this);
+			UObject* OldObj = HoverTarget.Get();
+			if (OldObj->Implements<UVRInteractableInterface>())
+			{
+				IVRInteractableInterface::Execute_OnHoverEnd(OldObj, this);
+			}
+			
+			if (AActor* Owner = HoverTarget->GetOwner())
+			{
+				if (Owner->Implements<UVRInteractableInterface>())
+				{
+					IVRInteractableInterface::Execute_OnHoverEnd(Owner, this);
+				}
+			}
 		}
 
 		if (NewBest)
 		{
-			IVRInteractableInterface::Execute_OnHoverStart(NewBest, this);
-			IVRInteractableInterface::Execute_OnHoverStart(NewBest->GetOwner(), this);
+			if (NewBest->Implements<UVRInteractableInterface>())
+			{
+				IVRInteractableInterface::Execute_OnHoverStart(NewBest, this);
+			}
+
+			if (AActor* Owner = NewBest->GetOwner())
+			{
+				if (Owner->Implements<UVRInteractableInterface>())
+				{
+					IVRInteractableInterface::Execute_OnHoverStart(Owner, this);
+				}
+			}
 			
 			if (APlayerController* PC = GetProvidingPlayerController())
 			{

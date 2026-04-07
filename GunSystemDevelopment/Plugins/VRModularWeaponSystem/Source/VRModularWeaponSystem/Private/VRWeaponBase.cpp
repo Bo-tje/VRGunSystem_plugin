@@ -4,12 +4,20 @@
 #include "VRGrabComponent.h"
 #include "VRNativeTags.h"
 #include "Components/StaticMeshComponent.h"
+#include "Components/BoxComponent.h"
 
 AVRWeaponBase::AVRWeaponBase()
 {
 	PrimaryActorTick.bCanEverTick = false;
 
-	WeaponRoot = CreateDefaultSubobject<USceneComponent>(TEXT("WeaponRoot"));
+	WeaponRoot = CreateDefaultSubobject<UBoxComponent>(TEXT("WeaponRoot"));
+	WeaponRoot->SetBoxExtent(FVector(20.0f, 5.0f, 15.0f));
+	
+	// FIX: Force collision to be compatible with physics simulation
+	WeaponRoot->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	WeaponRoot->SetCollisionProfileName(TEXT("PhysicsBody"));
+	
+	WeaponRoot->SetSimulatePhysics(true);
 	RootComponent = WeaponRoot;
 }
 

@@ -120,6 +120,8 @@ void UVRFireComponent::PerformHitscan(const UVRWeaponData* Data) const
 		LineTraceEnd, 
 		ECC_Visibility, QueryParams);
 	
+	DrawDebugLine(GetWorld(), StartLocation, LineTraceEnd, FColor::Red, false, 2.0f);
+	
 	if (bIsHit)
 	{
 		LineTraceEnd = HitResult.Location;

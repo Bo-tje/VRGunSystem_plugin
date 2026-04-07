@@ -24,7 +24,7 @@ public:
 	// --- Components ---
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VR Weapon | Parts")
-	USceneComponent* WeaponRoot;
+	class UBoxComponent* WeaponRoot;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VR Weapon | Parts")
 	USceneComponent* PartRoot;
