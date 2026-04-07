@@ -95,13 +95,11 @@ EControllerHand UVRGrabComponent::GetHoldingHand() const
 #pragma region Interface functions
 void UVRGrabComponent::OnHoverStart_Implementation(UObject* Interactor)
 {
-	IVRInteractableInterface::OnHoverStart_Implementation(Interactor);
 	OnHoverStart.Broadcast(Interactor);
 }
 
 void UVRGrabComponent::OnHoverEnd_Implementation(UObject* Interactor)
 {
-	IVRInteractableInterface::OnHoverEnd_Implementation(Interactor);
 	OnHoverEnd.Broadcast(Interactor);
 }
 

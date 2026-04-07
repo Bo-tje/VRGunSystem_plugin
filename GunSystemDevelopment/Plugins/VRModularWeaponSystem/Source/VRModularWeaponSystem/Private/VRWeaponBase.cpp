@@ -11,9 +11,6 @@ AVRWeaponBase::AVRWeaponBase()
 
 	WeaponRoot = CreateDefaultSubobject<USceneComponent>(TEXT("WeaponRoot"));
 	RootComponent = WeaponRoot;
-
-	PartRoot = CreateDefaultSubobject<USceneComponent>(TEXT("PartRoot"));
-	PartRoot->SetupAttachment(RootComponent);
 }
 
 void AVRWeaponBase::OnConstruction(const FTransform& Transform)
@@ -61,90 +58,24 @@ void AVRWeaponBase::ApplyWeaponDataVisuals()
 {
 	if (!WeaponData) return;
 
-	ClearOldParts();
+	TArray<UStaticMeshComponent*> Components;
+	GetComponents(Components);
 
-	// Local cache to keep track of components we just created for efficient searching
-	TArray<USceneComponent*> CreatedComponents;
-	CreatedComponents.Add(PartRoot);
-
+	// Match existing components in the BP by name to the entries in WeaponData
 	for (const FVRWeaponPart& Part : WeaponData->WeaponParts)
 	{
-		// 1. Handle Logic Components
-		if (Part.LogicComponentClass)
+		if (Part.PartName.IsNone() || !Part.Mesh) continue;
+
+		for (UStaticMeshComponent* Comp : Components)
 		{
-			UActorComponent* NewLogic = NewObject<UActorComponent>(this, Part.LogicComponentClass);
-			if (NewLogic)
+			// BP component names often contain the variable name.
+			if (Comp->GetName().Contains(Part.PartName.ToString()))
 			{
-				if (USceneComponent* SceneComp = Cast<USceneComponent>(NewLogic))
-				{
-					bool bAttached = false;
-					if (!Part.ParentSocketName.IsNone())
-					{
-						// Search only the components we've created in this loop
-						for (USceneComponent* PotentialParent : CreatedComponents)
-						{
-							if (PotentialParent->DoesSocketExist(Part.ParentSocketName))
-							{
-								SceneComp->AttachToComponent(PotentialParent, FAttachmentTransformRules::SnapToTargetIncludingScale, Part.ParentSocketName);
-								bAttached = true;
-								break;
-							}
-						}
-					}
-					if (!bAttached) SceneComp->AttachToComponent(PartRoot, FAttachmentTransformRules::SnapToTargetIncludingScale);
-					CreatedComponents.Add(SceneComp);
-				}
-				NewLogic->RegisterComponent();
+				Comp->SetStaticMesh(Part.Mesh);
+				break;
 			}
-			continue;
-		}
-
-		// 2. Handle Static Parts
-		if (!Part.Mesh) continue;
-
-		FName ComponentName = FName(*FString::Printf(TEXT("MeshPart_%s"), *Part.PartName));
-		UStaticMeshComponent* NewMesh = NewObject<UStaticMeshComponent>(this, ComponentName);
-		
-		if (NewMesh)
-		{
-			NewMesh->SetStaticMesh(Part.Mesh);
-			NewMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-			
-			bool bAttached = false;
-			if (!Part.ParentSocketName.IsNone())
-			{
-				for (USceneComponent* PotentialParent : CreatedComponents)
-				{
-					if (PotentialParent->DoesSocketExist(Part.ParentSocketName))
-					{
-						NewMesh->AttachToComponent(PotentialParent, FAttachmentTransformRules::SnapToTargetIncludingScale, Part.ParentSocketName);
-						bAttached = true;
-						break;
-					}
-				}
-			}
-
-			if (!bAttached) NewMesh->AttachToComponent(PartRoot, FAttachmentTransformRules::SnapToTargetIncludingScale);
-
-			NewMesh->RegisterComponent();
-			
-			// Cache it
-			CreatedComponents.Add(NewMesh);
-			PartMeshes.Add(Part.PartSlotTag, NewMesh);
 		}
 	}
-}
-
-void AVRWeaponBase::ClearOldParts()
-{
-	// Destroy any dynamic static meshes
-	for (auto& Elem : PartMeshes)
-	{
-		if (Elem.Value) Elem.Value->DestroyComponent();
-	}
-	PartMeshes.Empty();
-
-	// Also clear logic components if needed, though they aren't tracked in PartMeshes
 }
 
 void AVRWeaponBase::OnGrabbed(AActor* InteractingHand) {}

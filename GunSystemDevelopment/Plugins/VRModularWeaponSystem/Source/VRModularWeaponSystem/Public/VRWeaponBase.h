@@ -12,7 +12,6 @@ class UVRGrabComponent;
 
 /**
  * AVRWeaponBase is a container actor that holds modular components together.
- * It distributes VRWeaponData to all its components and manages the physical meshes.
  */
 UCLASS(Abstract, Blueprintable)
 class VRMODULARWEAPONSYSTEM_API AVRWeaponBase : public AActor, public IVRWeaponInterface
@@ -27,13 +26,12 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VR Weapon | Parts")
 	USceneComponent* WeaponRoot;
 
-	/** The root of the part hierarchy (usually the Grip). */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VR Weapon | Parts")
 	USceneComponent* PartRoot;
 
-	/** A map of all dynamic meshes spawned from WeaponData. */
-	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "VR Weapon | Parts")
-	TMap<FGameplayTag, UStaticMeshComponent*> PartMeshes;
+	/** Tracks all components created in the Construction Script so we can clean them up properly. */
+	UPROPERTY(Transient)
+	TArray<UActorComponent*> DynamicComponents;
 
 	// --- Data ---
 

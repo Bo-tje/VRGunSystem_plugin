@@ -34,7 +34,7 @@ protected:
 public:	
 	
 	// --- IVRWeaponComponentInterface ---
-	virtual void InitializeComponent(UVRWeaponData* InData);
+	virtual void InitializeComponent_Implementation(UVRWeaponData* InData);
 
 	// The point from which projectiles/hitscans originate
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VR Weapon | Visuals")
@@ -59,6 +59,6 @@ public:
 
 
 private:
-	void PerformHitscan(const UVRWeaponData* ProjectileInfo ) const;
-	void SpawnProjectile(UProjectileData* ProjectileInfo);
+	void PerformHitscan(const UVRWeaponData* Data ) const;
+	void SpawnProjectile(UProjectileData* Data);
 };

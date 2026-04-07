@@ -13,22 +13,10 @@ struct FVRWeaponPart
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Part")
-	FString PartName;
+	FName PartName;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Part")
 	UStaticMesh* Mesh;
-
-	/** The socket on the PARENT part that this part should attach to. */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Part")
-	FName ParentSocketName;
-
-	/** A tag to identify this part (e.g., Weapon.Part.Barrel). */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Part")
-	FGameplayTag PartSlotTag;
-
-	/** Optional: Logic component to spawn with this part (e.g., a LaserComponent). */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Part")
-	TSubclassOf<UActorComponent> LogicComponentClass;
 };
 
 /**
@@ -79,7 +67,11 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Visuals")
 	USoundBase* FireSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Visuals")
+	USoundBase* DryFireSound;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Visuals")
 	USoundBase* HitscanImpactSound;
 };
+
