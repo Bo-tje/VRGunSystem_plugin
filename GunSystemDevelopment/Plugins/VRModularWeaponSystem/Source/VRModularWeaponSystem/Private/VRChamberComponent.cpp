@@ -58,11 +58,17 @@ bool UVRChamberComponent::TryLoad(UProjectileData* NewRound)
 
 UProjectileData* UVRChamberComponent::TryEject()
 {
-	if (IsEmpty()) return nullptr;
+	// If it's already empty, do nothing
+	if (IsEmpty() && !LoadedProjectile) return nullptr;
 
 	UProjectileData* EjectedRound = LoadedProjectile;
-	OnRoundEjected.Broadcast(EjectedRound);
 	
+	if (EjectedRound)
+	{
+		OnRoundEjected.Broadcast(EjectedRound);
+	}
+	
+	// Ensure everything is cleared
 	LoadedProjectile = nullptr;
 	SetChamberState(VRNativeTags::Chamber_Empty);
 
@@ -100,9 +106,16 @@ void UVRChamberComponent::UpdateVisuals()
 	else
 	{
 		RoundVisualMesh->SetVisibility(true);
-		if (LoadedProjectile && LoadedProjectile->ProjectileMesh)
+		if (LoadedProjectile)
 		{
-			RoundVisualMesh->SetStaticMesh(LoadedProjectile->ProjectileMesh);
+			if (CurrentChamberState == VRNativeTags::Chamber_SpentCasing && LoadedProjectile->SpentCasingMesh)
+			{
+				RoundVisualMesh->SetStaticMesh(LoadedProjectile->SpentCasingMesh);
+			}
+			else if (LoadedProjectile->ProjectileMesh)
+			{
+				RoundVisualMesh->SetStaticMesh(LoadedProjectile->ProjectileMesh);
+			}
 		}
 	}
 }
