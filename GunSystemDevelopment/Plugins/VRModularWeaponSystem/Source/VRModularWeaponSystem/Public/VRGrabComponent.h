@@ -11,6 +11,8 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnHoverStart, UObject*, Interactor)
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnHoverEnd, UObject*, Interactor);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FStartAction, UObject*, Interactor, float, Value,  FGameplayTag, ActionTag);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FStopAction, UObject*, Interactor, FGameplayTag, ActionTag);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnInputActionValue, UObject*, Interactor, float, Value);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnInputAction, UObject*, Interactor);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGrabbed, AActor*, InteractingHand);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnReleased);
 
@@ -55,6 +57,24 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "VR Plugin | VR Interaction")
 	FStopAction StopAction;
+
+	UPROPERTY(BlueprintAssignable, Category = "VR Plugin | VR Interaction | Common Inputs")
+	FOnInputActionValue OnTriggerStart;
+	
+	UPROPERTY(BlueprintAssignable, Category = "VR Plugin | VR Interaction | Common Inputs")
+	FOnInputAction OnTriggerStop;
+
+	UPROPERTY(BlueprintAssignable, Category = "VR Plugin | VR Interaction | Common Inputs")
+	FOnInputActionValue OnPrimaryActionStart;
+
+	UPROPERTY(BlueprintAssignable, Category = "VR Plugin | VR Interaction | Common Inputs")
+	FOnInputAction OnPrimaryActionStop;
+
+	UPROPERTY(BlueprintAssignable, Category = "VR Plugin | VR Interaction | Common Inputs")
+	FOnInputActionValue OnSecondaryActionStart;
+
+	UPROPERTY(BlueprintAssignable, Category = "VR Plugin | VR Interaction | Common Inputs")
+	FOnInputAction OnSecondaryActionStop;
 
 	UPROPERTY(BlueprintAssignable, Category = "VR Plugin | VR Interaction")
 	FOnGrabbed OnGrabbed;

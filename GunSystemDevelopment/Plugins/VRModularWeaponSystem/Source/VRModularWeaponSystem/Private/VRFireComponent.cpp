@@ -32,14 +32,14 @@ void UVRFireComponent::OnRegister()
 
 void UVRFireComponent::PullTrigger_Implementation()
 {
-	HandleFiring();
+	HandleFiring(WeaponData->DefaultProjectile);
 }
 
 void UVRFireComponent::ReleaseTrigger_Implementation()
 {
 }
 
-void UVRFireComponent::HandleFiring()
+void UVRFireComponent::HandleFiring(UProjectileData* ProjectileData)
 {
 	if (!WeaponData) return;
 

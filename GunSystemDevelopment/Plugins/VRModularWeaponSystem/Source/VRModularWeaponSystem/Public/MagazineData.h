@@ -16,7 +16,7 @@ class VRMODULARWEAPONSYSTEM_API UMagazineData : public UDataAsset
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Magazine Data")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "tMagazine Data")
 	int32 MaxAmmo;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Magazine Data")

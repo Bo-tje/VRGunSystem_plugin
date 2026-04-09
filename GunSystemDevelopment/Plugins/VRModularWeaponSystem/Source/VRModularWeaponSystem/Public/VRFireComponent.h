@@ -55,7 +55,7 @@ public:
 	virtual void ReleaseTrigger_Implementation();
 
 	UFUNCTION(BlueprintCallable, Category = "VR Weapon | Actions")
-	void HandleFiring();
+	void HandleFiring(UProjectileData* ProjectileData);
 
 
 private:

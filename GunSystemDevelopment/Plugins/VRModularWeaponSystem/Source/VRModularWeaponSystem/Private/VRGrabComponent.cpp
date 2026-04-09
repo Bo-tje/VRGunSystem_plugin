@@ -3,6 +3,7 @@
 #include "GameFramework/Actor.h"
 #include "VRInteractorInterface.h"
 #include "GameFramework/PlayerController.h"
+#include "VRNativeTags.h"
 
 UVRGrabComponent::UVRGrabComponent()
 {
@@ -105,14 +106,42 @@ void UVRGrabComponent::OnHoverEnd_Implementation(UObject* Interactor)
 
 void UVRGrabComponent::StartAction_Implementation(UObject* Interactor, float ActionValue, FGameplayTag ActionTag)
 {
-	// called when a trigger is pressed
+	// Generic broadcast
 	StartAction.Broadcast(Interactor, ActionValue, ActionTag);
+
+	// Specialized broadcasts
+	if (ActionTag.MatchesTagExact(VRNativeTags::Trigger))
+	{
+		OnTriggerStart.Broadcast(Interactor, ActionValue);
+	}
+	else if (ActionTag.MatchesTagExact(VRNativeTags::PrimaryInput))
+	{
+		OnPrimaryActionStart.Broadcast(Interactor, ActionValue);
+	}
+	else if (ActionTag.MatchesTagExact(VRNativeTags::SecondaryInput))
+	{
+		OnSecondaryActionStart.Broadcast(Interactor, ActionValue);
+	}
 }
 
 void UVRGrabComponent::StopAction_Implementation(UObject* Interactor, FGameplayTag ActionTag)
 {
-	// called when a trigger is released
+	// Generic broadcast
 	StopAction.Broadcast(Interactor, ActionTag);
+
+	// Specialized broadcasts
+	if (ActionTag.MatchesTagExact(VRNativeTags::Trigger))
+	{
+		OnTriggerStop.Broadcast(Interactor);
+	}
+	else if (ActionTag.MatchesTagExact(VRNativeTags::PrimaryInput))
+	{
+		OnPrimaryActionStop.Broadcast(Interactor);
+	}
+	else if (ActionTag.MatchesTagExact(VRNativeTags::SecondaryInput))
+	{
+		OnSecondaryActionStop.Broadcast(Interactor);
+	}
 }
 
 #pragma endregion

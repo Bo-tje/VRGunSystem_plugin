@@ -7,6 +7,8 @@ namespace  VRNativeTags
 #pragma region Input actions
 	
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Trigger);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(PrimaryInput);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(SecondaryInput);
 
 #pragma endregion
 	

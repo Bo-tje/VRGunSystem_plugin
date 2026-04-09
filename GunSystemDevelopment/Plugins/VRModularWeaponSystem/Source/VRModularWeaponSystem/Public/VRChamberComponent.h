@@ -74,11 +74,11 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Weapon | Chamber | Visuals")
 	UStaticMeshComponent* RoundVisualMesh;
+	
+	void SetChamberState(FGameplayTag NewState);
 
 protected:
 	virtual void BeginPlay() override;
-	
-	void SetChamberState(FGameplayTag NewState);
 	
 	UFUNCTION(BlueprintCallable, Category = "VR Weapon | Chamber | Visuals")
 	void UpdateVisuals();

@@ -9,7 +9,8 @@ UVRChamberComponent::UVRChamberComponent()
 	PrimaryComponentTick.bCanEverTick = false;
 	CurrentChamberState = VRNativeTags::Chamber_Empty;
 	LoadedProjectile = nullptr;
-	RoundVisualMesh = nullptr;
+	RoundVisualMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("RoundVisualMesh"));
+	RoundVisualMesh->SetupAttachment(this);
 }
 
 void UVRChamberComponent::InitializeComponent_Implementation(UVRWeaponData* InData)

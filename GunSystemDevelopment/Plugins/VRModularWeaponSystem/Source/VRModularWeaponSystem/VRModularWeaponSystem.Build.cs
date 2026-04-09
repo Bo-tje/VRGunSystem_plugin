@@ -30,6 +30,7 @@ public class VRModularWeaponSystem : ModuleRules
 				"Engine",
 				"GameplayTags",
 				"StateTreeModule",
+				"GameplayStateTreeModule",
 				"HeadMountedDisplay",
 				"InputCore"
 				// ... add other public dependencies that you statically link with here ...
