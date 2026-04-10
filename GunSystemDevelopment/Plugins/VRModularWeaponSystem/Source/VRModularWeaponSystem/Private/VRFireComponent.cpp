@@ -1,4 +1,6 @@
 #include "VRFireComponent.h"
+
+#include "ProjectileData.h"
 #include "VRWeaponData.h"
 #include "VRRoundProvider.h"
 #include "Kismet/GameplayStatics.h"
@@ -13,16 +15,19 @@ void UVRFireComponent::InitializeComponent_Implementation(UVRWeaponData* InData)
 	WeaponData = InData;
 }
 
-void UVRFireComponent::BeginPlay()
+FTransform UVRFireComponent::GetMuzzleTransform() const
 {
-	Super::BeginPlay();
+	AActor* MyOwner = GetOwner();
+	if (!MyOwner) return GetComponentTransform();
 	
-	if (!MuzzleLocation)
+	USceneComponent* Root = MyOwner->GetRootComponent();
+	
+	if (Root && Root->DoesSocketExist(MuzzleSocketName))
 	{
-		MuzzleLocation = NewObject<USceneComponent>(GetOwner(), TEXT("MuzzleLocation"));
-		MuzzleLocation->RegisterComponent();
-		MuzzleLocation->AttachToComponent(this, FAttachmentTransformRules::SnapToTargetIncludingScale);
+		return Root->GetSocketTransform(MuzzleSocketName);
 	}
+	
+	return GetComponentTransform();
 }
 
 void UVRFireComponent::OnRegister()
@@ -39,97 +44,78 @@ void UVRFireComponent::ReleaseTrigger_Implementation()
 {
 }
 
-void UVRFireComponent::HandleFiring(UProjectileData* ProjectileData)
+void UVRFireComponent::HandleFiring(UProjectileData* ProjectileData) const
 {
-	if (!WeaponData) return;
-
-	bool bFoundProvider = false;
-	bool bHasRound = false;
-
-	// 1. Check for a Round Provider (Chamber, Mag, etc.)
-	TArray<UActorComponent*> ProviderComponents;
-	GetOwner()->GetComponents(ProviderComponents);
-
-	for (UActorComponent* Component : ProviderComponents)
+	if (!ProjectileData) return;
+	
+	const FTransform SpawnTransform = GetMuzzleTransform();
+	const FVector MuzzleLocation = SpawnTransform.GetLocation();
+	const FRotator MuzzleRotation = SpawnTransform.GetRotation().Rotator();
+	
+	if (WeaponData->bUseHitscan)
 	{
-		if (Component && Component->Implements<UVRRoundProvider>())
-		{
-			bFoundProvider = true;
-			UProjectileData* DummyRound = nullptr;
-			if (IVRRoundProvider::Execute_GetRound(Component, DummyRound))
-			{
-				bHasRound = true;
-				break; 
-			}
-			else
-			{
-				// Found a provider, but it's empty (Dry Fire)
-				if (WeaponData->DryFireSound)
-				{
-					UGameplayStatics::PlaySoundAtLocation(this, WeaponData->DryFireSound, GetComponentLocation());
-				}
-				OnDryFired.Broadcast();
-				return;
-			}
-		}
+		PerformHitscan(ProjectileData, MuzzleLocation, MuzzleRotation);
+	}
+	else if (ProjectileData->ProjectileClass)
+	{
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.Owner = GetOwner();
+		SpawnParams.Instigator = GetOwner()->GetInstigator();
+		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+		GetWorld()->SpawnActor<AActor>(ProjectileData->ProjectileClass, SpawnTransform, SpawnParams);
+	}
+	
+	if (WeaponData->MuzzleFlash)
+	{
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), WeaponData->MuzzleFlash, SpawnTransform);
+	}
+	
+	if (WeaponData->FireSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, WeaponData->FireSound, MuzzleLocation);
 	}
 
-	// 2. Determine if we should fire (If provider has round, OR if no provider exists [Arcade Mode])
-	if (bHasRound || !bFoundProvider)
+	if (WeaponData->FireHapticEffect)
 	{
-		// Play Firing Sound
-		if (WeaponData->FireSound)
-		{
-			UGameplayStatics::PlaySoundAtLocation(this, WeaponData->FireSound, GetComponentLocation());
-		}
-
-		// Play Muzzle Flash
-		if (WeaponData->MuzzleFlash)
-		{
-			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), WeaponData->MuzzleFlash, MuzzleLocation->GetComponentTransform());
-		}
-		
-		if (WeaponData->bUseHitscan)
-		{
-			PerformHitscan(WeaponData);
-		}
-		
-
-		OnFired.Broadcast();
+		// PlayRecoilHaptics(); 
 	}
+	OnFired.Broadcast();
 }
 
 void UVRFireComponent::SpawnProjectile(UProjectileData* ProjectileData)
 {
-	// User will implement custom spawning logic here later
+	// Will implement custom spawning logic here later
 }
 
-void UVRFireComponent::PerformHitscan(const UVRWeaponData* Data) const
+void UVRFireComponent::PerformHitscan(const UProjectileData* Data, const FVector& StartLocation, const FRotator& StartRotation) const
 {
-	
-	FVector StartLocation = this->GetComponentLocation();
-	FRotator StartRotation = this->GetComponentRotation();
-	
 	FHitResult HitResult; 
 	FCollisionQueryParams QueryParams;
 	QueryParams.AddIgnoredActor(GetOwner());
 	
-	FVector LineTraceEnd = StartLocation + StartRotation.Vector() * WeaponData->HitscanRange;
-	bool bIsHit = GetWorld()->LineTraceSingleByChannel(HitResult, 
+	FVector LineTraceEnd = StartLocation + (StartRotation.Vector() * Data->HitscanRange);
+
+	bool bIsHit = GetWorld()->LineTraceSingleByChannel(
+		HitResult, 
 		StartLocation, 
 		LineTraceEnd, 
-		ECC_Visibility, QueryParams);
+		ECC_Visibility, 
+		QueryParams
+	);
 	
-	DrawDebugLine(GetWorld(), StartLocation, LineTraceEnd, FColor::Red, false, 2.0f);
-	
+	DrawDebugLine(GetWorld(), StartLocation, bIsHit ? HitResult.Location : LineTraceEnd, FColor::Red, false, 2.0f);
+    
 	if (bIsHit)
 	{
-		LineTraceEnd = HitResult.Location;
-		UGameplayStatics::PlaySoundAtLocation(GetWorld(), WeaponData->HitscanImpactSound, HitResult.Location);
+		if (Data->ImpactSound)
+		{
+			UGameplayStatics::PlaySoundAtLocation(GetWorld(), Data->ImpactSound, HitResult.Location);
+		}
 
 		if (AActor* HitActor = HitResult.GetActor())
 		{
-			UGameplayStatics::ApplyDamage(HitActor, WeaponData->HitscanDamage, nullptr, GetOwner(), UDamageType::StaticClass());
+			UGameplayStatics::ApplyDamage(HitActor, Data->HitscanDamage, nullptr, GetOwner(), UDamageType::StaticClass());
 		}
 	}
 }

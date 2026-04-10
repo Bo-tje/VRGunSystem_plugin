@@ -113,9 +113,9 @@ void UVRChamberComponent::UpdateVisuals()
 			{
 				RoundVisualMesh->SetStaticMesh(LoadedProjectile->SpentCasingMesh);
 			}
-			else if (LoadedProjectile->ProjectileMesh)
+			else if (LoadedProjectile->LiveRoundMesh)
 			{
-				RoundVisualMesh->SetStaticMesh(LoadedProjectile->ProjectileMesh);
+				RoundVisualMesh->SetStaticMesh(LoadedProjectile->LiveRoundMesh);
 			}
 		}
 	}

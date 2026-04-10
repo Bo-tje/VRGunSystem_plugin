@@ -35,12 +35,6 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Stats")
 	bool bUseHitscan = false;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Stats")
-	float HitscanDamage = 10.0f;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Stats")
-	float HitscanRange = 1000.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Stats")
 	float FireRate = 600.0f;
@@ -58,20 +52,24 @@ public:
 
 	/** The projectile this weapon fires. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Specs")
-	UProjectileData* DefaultProjectile;
+	TObjectPtr<UProjectileData> DefaultProjectile;
 
 	// --- Visual FX ---
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Visuals")
-	UParticleSystem* MuzzleFlash;
+	TObjectPtr<UParticleSystem> MuzzleFlash;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Visuals")
-	USoundBase* FireSound;
+	TObjectPtr<USoundBase> FireSound;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Visuals")
-	USoundBase* DryFireSound;
+	TObjectPtr<USoundBase> DryFireSound;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Visuals")
-	USoundBase* HitscanImpactSound;
+	TObjectPtr<USoundBase> ReloadSound;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Visuals")
+	TObjectPtr<UHapticFeedbackEffect_Base> FireHapticEffect;
+	
 };
 

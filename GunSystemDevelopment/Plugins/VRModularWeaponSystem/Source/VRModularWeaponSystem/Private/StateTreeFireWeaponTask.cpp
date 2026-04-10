@@ -1,5 +1,5 @@
 ﻿#include "StateTreeFireWeaponTask.h"
-#include "StateTreeExecutionContext.h"`
+#include "StateTreeExecutionContext.h"
 #include "VRFireComponent.h"
 #include "VRRoundProvider.h"
 
@@ -12,17 +12,20 @@ EStateTreeRunStatus FSTTask_FireWeapon::EnterState(FStateTreeExecutionContext& C
 	if (InstanceData.Weapon)
 	{
 		// Look for any component that implements your provider interface
-		UVRRoundProvider* ProviderComp = InstanceData.Weapon->FindComponentByClass<UVRRoundProvider>();
-		if (IVRRoundProvider* RoundProvider = Cast<IVRRoundProvider>(ProviderComp))
+		for (UActorComponent* Comp : InstanceData.Weapon->GetComponents())
 		{
-			UProjectileData* RoundToFire = nullptr;
-			if (RoundProvider->Execute_GetRound(ProviderComp, RoundToFire))
+			if (IVRRoundProvider* RoundProvider = Cast<IVRRoundProvider>(Comp))
+			{
+				UProjectileData* RoundToFire = nullptr;
+				if (RoundProvider->Execute_GetRound(Comp, RoundToFire))
 				{
-					if (UVRFireComponent* FireComponent = Cast<UVRFireComponent>(InstanceData.Weapon->FindComponentByClass<UVRFireComponent>()))
+					if (UVRFireComponent* FireComponent = InstanceData.Weapon->FindComponentByClass<UVRFireComponent>())
 					{
 						FireComponent->HandleFiring(RoundToFire);
 						return EStateTreeRunStatus::Succeeded;
 					}
+				}
+				break; 
 			}
 		}
 	}

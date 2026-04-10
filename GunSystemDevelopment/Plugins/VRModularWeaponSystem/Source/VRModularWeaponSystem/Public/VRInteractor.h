@@ -33,11 +33,9 @@ public:
 	void IntendActionStop(UPARAM(meta = (Categories = "VRModularWeaponSystem.Interaction")) FGameplayTag ActionTag);
 
 #pragma endregion 
-
-	// Called by a GrabComponent if another hand wants to grab the holding object
+	
 	void RequestRelease();
 	
-	// In VRInteractor.h so that we easily give the grab component a lot of information
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Plugin | Input")
 	EControllerHand HandSide;
 
@@ -58,14 +56,12 @@ protected:
 	UPROPERTY()
 	TWeakObjectPtr<UVRGrabComponent> HoverTarget;
 	
-	// function to find the best grab target in range if there are multiple found
 	UVRGrabComponent* GetBestGrabTarget() const;
 	void UpdateBestHoverTarget();
 	
 	FTimerHandle HoverTimerHandle;
 	
 	
-	// A list of all grabbable components found by the detection sphere
 	UPROPERTY()
 	TArray<TWeakObjectPtr<UVRGrabComponent>> OverlappingGrabs;
 

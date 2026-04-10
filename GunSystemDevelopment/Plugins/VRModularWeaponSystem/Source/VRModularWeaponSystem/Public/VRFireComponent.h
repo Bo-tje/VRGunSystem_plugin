@@ -34,11 +34,15 @@ protected:
 public:	
 	
 	// --- IVRWeaponComponentInterface ---
-	virtual void InitializeComponent_Implementation(UVRWeaponData* InData);
+	virtual void InitializeComponent_Implementation(UVRWeaponData* InData) override;
 
-	// The point from which projectiles/hitscans originate
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VR Weapon | Visuals")
-	USceneComponent* MuzzleLocation;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Weapon | Config")
+	FName MuzzleSocketName = TEXT("Muzzle");
+
+	/** Helper to get the best available fire transform */
+	UFUNCTION(BlueprintCallable, Category = "VR Weapon | Logic")
+	FTransform GetMuzzleTransform() const;
 	
 	
 	UPROPERTY()
@@ -55,10 +59,10 @@ public:
 	virtual void ReleaseTrigger_Implementation();
 
 	UFUNCTION(BlueprintCallable, Category = "VR Weapon | Actions")
-	void HandleFiring(UProjectileData* ProjectileData);
+	void HandleFiring(UProjectileData* ProjectileData) const;
 
 
 private:
-	void PerformHitscan(const UVRWeaponData* Data ) const;
-	void SpawnProjectile(UProjectileData* Data);
+	void PerformHitscan(const UProjectileData* Data, const FVector& StartLocation, const FRotator& StartRotation) const;
+	static void SpawnProjectile(UProjectileData* Data);
 };
