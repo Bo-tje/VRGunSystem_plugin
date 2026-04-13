@@ -16,7 +16,7 @@ class VRMODULARWEAPONSYSTEM_API UVRInteractor : public USceneComponent, public I
 
 public:	
 	UVRInteractor();
-	
+	virtual void BeginPlay() override;
 	
 #pragma region  events callable by designers
 	
@@ -45,7 +45,6 @@ public:
 	virtual APlayerController* GetProvidingPlayerController() const override;
 	
 protected:
-	virtual void BeginPlay() override;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Plugin | Components") 
 	class USphereComponent* DetectionSphereComponent;

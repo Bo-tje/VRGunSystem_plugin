@@ -12,6 +12,7 @@ class VRMODULARWEAPONSYSTEM_API UVRCustomActionComponent : public UActorComponen
 	GENERATED_BODY()
 
 public:
+	virtual void BeginPlay() override;
 	UVRCustomActionComponent();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Plugin | Interaction", meta = (Categories = "VRModularWeaponSystem.Interaction"))
@@ -24,7 +25,7 @@ public:
 	FOnInputAction OnActionStop;
 
 protected:
-	virtual void BeginPlay() override;
+	
 
 private:
 	UFUNCTION()

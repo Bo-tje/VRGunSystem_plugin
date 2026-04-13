@@ -21,6 +21,7 @@ class VRMODULARWEAPONSYSTEM_API UVRChamberComponent : public USceneComponent, pu
 	GENERATED_BODY()
 
 public:
+	virtual void BeginPlay() override;
 	UVRChamberComponent();
 
 	// --- IVRRoundProvider ---
@@ -78,7 +79,7 @@ public:
 	void SetChamberState(FGameplayTag NewState);
 
 protected:
-	virtual void BeginPlay() override;
+	
 	
 	UFUNCTION(BlueprintCallable, Category = "VR Weapon | Chamber | Visuals")
 	void UpdateVisuals();

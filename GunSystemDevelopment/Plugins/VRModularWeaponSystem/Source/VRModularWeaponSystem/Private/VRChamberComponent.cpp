@@ -59,7 +59,6 @@ bool UVRChamberComponent::TryLoad(UProjectileData* NewRound)
 
 UProjectileData* UVRChamberComponent::TryEject()
 {
-	// If it's already empty, do nothing
 	if (IsEmpty() && !LoadedProjectile) return nullptr;
 
 	UProjectileData* EjectedRound = LoadedProjectile;
@@ -69,7 +68,6 @@ UProjectileData* UVRChamberComponent::TryEject()
 		OnRoundEjected.Broadcast(EjectedRound);
 	}
 	
-	// Ensure everything is cleared
 	LoadedProjectile = nullptr;
 	SetChamberState(VRNativeTags::Chamber_Empty);
 

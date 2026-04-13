@@ -24,6 +24,9 @@ class VRMODULARWEAPONSYSTEM_API UVRGrabComponent : public USceneComponent, publi
 public:	
 	UVRGrabComponent();
 	
+	virtual void BeginPlay() override;
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	
 	UFUNCTION(BlueprintCallable, Category = "VR Plugin | VR Interaction")
 	void TryGrab(UVRInteractor* Interactor);
 	
@@ -103,10 +106,6 @@ public:
 	FName GrabSocketName = FName("GripSocket");
 	
 protected:
-	
-	virtual void BeginPlay() override;
-	
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	
 	UPROPERTY(BlueprintReadOnly, Category = " VR Plugin | VR Interaction")
 	bool bIsHeld;

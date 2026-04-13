@@ -6,18 +6,17 @@
 
 EStateTreeRunStatus FSTTask_FireWeapon::EnterState(FStateTreeExecutionContext& Context, const FStateTreeTransitionResult& Transition) const
 {
-	// 1. Get our Instance Data (the weapon reference)
 	FSTTask_FireWeaponInstanceData& InstanceData = Context.GetInstanceData<FSTTask_FireWeaponInstanceData>(*this);
 
 	if (InstanceData.Weapon)
 	{
-		// Look for any component that implements your provider interface
-		for (UActorComponent* Comp : InstanceData.Weapon->GetComponents())
+		for (UActorComponent* Component : InstanceData.Weapon->GetComponents())
 		{
-			if (IVRRoundProvider* RoundProvider = Cast<IVRRoundProvider>(Comp))
+			// Use Implements and Execute instead of Cast for Interfaces
+			if (Component && Component->Implements<UVRRoundProvider>())
 			{
 				UProjectileData* RoundToFire = nullptr;
-				if (RoundProvider->Execute_GetRound(Comp, RoundToFire))
+				if (IVRRoundProvider::Execute_GetRound(Component, RoundToFire))
 				{
 					if (UVRFireComponent* FireComponent = InstanceData.Weapon->FindComponentByClass<UVRFireComponent>())
 					{

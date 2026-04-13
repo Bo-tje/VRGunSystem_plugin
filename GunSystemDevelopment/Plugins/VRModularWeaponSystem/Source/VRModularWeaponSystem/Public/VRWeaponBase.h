@@ -42,9 +42,10 @@ public:
 	virtual void PullTrigger_Implementation() override;
 	virtual void ReleaseTrigger_Implementation() override;
 
+	virtual void OnConstruction(const FTransform& Transform) override;
+
 protected:
 	virtual void BeginPlay() override;
-	virtual void OnConstruction(const FTransform& Transform) override;
 
 	/** Spawns and attaches meshes defined in WeaponData. */
 	UFUNCTION(BlueprintCallable, Category = "VR Weapon")

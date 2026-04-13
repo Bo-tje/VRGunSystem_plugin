@@ -22,8 +22,7 @@ void UVRGrabComponent::BeginPlay()
 void UVRGrabComponent::TryGrab(UVRInteractor* Interactor)
 {
 	if (!Interactor) return;
-
-	// If already held, tell the old interactor to let go so you can pass objects between hands
+	
 	if (bIsHeld && CurrentInteractor.IsValid())
 	{
 		CurrentInteractor->RequestRelease(); 
@@ -217,9 +216,9 @@ void UVRGrabComponent::PlayHaptics(const EControllerHand Side) const
 {
 	if (CurrentInteractor.IsValid())
 	{
-		if (APlayerController* PC = CurrentInteractor->GetProvidingPlayerController())
+		if (APlayerController* PlayerController = CurrentInteractor->GetProvidingPlayerController())
 		{
-			PC->PlayHapticEffect(GrabHapticEffect, Side, HapticScale, bLoopHaptics);
+			PlayerController->PlayHapticEffect(GrabHapticEffect, Side, HapticScale, bLoopHaptics);
 		}
 	}
 }

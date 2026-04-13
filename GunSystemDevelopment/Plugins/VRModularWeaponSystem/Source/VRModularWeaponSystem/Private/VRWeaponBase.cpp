@@ -13,7 +13,6 @@ AVRWeaponBase::AVRWeaponBase()
 	WeaponRoot = CreateDefaultSubobject<UBoxComponent>(TEXT("WeaponRoot"));
 	WeaponRoot->SetBoxExtent(FVector(20.0f, 5.0f, 15.0f));
 	
-	// FIX: Force collision to be compatible with physics simulation
 	WeaponRoot->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	WeaponRoot->SetCollisionProfileName(TEXT("PhysicsBody"));
 	
@@ -68,18 +67,16 @@ void AVRWeaponBase::ApplyWeaponDataVisuals()
 
 	TArray<UStaticMeshComponent*> Components;
 	GetComponents(Components);
-
-	// Match existing components in the BP by name to the entries in WeaponData
+	
 	for (const FVRWeaponPart& Part : WeaponData->WeaponParts)
 	{
 		if (Part.PartName.IsNone() || !Part.Mesh) continue;
 
-		for (UStaticMeshComponent* Comp : Components)
+		for (UStaticMeshComponent* Component : Components)
 		{
-			// BP component names often contain the variable name.
-			if (Comp->GetName().Contains(Part.PartName.ToString()))
+			if (Component->GetName().Contains(Part.PartName.ToString()))
 			{
-				Comp->SetStaticMesh(Part.Mesh);
+				Component->SetStaticMesh(Part.Mesh);
 				break;
 			}
 		}

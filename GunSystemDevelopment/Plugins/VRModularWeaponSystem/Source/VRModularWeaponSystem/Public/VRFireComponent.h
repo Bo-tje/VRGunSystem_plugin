@@ -9,7 +9,6 @@ class UVRWeaponData;
 class UProjectileData;
 class UStaticMeshComponent;
 
-// Multicast delegates for other modular components to listen to
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnWeaponFired);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnWeaponDryFired);
 
@@ -20,27 +19,15 @@ class VRMODULARWEAPONSYSTEM_API UVRFireComponent : public USceneComponent, publi
 
 public:	
 	UVRFireComponent();
-
-protected:
-	virtual void BeginPlay() override;
+	
 	virtual void OnRegister() override;
-
-/*
-#if WITH_EDITOR
-	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
-#endif
-*/
 	
-public:	
-	
-	// --- IVRWeaponComponentInterface ---
 	virtual void InitializeComponent_Implementation(UVRWeaponData* InData) override;
 
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Weapon | Config")
 	FName MuzzleSocketName = TEXT("Muzzle");
-
-	/** Helper to get the best available fire transform */
+	
 	UFUNCTION(BlueprintCallable, Category = "VR Weapon | Logic")
 	FTransform GetMuzzleTransform() const;
 	
