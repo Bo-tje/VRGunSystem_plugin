@@ -4,6 +4,8 @@
 #include "GameFramework/Actor.h"
 #include "VRWeaponInterface.h"
 #include "GameplayTagContainer.h"
+#include "VRNativeTags.h"
+#include "Components/StateTreeComponent.h"
 #include "VRWeaponBase.generated.h"
 
 class UVRWeaponData;
@@ -31,16 +33,23 @@ public:
 	
 	UPROPERTY(Transient)
 	TArray<UActorComponent*> DynamicComponents;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VR Weapon | Logic")
+	class UVRWeaponStateTreeComponent* StateTreeComponent;
 
 	// --- Data ---
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Weapon | Config")
 	UVRWeaponData* WeaponData;
-
+	
+	UPROPERTY(BlueprintReadOnly, Category = "VR Weapon | Config")
+	FGameplayTag CurrentWeaponState = VRNativeTags::Idle;
+	
 	// --- IVRWeaponInterface ---
 	virtual void PullTrigger_Implementation() override;
 	virtual void ReleaseTrigger_Implementation() override;
 	virtual bool IsTriggerPulled_Implementation() const override;
+	virtual void SetWeaponState_Implementation(FGameplayTag NewState) override;
 
 	virtual void OnConstruction(const FTransform& Transform) override;
 

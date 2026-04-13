@@ -3,6 +3,7 @@
 #include "VRWeaponComponentInterface.h"
 #include "VRGrabComponent.h"
 #include "VRNativeTags.h"
+#include "VRWeaponStateTreeComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/BoxComponent.h"
 
@@ -12,12 +13,14 @@ AVRWeaponBase::AVRWeaponBase()
 
 	WeaponRoot = CreateDefaultSubobject<UBoxComponent>(TEXT("WeaponRoot"));
 	WeaponRoot->SetBoxExtent(FVector(20.0f, 5.0f, 15.0f));
-	
+
 	WeaponRoot->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	WeaponRoot->SetCollisionProfileName(TEXT("PhysicsBody"));
-	
+
 	WeaponRoot->SetSimulatePhysics(true);
 	RootComponent = WeaponRoot;
+
+	StateTreeComponent = CreateDefaultSubobject<UVRWeaponStateTreeComponent>(TEXT("StateTree"));
 }
 
 void AVRWeaponBase::OnConstruction(const FTransform& Transform)
@@ -31,8 +34,7 @@ void AVRWeaponBase::OnConstruction(const FTransform& Transform)
 void AVRWeaponBase::BeginPlay()
 {
 	Super::BeginPlay();
-
-	// Find the Grab Component
+	
 	GrabComponent = FindComponentByClass<UVRGrabComponent>();
 	if (GrabComponent)
 	{
@@ -48,7 +50,7 @@ void AVRWeaponBase::BeginPlay()
 void AVRWeaponBase::InitializeWeapon()
 {
 	if (!WeaponData) return;
-
+	
 	TArray<UActorComponent*> WeaponComponents;
 	GetComponents(WeaponComponents);
 
@@ -133,4 +135,9 @@ void AVRWeaponBase::ReleaseTrigger_Implementation()
 bool AVRWeaponBase::IsTriggerPulled_Implementation() const
 {
 	return bIsTriggerPulled;
+}
+
+void AVRWeaponBase::SetWeaponState_Implementation(FGameplayTag NewState)
+{
+	CurrentWeaponState = NewState;
 }

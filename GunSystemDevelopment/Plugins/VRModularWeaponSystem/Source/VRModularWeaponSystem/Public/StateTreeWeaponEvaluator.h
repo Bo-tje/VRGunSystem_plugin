@@ -6,7 +6,7 @@
 #include "VRChamberComponent.h"
 #include "StateTreeWeaponEvaluator.generated.h"
 
-USTRUCT(meta = (DisplayName = "Weapon Evaluator"))
+USTRUCT(BlueprintType, meta = (DisplayName = "Weapon Evaluator"))
 struct VRMODULARWEAPONSYSTEM_API FSTEval_WeaponInstanceData
 {
 	GENERATED_BODY()
