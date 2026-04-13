@@ -104,6 +104,7 @@ void AVRWeaponBase::HandleActionStop(UObject* Interactor, FGameplayTag ActionTag
 
 void AVRWeaponBase::PullTrigger_Implementation()
 {
+	bIsTriggerPulled = true;
 	TArray<UActorComponent*> TriggerComponents;
 	GetComponents(TriggerComponents);
 	for (UActorComponent* Component : TriggerComponents)
@@ -117,6 +118,7 @@ void AVRWeaponBase::PullTrigger_Implementation()
 
 void AVRWeaponBase::ReleaseTrigger_Implementation()
 {
+	bIsTriggerPulled = false;
 	TArray<UActorComponent*> TriggerComponents;
 	GetComponents(TriggerComponents);
 	for (UActorComponent* Component : TriggerComponents)
@@ -126,4 +128,9 @@ void AVRWeaponBase::ReleaseTrigger_Implementation()
 			IVRWeaponInterface::Execute_ReleaseTrigger(Component);
 		}
 	}
+}
+
+bool AVRWeaponBase::IsTriggerPulled_Implementation() const
+{
+	return bIsTriggerPulled;
 }

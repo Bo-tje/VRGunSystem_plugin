@@ -28,8 +28,7 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VR Weapon | Parts")
 	USceneComponent* PartRoot;
-
-	/** Tracks all components created in the Construction Script so we can clean them up properly. */
+	
 	UPROPERTY(Transient)
 	TArray<UActorComponent*> DynamicComponents;
 
@@ -41,6 +40,7 @@ public:
 	// --- IVRWeaponInterface ---
 	virtual void PullTrigger_Implementation() override;
 	virtual void ReleaseTrigger_Implementation() override;
+	virtual bool IsTriggerPulled_Implementation() const override;
 
 	virtual void OnConstruction(const FTransform& Transform) override;
 
@@ -57,7 +57,9 @@ protected:
 
 	// --- Input Handling ---
 
-	/** Reference to the grab component on this weapon. */
+	UPROPERTY(BlueprintReadOnly, Category = "VR Weapon | Interaction")
+	bool bIsTriggerPulled = false;
+	
 	UPROPERTY(BlueprintReadOnly, Category = "VR Weapon | Interaction")
 	UVRGrabComponent* GrabComponent;
 
@@ -74,5 +76,5 @@ protected:
 	virtual void HandleActionStop(UObject* Interactor, FGameplayTag ActionTag);
 
 private:
-	void ClearOldParts();
+	//void ClearOldParts();
 };

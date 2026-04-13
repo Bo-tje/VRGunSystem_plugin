@@ -8,26 +8,42 @@ EStateTreeRunStatus FSTTask_FireWeapon::EnterState(FStateTreeExecutionContext& C
 {
 	FSTTask_FireWeaponInstanceData& InstanceData = Context.GetInstanceData<FSTTask_FireWeaponInstanceData>(*this);
 
-	if (InstanceData.Weapon)
+	if (!InstanceData.Weapon) return EStateTreeRunStatus::Failed;
+	
+	UVRFireComponent* FireComponent = InstanceData.Weapon->FindComponentByClass<UVRFireComponent>();
+	if (!FireComponent) return EStateTreeRunStatus::Failed;
+	
+	UProjectileData* RoundToFire = nullptr;
+	
+	if (UVRChamberComponent* ChamberComponent = InstanceData.Weapon->FindComponentByClass<UVRChamberComponent>())
 	{
-		for (UActorComponent* Component : InstanceData.Weapon->GetComponents())
+		if (IVRRoundProvider::Execute_GetRound(ChamberComponent, RoundToFire))
 		{
-			// Use Implements and Execute instead of Cast for Interfaces
-			if (Component && Component->Implements<UVRRoundProvider>())
+			FireComponent->HandleFiring(RoundToFire);
+			return EStateTreeRunStatus::Succeeded;
+		}
+
+		if (bOnlyFireFromChamber)
+		{
+			FireComponent->OnDryFired.Broadcast();
+			return EStateTreeRunStatus::Failed;
+		}
+	}
+	
+	TArray<UActorComponent*> RoundProviders;
+	InstanceData.Weapon->GetComponents(RoundProviders);
+	
+	for (UActorComponent* Component : RoundProviders)
+	{
+		if (Component && Component->Implements<UVRRoundProvider>() && !Component->IsA<UVRChamberComponent>() && !Component->IsA<UVRFireComponent>())
+		{
+			if (IVRRoundProvider::Execute_GetRound(Component, RoundToFire))
 			{
-				UProjectileData* RoundToFire = nullptr;
-				if (IVRRoundProvider::Execute_GetRound(Component, RoundToFire))
-				{
-					if (UVRFireComponent* FireComponent = InstanceData.Weapon->FindComponentByClass<UVRFireComponent>())
-					{
-						FireComponent->HandleFiring(RoundToFire);
-						return EStateTreeRunStatus::Succeeded;
-					}
-				}
-				break; 
+				FireComponent->HandleFiring(RoundToFire);
+				return EStateTreeRunStatus::Succeeded;
 			}
 		}
 	}
-
+	FireComponent->OnDryFired.Broadcast();
 	return EStateTreeRunStatus::Failed;
 }

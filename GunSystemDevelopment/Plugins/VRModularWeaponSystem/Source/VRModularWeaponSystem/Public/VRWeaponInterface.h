@@ -17,4 +17,8 @@ public:
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "VR Weapon")
 	void ReleaseTrigger();
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "VR Weapon")
+	bool IsTriggerPulled() const;
+
 };
