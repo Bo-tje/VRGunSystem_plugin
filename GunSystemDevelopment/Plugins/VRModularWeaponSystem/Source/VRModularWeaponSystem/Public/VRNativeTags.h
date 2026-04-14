@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "NativeGameplayTags.h"
 
@@ -7,8 +7,11 @@ namespace  VRNativeTags
 #pragma region Input actions
 	
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Trigger);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(TriggerReleased);
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(PrimaryInput);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(PrimaryInputReleased);
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(SecondaryInput);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(SecondaryInputReleased);
 
 #pragma endregion
 	

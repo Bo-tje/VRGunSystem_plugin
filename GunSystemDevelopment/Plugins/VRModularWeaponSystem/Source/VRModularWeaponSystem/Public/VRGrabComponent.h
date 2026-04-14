@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "CoreMinimal.h"
 #include "VRInteractableInterface.h"
@@ -38,6 +38,9 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "VR Plugin | VR Interaction")
 	EControllerHand GetHoldingHand() const;
+	
+	UFUNCTION(BlueprintPure, Category = "VR Plugin | VR Interaction")
+	UVRInteractor* GetCurrentInteractor() const { return CurrentInteractor.Get(); }
 	
 
 	

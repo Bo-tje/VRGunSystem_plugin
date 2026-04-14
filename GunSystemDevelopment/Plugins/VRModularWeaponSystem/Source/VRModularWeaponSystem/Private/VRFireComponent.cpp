@@ -3,6 +3,8 @@
 #include "ProjectileData.h"
 #include "VRWeaponData.h"
 #include "VRRoundProvider.h"
+#include "VRWeaponBase.h"
+#include "VRInteractor.h"
 #include "Kismet/GameplayStatics.h"
 
 UVRFireComponent::UVRFireComponent()
@@ -37,7 +39,7 @@ void UVRFireComponent::OnRegister()
 
 void UVRFireComponent::PullTrigger_Implementation()
 {
-	HandleFiring(WeaponData->DefaultProjectile);
+	// Trigger logic handled by StateTree
 }
 
 void UVRFireComponent::ReleaseTrigger_Implementation()
@@ -78,9 +80,28 @@ void UVRFireComponent::HandleFiring(UProjectileData* ProjectileData) const
 
 	if (WeaponData->FireHapticEffect)
 	{
-		// PlayRecoilHaptics(); 
+		if (AVRWeaponBase* Weapon = Cast<AVRWeaponBase>(GetOwner()))
+		{
+			if (UVRInteractor* Interactor = Weapon->GetHoldingInteractor())
+			{
+				if (APlayerController* PC = Interactor->GetProvidingPlayerController())
+				{
+					PC->PlayHapticEffect(WeaponData->FireHapticEffect, Interactor->HandSide);
+				}
+			}
+		}
 	}
 	OnFired.Broadcast();
+}
+
+void UVRFireComponent::HandleDryFire() const
+{
+	if (WeaponData && WeaponData->DryFireSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, WeaponData->DryFireSound, GetMuzzleTransform().GetLocation());
+	}
+
+	OnDryFired.Broadcast();
 }
 
 void UVRFireComponent::SpawnProjectile(UProjectileData* ProjectileData)

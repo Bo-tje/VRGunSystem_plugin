@@ -20,6 +20,18 @@ public:
 	void ReleaseTrigger();
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "VR Weapon")
+	void PrimaryAction();
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "VR Weapon")
+	void ReleasePrimaryAction();
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "VR Weapon")
+	void SecondaryAction();
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "VR Weapon")
+	void ReleaseSecondaryAction();
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "VR Weapon")
 	bool IsTriggerPulled() const;
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "VR Weapon")

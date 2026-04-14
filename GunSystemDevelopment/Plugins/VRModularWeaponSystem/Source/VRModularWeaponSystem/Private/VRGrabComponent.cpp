@@ -30,8 +30,6 @@ void UVRGrabComponent::TryGrab(UVRInteractor* Interactor)
 
 	AActor* MyOwner = GetOwner();
 	
-#pragma region Set physics
-	
 	if (UPrimitiveComponent* RootPrim = Cast<UPrimitiveComponent>(MyOwner->GetRootComponent()))
 	{
 		if (!bIsHeld)
@@ -41,21 +39,15 @@ void UVRGrabComponent::TryGrab(UVRInteractor* Interactor)
 		RootPrim->SetSimulatePhysics(false);
 	}
 	
-#pragma endregion 
-	
 	bIsHeld = true;
 	CurrentInteractor = Interactor;
     
 	Attach(MyOwner, Interactor);
     
-#pragma region Initialize velocity tracking
-	
 	SetComponentTickEnabled(true);
 	LastPosition = MyOwner->GetActorLocation();
 	VelocityBuffer.Empty();
     
-#pragma endregion 
-	
 	if (OnGrabbed.IsBound())
 	{
 		OnGrabbed.Broadcast(Interactor->GetOwner());
@@ -92,7 +84,6 @@ EControllerHand UVRGrabComponent::GetHoldingHand() const
 	return EControllerHand::AnyHand;
 }
 
-#pragma region Interface functions
 void UVRGrabComponent::OnHoverStart_Implementation(UObject* Interactor)
 {
 	OnHoverStart.Broadcast(Interactor);
@@ -105,10 +96,16 @@ void UVRGrabComponent::OnHoverEnd_Implementation(UObject* Interactor)
 
 void UVRGrabComponent::StartAction_Implementation(UObject* Interactor, float ActionValue, FGameplayTag ActionTag)
 {
-	// Generic broadcast
+	if (AActor* MyOwner = GetOwner())
+	{
+		if (MyOwner->Implements<UVRInteractableInterface>())
+		{
+			IVRInteractableInterface::Execute_StartAction(MyOwner, Interactor, ActionValue, ActionTag);
+		}
+	}
+
 	StartAction.Broadcast(Interactor, ActionValue, ActionTag);
 
-	// Specialized broadcasts
 	if (ActionTag.MatchesTagExact(VRNativeTags::Trigger))
 	{
 		OnTriggerStart.Broadcast(Interactor, ActionValue);
@@ -125,26 +122,29 @@ void UVRGrabComponent::StartAction_Implementation(UObject* Interactor, float Act
 
 void UVRGrabComponent::StopAction_Implementation(UObject* Interactor, FGameplayTag ActionTag)
 {
-	// Generic broadcast
+	if (AActor* MyOwner = GetOwner())
+	{
+		if (MyOwner->Implements<UVRInteractableInterface>())
+		{
+			IVRInteractableInterface::Execute_StopAction(MyOwner, Interactor, ActionTag);
+		}
+	}
+
 	StopAction.Broadcast(Interactor, ActionTag);
 
-	// Specialized broadcasts
-	if (ActionTag.MatchesTagExact(VRNativeTags::Trigger))
+	if (ActionTag.MatchesTagExact(VRNativeTags::TriggerReleased))
 	{
 		OnTriggerStop.Broadcast(Interactor);
 	}
-	else if (ActionTag.MatchesTagExact(VRNativeTags::PrimaryInput))
+	else if (ActionTag.MatchesTagExact(VRNativeTags::PrimaryInputReleased))
 	{
 		OnPrimaryActionStop.Broadcast(Interactor);
 	}
-	else if (ActionTag.MatchesTagExact(VRNativeTags::SecondaryInput))
+	else if (ActionTag.MatchesTagExact(VRNativeTags::SecondaryInputReleased))
 	{
 		OnSecondaryActionStop.Broadcast(Interactor);
 	}
 }
-
-#pragma endregion
-
 
 void UVRGrabComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
@@ -154,12 +154,10 @@ void UVRGrabComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 
 void UVRGrabComponent::Attach(AActor* MyOwner, UVRInteractor* TargetInteractor) const
 {
-	// Calculate the relative transform from the GrabComponent to the Actor Root
 	FTransform GrabRelativeTransform = GetRelativeTransform();
 	FVector GrabRelativeLocation = GrabRelativeTransform.GetLocation();
 	FRotator GrabRelativeRotation = GrabRelativeTransform.Rotator();
 
-	// If socket snap is not enabled, we keep the offset the player had when they grabbed
 	FAttachmentTransformRules AttachmentRules(EAttachmentRule::KeepWorld, true);
 	
 	if (bUseSocketSnap)

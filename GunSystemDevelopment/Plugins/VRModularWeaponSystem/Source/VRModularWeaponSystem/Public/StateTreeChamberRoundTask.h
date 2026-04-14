@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "CoreMinimal.h"
 #include "StateTreeTaskBase.h"
@@ -19,4 +19,8 @@ struct VRMODULARWEAPONSYSTEM_API FSTTask_ChamberRound : public FStateTreeTaskBas
 	GENERATED_BODY()
 	virtual const UScriptStruct* GetInstanceDataType() const override { return FSTTask_ChamberRoundInstanceData::StaticStruct(); }
 	virtual EStateTreeRunStatus EnterState(FStateTreeExecutionContext& Context, const FStateTreeTransitionResult& Transition) const override;
+
+protected:
+	UPROPERTY(EditAnywhere, Category = "Parameter")
+	bool bInfiniteAmmo = false;
 };

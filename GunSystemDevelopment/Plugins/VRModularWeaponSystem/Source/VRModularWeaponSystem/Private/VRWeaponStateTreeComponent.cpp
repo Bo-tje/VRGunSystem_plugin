@@ -2,6 +2,12 @@
 #include "StateTreeExecutionContext.h"
 #include "VRWeaponBase.h"
 #include "VRWeaponData.h"
+#include "VRWeaponStateTreeSchema.h"
+
+TSubclassOf<UStateTreeSchema> UVRWeaponStateTreeComponent::GetSchema() const
+{
+	return UVRWeaponStateTreeSchema::StaticClass();
+}
 
 bool UVRWeaponStateTreeComponent::SetContextRequirements(FStateTreeExecutionContext& Context, bool bLogErrors)
 {

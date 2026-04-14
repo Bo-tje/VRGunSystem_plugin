@@ -1,8 +1,9 @@
-﻿#include "StateTreeChamberRoundTask.h"
+#include "StateTreeChamberRoundTask.h"
 #include "StateTreeExecutionContext.h"
 #include "VRChamberComponent.h"
 #include "VRRoundProvider.h"
 #include "ProjectileData.h"
+#include "VRWeaponData.h"
 
 EStateTreeRunStatus FSTTask_ChamberRound::EnterState(FStateTreeExecutionContext& Context, const FStateTreeTransitionResult& Transition) const
 {
@@ -32,10 +33,21 @@ EStateTreeRunStatus FSTTask_ChamberRound::EnterState(FStateTreeExecutionContext&
 	{
 		if (ChamberComponent->TryLoad(RoundToChamber))
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Loaded %s into chamber"), *RoundToChamber->GetName());
 			return EStateTreeRunStatus::Succeeded;
 		}
 	}
-	UE_LOG(LogTemp, Warning, TEXT("Failed to load round into chamber"));
+	else if (bInfiniteAmmo)
+	{
+		AVRWeaponBase* Weapon = Cast<AVRWeaponBase>(InstanceData.WeaponActor);
+		if (Weapon && Weapon->WeaponData && Weapon->WeaponData->DefaultProjectile)
+		{
+			RoundToChamber = Weapon->WeaponData->DefaultProjectile;
+			if (ChamberComponent->TryLoad(RoundToChamber))
+			{
+				return EStateTreeRunStatus::Succeeded;
+			}
+		}
+	}
+
 	return EStateTreeRunStatus::Failed;
 }

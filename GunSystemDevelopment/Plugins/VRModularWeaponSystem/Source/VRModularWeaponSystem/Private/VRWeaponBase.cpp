@@ -35,13 +35,10 @@ void AVRWeaponBase::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	GrabComponent = FindComponentByClass<UVRGrabComponent>();
-	if (GrabComponent)
+	if (UVRGrabComponent* GrabComponent = FindComponentByClass<UVRGrabComponent>())
 	{
 		GrabComponent->OnGrabbed.AddDynamic(this, &AVRWeaponBase::OnGrabbed);
 		GrabComponent->OnReleased.AddDynamic(this, &AVRWeaponBase::OnReleased);
-		GrabComponent->StartAction.AddDynamic(this, &AVRWeaponBase::HandleActionStart);
-		GrabComponent->StopAction.AddDynamic(this, &AVRWeaponBase::HandleActionStop);
 	}
 	
 	InitializeWeapon();
@@ -51,14 +48,23 @@ void AVRWeaponBase::InitializeWeapon()
 {
 	if (!WeaponData) return;
 	
-	TArray<UActorComponent*> WeaponComponents;
-	GetComponents(WeaponComponents);
+	CachedWeaponComponents.Empty();
+	CachedInputComponents.Empty();
 
-	for (UActorComponent* Component : WeaponComponents)
+	TArray<UActorComponent*> AllComponents;
+	GetComponents(AllComponents);
+
+	for (UActorComponent* Component : AllComponents)
 	{
-		if (Component && Component->Implements<UVRWeaponComponentInterface>())
+		if (Component->Implements<UVRWeaponComponentInterface>())
 		{
+			CachedWeaponComponents.Add(Component);
 			IVRWeaponComponentInterface::Execute_InitializeComponent(Component, WeaponData);
+		}
+
+		if (Component->Implements<UVRWeaponInterface>())
+		{
+			CachedInputComponents.Add(Component);
 		}
 	}
 }
@@ -88,47 +94,96 @@ void AVRWeaponBase::ApplyWeaponDataVisuals()
 void AVRWeaponBase::OnGrabbed(AActor* InteractingHand) {}
 void AVRWeaponBase::OnReleased() {}
 
-void AVRWeaponBase::HandleActionStart(UObject* Interactor, float Value, FGameplayTag ActionTag)
+void AVRWeaponBase::StartAction_Implementation(UObject* Interactor, float ActionValue, FGameplayTag ActionTag)
 {
 	if (ActionTag.MatchesTag(VRNativeTags::Trigger))
 	{
 		IVRWeaponInterface::Execute_PullTrigger(this);
 	}
+	else if (ActionTag.MatchesTag(VRNativeTags::PrimaryInput))
+	{
+		IVRWeaponInterface::Execute_PrimaryAction(this);
+	}
+	else if (ActionTag.MatchesTag(VRNativeTags::SecondaryInput))
+	{
+		IVRWeaponInterface::Execute_SecondaryAction(this);
+	}
 }
 
-void AVRWeaponBase::HandleActionStop(UObject* Interactor, FGameplayTag ActionTag)
+void AVRWeaponBase::StopAction_Implementation(UObject* Interactor, FGameplayTag ActionTag)
 {
-	if (ActionTag.MatchesTag(VRNativeTags::Trigger))
+	if (ActionTag.MatchesTag(VRNativeTags::Trigger) || ActionTag.MatchesTag(VRNativeTags::TriggerReleased))
 	{
 		IVRWeaponInterface::Execute_ReleaseTrigger(this);
 	}
+	else if (ActionTag.MatchesTag(VRNativeTags::PrimaryInput) || ActionTag.MatchesTag(VRNativeTags::PrimaryInputReleased))
+	{
+		IVRWeaponInterface::Execute_ReleasePrimaryAction(this);
+	}
+	else if (ActionTag.MatchesTag(VRNativeTags::SecondaryInput) || ActionTag.MatchesTag(VRNativeTags::SecondaryInputReleased))
+	{
+		IVRWeaponInterface::Execute_ReleaseSecondaryAction(this);
+	}
+}
+
+UVRInteractor* AVRWeaponBase::GetHoldingInteractor() const
+{
+	if (UVRGrabComponent* GC = FindComponentByClass<UVRGrabComponent>())
+	{
+		return GC->GetCurrentInteractor();
+	}
+	return nullptr;
 }
 
 void AVRWeaponBase::PullTrigger_Implementation()
 {
-	bIsTriggerPulled = true;
-	TArray<UActorComponent*> TriggerComponents;
-	GetComponents(TriggerComponents);
-	for (UActorComponent* Component : TriggerComponents)
+
+
+	if (StateTreeComponent)
 	{
-		if (Component && Component->Implements<UVRWeaponInterface>())
-		{
-			IVRWeaponInterface::Execute_PullTrigger(Component);
-		}
+		StateTreeComponent->SendStateTreeEvent(VRNativeTags::Trigger);
 	}
 }
 
 void AVRWeaponBase::ReleaseTrigger_Implementation()
 {
-	bIsTriggerPulled = false;
-	TArray<UActorComponent*> TriggerComponents;
-	GetComponents(TriggerComponents);
-	for (UActorComponent* Component : TriggerComponents)
+
+
+	if (StateTreeComponent)
 	{
-		if (Component && Component->Implements<UVRWeaponInterface>())
-		{
-			IVRWeaponInterface::Execute_ReleaseTrigger(Component);
-		}
+		StateTreeComponent->SendStateTreeEvent(VRNativeTags::TriggerReleased);
+	}
+}
+
+void AVRWeaponBase::PrimaryAction_Implementation()
+{
+	if (StateTreeComponent)
+	{
+		StateTreeComponent->SendStateTreeEvent(VRNativeTags::PrimaryInput);
+	}
+}
+
+void AVRWeaponBase::ReleasePrimaryAction_Implementation()
+{
+	if (StateTreeComponent)
+	{
+		StateTreeComponent->SendStateTreeEvent(VRNativeTags::PrimaryInputReleased);
+	}
+}
+
+void AVRWeaponBase::SecondaryAction_Implementation()
+{
+	if (StateTreeComponent)
+	{
+		StateTreeComponent->SendStateTreeEvent(VRNativeTags::SecondaryInput);
+	}
+}
+
+void AVRWeaponBase::ReleaseSecondaryAction_Implementation()
+{
+	if (StateTreeComponent)
+	{
+		StateTreeComponent->SendStateTreeEvent(VRNativeTags::SecondaryInputReleased);
 	}
 }
 

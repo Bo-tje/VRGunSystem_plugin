@@ -13,6 +13,9 @@ class VRMODULARWEAPONSYSTEM_API UVRWeaponStateTreeComponent : public UStateTreeC
 {
 	GENERATED_BODY()
 
+public:
+	virtual TSubclassOf<UStateTreeSchema> GetSchema() const override;
+
 protected:
 	/** UE 5.6: Overridden to manually bind the WeaponData context. */
 	virtual bool SetContextRequirements(FStateTreeExecutionContext& Context, bool bLogErrors) override;

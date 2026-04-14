@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "VRWeaponInterface.h"
+#include "VRInteractableInterface.h"
 #include "GameplayTagContainer.h"
 #include "VRNativeTags.h"
 #include "Components/StateTreeComponent.h"
@@ -16,7 +17,7 @@ class UVRGrabComponent;
  * AVRWeaponBase is a container actor that holds modular components together.
  */
 UCLASS(Abstract, Blueprintable)
-class VRMODULARWEAPONSYSTEM_API AVRWeaponBase : public AActor, public IVRWeaponInterface
+class VRMODULARWEAPONSYSTEM_API AVRWeaponBase : public AActor, public IVRWeaponInterface, public IVRInteractableInterface
 {
 	GENERATED_BODY()
 
@@ -31,8 +32,13 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VR Weapon | Parts")
 	USceneComponent* PartRoot;
 	
+	/** Components that need initialization when WeaponData changes. */
 	UPROPERTY(Transient)
-	TArray<UActorComponent*> DynamicComponents;
+	TArray<UActorComponent*> CachedWeaponComponents;
+
+	/** Components that receive input events (PullTrigger, etc). */
+	UPROPERTY(Transient)
+	TArray<UActorComponent*> CachedInputComponents;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VR Weapon | Logic")
 	class UVRWeaponStateTreeComponent* StateTreeComponent;
@@ -48,8 +54,18 @@ public:
 	// --- IVRWeaponInterface ---
 	virtual void PullTrigger_Implementation() override;
 	virtual void ReleaseTrigger_Implementation() override;
+	virtual void PrimaryAction_Implementation() override;
+	virtual void ReleasePrimaryAction_Implementation() override;
+	virtual void SecondaryAction_Implementation() override;
+	virtual void ReleaseSecondaryAction_Implementation() override;
 	virtual bool IsTriggerPulled_Implementation() const override;
 	virtual void SetWeaponState_Implementation(FGameplayTag NewState) override;
+
+	// --- IVRInteractableInterface ---
+	virtual void StartAction_Implementation(UObject* Interactor, float ActionValue, FGameplayTag ActionTag) override;
+	virtual void StopAction_Implementation(UObject* Interactor, FGameplayTag ActionTag) override;
+	virtual void OnHoverStart_Implementation(UObject* Interactor) override {}
+	virtual void OnHoverEnd_Implementation(UObject* Interactor) override {}
 
 	virtual void OnConstruction(const FTransform& Transform) override;
 
@@ -64,25 +80,21 @@ protected:
 	UFUNCTION(BlueprintCallable, Category = "VR Weapon")
 	void InitializeWeapon();
 
-	// --- Input Handling ---
+public:
+	/** Returns the interactor currently holding this weapon via its GrabComponent. */
+	UFUNCTION(BlueprintPure, Category = "VR Weapon | Interaction")
+	class UVRInteractor* GetHoldingInteractor() const;
+
+	// --- Interaction Callbacks ---
 
 	UPROPERTY(BlueprintReadOnly, Category = "VR Weapon | Interaction")
 	bool bIsTriggerPulled = false;
-	
-	UPROPERTY(BlueprintReadOnly, Category = "VR Weapon | Interaction")
-	UVRGrabComponent* GrabComponent;
 
 	UFUNCTION()
 	virtual void OnGrabbed(AActor* InteractingHand);
 
 	UFUNCTION()
 	virtual void OnReleased();
-
-	UFUNCTION()
-	virtual void HandleActionStart(UObject* Interactor, float Value, FGameplayTag ActionTag);
-
-	UFUNCTION()
-	virtual void HandleActionStop(UObject* Interactor, FGameplayTag ActionTag);
 
 private:
 	//void ClearOldParts();
