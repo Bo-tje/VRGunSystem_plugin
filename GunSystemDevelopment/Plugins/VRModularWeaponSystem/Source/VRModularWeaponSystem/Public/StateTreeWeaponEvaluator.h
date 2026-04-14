@@ -6,25 +6,30 @@
 #include "VRChamberComponent.h"
 #include "StateTreeWeaponEvaluator.generated.h"
 
-USTRUCT(BlueprintType, meta = (DisplayName = "Weapon Evaluator"))
+USTRUCT(BlueprintType)
 struct VRMODULARWEAPONSYSTEM_API FSTEval_WeaponInstanceData
 {
 	GENERATED_BODY()
-	
+
 	UPROPERTY(EditAnywhere, Category = "Context")
 	TObjectPtr<AActor> WeaponActor = nullptr;
-	
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Output")
 	bool bIsTriggerPulled = false;
-	bool bHasRoundReady;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Output")
+	bool bHasRoundReady = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Output")
 	FGameplayTag ChamberStateTag;
 };
 
-USTRUCT(DisplayName = "Weapon Evaluator")
+USTRUCT(meta = (DisplayName = "Weapon Evaluator", Category = "Weapon"))
 struct VRMODULARWEAPONSYSTEM_API FSTEval_Weapon : public FStateTreeEvaluatorBase
 {
 	GENERATED_BODY()
-	
+
 	virtual const UScriptStruct* GetInstanceDataType() const override { return FSTEval_WeaponInstanceData::StaticStruct(); }
 	virtual void Tick(FStateTreeExecutionContext& Context, const float DeltaTime) const override;
 };
+

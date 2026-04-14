@@ -12,6 +12,8 @@ class VRMODULARWEAPONSYSTEM_API UVRWeaponStateTreeSchema : public UStateTreeComp
 	
 public:
 	UVRWeaponStateTreeSchema();
+	
+	virtual bool IsStructAllowed(const UScriptStruct* InScriptStruct) const override;
 
 protected:
 	UPROPERTY(EditAnywhere, Category="Context")

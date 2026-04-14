@@ -8,16 +8,16 @@
 
 
 
-USTRUCT()
+USTRUCT(meta=(DisplayName = "Fire Weapon Instance Data"))
 struct VRMODULARWEAPONSYSTEM_API FSTTask_FireWeaponInstanceData
 {
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, Category = "Context")
-	TObjectPtr<AVRWeaponBase> Weapon = nullptr;
+	TObjectPtr<AActor> WeaponActor = nullptr;
 };
 
-USTRUCT()
+USTRUCT(meta=(DisplayName = "Fire Weapon", Category = "Weapon"))
 struct VRMODULARWEAPONSYSTEM_API FSTTask_FireWeapon : public FStateTreeTaskBase
 {
 	GENERATED_BODY()

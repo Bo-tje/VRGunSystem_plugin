@@ -8,24 +8,21 @@
 
 
 
-// This is the "Instance Data" - it holds the actual references during runtime
-USTRUCT()
+USTRUCT(meta=(DisplayName= "Eject Round Instance Data"))
 struct VRMODULARWEAPONSYSTEM_API FSTTask_EjectRoundInstanceData
 {
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, Category = "Context")
-	TObjectPtr<AVRWeaponBase> Weapon = nullptr;
+	TObjectPtr<AActor> WeaponActor = nullptr;
 };
 
-USTRUCT()
+USTRUCT(meta=(DisplayName= "Eject Round", Category = "Weapon"))
 struct VRMODULARWEAPONSYSTEM_API FSTTask_EjectRound : public FStateTreeTaskBase
 {
 	GENERATED_BODY()
-
-	// This defines what the task needs from the weapon to function
+	
 	virtual const UScriptStruct* GetInstanceDataType() const override { return FSTTask_EjectRoundInstanceData::StaticStruct(); }
 
-	// This runs the moment the State Tree enters the node
 	virtual EStateTreeRunStatus EnterState(FStateTreeExecutionContext& Context, const FStateTreeTransitionResult& Transition) const override;
 };

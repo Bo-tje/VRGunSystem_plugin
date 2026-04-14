@@ -5,15 +5,15 @@
 #include "VRWeaponBase.h"
 #include "StateTreeChamberRoundTask.generated.h"
 
-USTRUCT()
+USTRUCT(meta= (DisplayName= "Chamber Round Instance Data"))
 struct VRMODULARWEAPONSYSTEM_API FSTTask_ChamberRoundInstanceData
 {
 	GENERATED_BODY()
 	UPROPERTY(EditAnywhere, Category = "Context")
-	TObjectPtr<class AVRWeaponBase> Weapon = nullptr;
+	TObjectPtr<AActor> WeaponActor = nullptr;
 };
 
-USTRUCT(meta = (DisplayName = "Chamber Round"))
+USTRUCT(meta = (DisplayName = "Chamber Round", Category = "Weapon"))
 struct VRMODULARWEAPONSYSTEM_API FSTTask_ChamberRound : public FStateTreeTaskBase
 {
 	GENERATED_BODY()

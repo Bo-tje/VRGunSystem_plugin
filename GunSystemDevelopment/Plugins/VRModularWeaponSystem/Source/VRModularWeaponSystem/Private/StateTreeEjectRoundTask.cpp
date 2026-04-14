@@ -6,13 +6,13 @@ EStateTreeRunStatus FSTTask_EjectRound::EnterState(FStateTreeExecutionContext& C
 {
 	FSTTask_EjectRoundInstanceData& InstanceData = Context.GetInstanceData<FSTTask_EjectRoundInstanceData>(*this);
 
-	if (InstanceData.Weapon)
+	if (InstanceData.WeaponActor)
 	{
-		if (UVRChamberComponent* Chamber = InstanceData.Weapon->FindComponentByClass<UVRChamberComponent>())
+		if (UVRChamberComponent* Chamber = InstanceData.WeaponActor->FindComponentByClass<UVRChamberComponent>())
 		{
 			Chamber->TryEject();
 			
-			UE_LOG(LogTemp, Log, TEXT("StateTree: Ejecting round via Task from %s"), *InstanceData.Weapon->GetName());
+			UE_LOG(LogTemp, Log, TEXT("StateTree: Ejecting round via Task from %s"), *InstanceData.WeaponActor->GetName());
             
 			return EStateTreeRunStatus::Succeeded;
 		}

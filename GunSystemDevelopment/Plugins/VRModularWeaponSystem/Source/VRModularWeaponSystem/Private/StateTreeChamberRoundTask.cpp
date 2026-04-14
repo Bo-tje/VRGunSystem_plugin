@@ -8,14 +8,14 @@ EStateTreeRunStatus FSTTask_ChamberRound::EnterState(FStateTreeExecutionContext&
 {
 	FSTTask_ChamberRoundInstanceData& InstanceData = Context.GetInstanceData<FSTTask_ChamberRoundInstanceData>(*this);
 
-	if (!InstanceData.Weapon) return EStateTreeRunStatus::Failed;
+	if (!InstanceData.WeaponActor) return EStateTreeRunStatus::Failed;
 	
-	UVRChamberComponent* ChamberComponent = InstanceData.Weapon->FindComponentByClass<UVRChamberComponent>();
+	UVRChamberComponent* ChamberComponent = InstanceData.WeaponActor->FindComponentByClass<UVRChamberComponent>();
 	if (!ChamberComponent) return EStateTreeRunStatus::Failed;
 	
 	UProjectileData* RoundToChamber = nullptr;
 	TArray<UActorComponent*> RoundProviders;
-	InstanceData.Weapon->GetComponents(RoundProviders);
+	InstanceData.WeaponActor->GetComponents(RoundProviders);
 	
 	for (UActorComponent* Component : RoundProviders)
 	{

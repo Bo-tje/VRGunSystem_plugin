@@ -9,7 +9,7 @@
 
 
 
-USTRUCT()
+USTRUCT(meta=(DisplayName = "SetWeaponTag Instance Data"))
 struct VRMODULARWEAPONSYSTEM_API FSTTask_SetWeaponTagInstanceData
 {
 	GENERATED_BODY()
@@ -18,7 +18,7 @@ struct VRMODULARWEAPONSYSTEM_API FSTTask_SetWeaponTagInstanceData
 	TObjectPtr<AActor> Weapon = nullptr;
 };
 
-USTRUCT()
+USTRUCT(meta=(DisplayName = "Set Weapon Tag", Category = "Weapon"))
 struct VRMODULARWEAPONSYSTEM_API FSTTask_SetWeaponTag : public FStateTreeTaskBase
 {
 	GENERATED_BODY()
