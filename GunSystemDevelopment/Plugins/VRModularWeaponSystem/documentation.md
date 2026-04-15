@@ -117,7 +117,6 @@ Defines the properties of a bullet/round.
 Implemented by the weapon actor and components that react to trigger inputs.
 - `PullTrigger()` / `ReleaseTrigger()`: Handle trigger state changes.
 - `IsTriggerPulled()`: Query current trigger state.
-- `SetWeaponState(FGameplayTag NewState)`: Update the weapon's high-level state.
 
 ### `IVRWeaponComponentInterface`
 Implemented by components that need setup from the weapon.

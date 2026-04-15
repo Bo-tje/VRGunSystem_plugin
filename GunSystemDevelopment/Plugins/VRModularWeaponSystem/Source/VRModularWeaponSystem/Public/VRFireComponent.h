@@ -51,7 +51,6 @@ public:
 	virtual void SecondaryAction_Implementation() override {}
 	virtual void ReleaseSecondaryAction_Implementation() override {}
 	virtual bool IsTriggerPulled_Implementation() const override { return false; }
-	virtual void SetWeaponState_Implementation(FGameplayTag NewState) override {}
 
 	UFUNCTION(BlueprintCallable, Category = "VR Weapon | Actions")
 	void HandleFiring(UProjectileData* ProjectileData) const;

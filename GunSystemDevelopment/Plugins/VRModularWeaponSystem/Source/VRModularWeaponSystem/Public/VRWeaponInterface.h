@@ -34,7 +34,4 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "VR Weapon")
 	bool IsTriggerPulled() const;
 
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "VR Weapon")
-	void SetWeaponState(FGameplayTag NewState);
-
 };

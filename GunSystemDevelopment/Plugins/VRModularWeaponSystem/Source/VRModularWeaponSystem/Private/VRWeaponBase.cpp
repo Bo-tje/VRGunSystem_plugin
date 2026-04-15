@@ -35,6 +35,11 @@ void AVRWeaponBase::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	if (StateTreeComponent)
+	{
+		StateTreeComponent->StopLogic(TEXT("Init"));
+	}
+	
 	if (UVRGrabComponent* GrabComponent = FindComponentByClass<UVRGrabComponent>())
 	{
 		GrabComponent->OnGrabbed.AddDynamic(this, &AVRWeaponBase::OnGrabbed);
@@ -91,8 +96,27 @@ void AVRWeaponBase::ApplyWeaponDataVisuals()
 	}
 }
 
-void AVRWeaponBase::OnGrabbed(AActor* InteractingHand) {}
-void AVRWeaponBase::OnReleased() {}
+void AVRWeaponBase::OnGrabbed(AActor* InteractingHand)
+{
+	if (StateTreeComponent)
+	{
+		StateTreeComponent->StartLogic();
+	}
+}
+
+void AVRWeaponBase::OnReleased()
+{
+	if (StateTreeComponent)
+	{
+		StateTreeComponent->StopLogic(TEXT("Released"));
+	}
+	
+	// Reset trigger state if released
+	if (bIsTriggerPulled)
+	{
+		IVRWeaponInterface::Execute_ReleaseTrigger(this);
+	}
+}
 
 void AVRWeaponBase::StartAction_Implementation(UObject* Interactor, float ActionValue, FGameplayTag ActionTag)
 {
@@ -137,7 +161,9 @@ UVRInteractor* AVRWeaponBase::GetHoldingInteractor() const
 
 void AVRWeaponBase::PullTrigger_Implementation()
 {
-
+	if (bIsTriggerPulled) return;
+	
+	bIsTriggerPulled = true;
 
 	if (StateTreeComponent)
 	{
@@ -147,7 +173,9 @@ void AVRWeaponBase::PullTrigger_Implementation()
 
 void AVRWeaponBase::ReleaseTrigger_Implementation()
 {
-
+	if (!bIsTriggerPulled) return;
+	
+	bIsTriggerPulled = false;
 
 	if (StateTreeComponent)
 	{
@@ -190,9 +218,4 @@ void AVRWeaponBase::ReleaseSecondaryAction_Implementation()
 bool AVRWeaponBase::IsTriggerPulled_Implementation() const
 {
 	return bIsTriggerPulled;
-}
-
-void AVRWeaponBase::SetWeaponState_Implementation(FGameplayTag NewState)
-{
-	CurrentWeaponState = NewState;
 }

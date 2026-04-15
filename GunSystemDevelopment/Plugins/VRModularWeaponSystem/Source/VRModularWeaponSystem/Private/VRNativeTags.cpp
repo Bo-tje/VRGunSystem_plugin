@@ -14,18 +14,6 @@ namespace VRNativeTags
 
 #pragma endregion
 	
-#pragma region Weapon states
-	
-	UE_DEFINE_GAMEPLAY_TAG(Idle, "VRModularWeaponSystem.WeaponState.Idle");
-	UE_DEFINE_GAMEPLAY_TAG(Held, "VRModularWeaponSystem.WeaponState.Held");
-	UE_DEFINE_GAMEPLAY_TAG(Firing, "VRModularWeaponSystem.WeaponState.Firing");
-	UE_DEFINE_GAMEPLAY_TAG(Reloading, "VRModularWeaponSystem.WeaponState.Reloading");
-	UE_DEFINE_GAMEPLAY_TAG(LockedBack, "VRModularWeaponSystem.WeaponState.LockedBack");
-	UE_DEFINE_GAMEPLAY_TAG(Jammed, "VRModularWeaponSystem.WeaponState.Jammed");
-	UE_DEFINE_GAMEPLAY_TAG(Empty, "VRModularWeaponSystem.WeaponState.Empty");
-	
-#pragma endregion 
-	
 #pragma region Chamber states	
 
 	UE_DEFINE_GAMEPLAY_TAG(Chamber_Empty, "VRModularWeaponSystem.ChamberState.Empty");

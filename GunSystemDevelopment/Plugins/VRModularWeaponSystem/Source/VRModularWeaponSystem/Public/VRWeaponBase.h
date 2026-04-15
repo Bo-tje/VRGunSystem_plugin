@@ -47,10 +47,7 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Weapon | Config")
 	UVRWeaponData* WeaponData;
-	
-	UPROPERTY(BlueprintReadOnly, Category = "VR Weapon | Config")
-	FGameplayTag CurrentWeaponState = VRNativeTags::Idle;
-	
+
 	// --- IVRWeaponInterface ---
 	virtual void PullTrigger_Implementation() override;
 	virtual void ReleaseTrigger_Implementation() override;
@@ -59,9 +56,9 @@ public:
 	virtual void SecondaryAction_Implementation() override;
 	virtual void ReleaseSecondaryAction_Implementation() override;
 	virtual bool IsTriggerPulled_Implementation() const override;
-	virtual void SetWeaponState_Implementation(FGameplayTag NewState) override;
 
 	// --- IVRInteractableInterface ---
+
 	virtual void StartAction_Implementation(UObject* Interactor, float ActionValue, FGameplayTag ActionTag) override;
 	virtual void StopAction_Implementation(UObject* Interactor, FGameplayTag ActionTag) override;
 	virtual void OnHoverStart_Implementation(UObject* Interactor) override {}

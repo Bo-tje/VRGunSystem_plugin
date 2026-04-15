@@ -15,18 +15,6 @@ namespace  VRNativeTags
 
 #pragma endregion
 	
-#pragma region Weapon states
-	
-	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Idle);
-	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Held);
-	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Firing);
-	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Reloading);
-	UE_DECLARE_GAMEPLAY_TAG_EXTERN(LockedBack);
-	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Jammed);
-	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Empty);
-	
-#pragma endregion
-	
 #pragma region Chamber states	
 
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Chamber_Empty);
