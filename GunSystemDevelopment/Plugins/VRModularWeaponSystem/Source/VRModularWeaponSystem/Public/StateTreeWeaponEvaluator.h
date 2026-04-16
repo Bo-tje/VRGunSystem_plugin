@@ -22,6 +22,9 @@ struct VRMODULARWEAPONSYSTEM_API FSTEval_WeaponInstanceData
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Output")
 	FGameplayTag ChamberStateTag;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Output")
+	float TimeBetweenShots = 0.1f; 
 };
 
 USTRUCT(meta = (DisplayName = "Weapon Evaluator", Category = "Weapon"))

@@ -11,7 +11,17 @@ UVRInteractor::UVRInteractor()
 	DetectionSphereComponent = CreateDefaultSubobject<USphereComponent>(TEXT("Detection Sphere"));
 	DetectionSphereComponent->SetupAttachment(this);
 	DetectionSphereComponent->SetSphereRadius(10.0f);
-	DetectionSphereComponent->SetCollisionProfileName(TEXT("Trigger"));	
+	
+	
+	DetectionSphereComponent->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	DetectionSphereComponent->SetCollisionObjectType(ECC_WorldDynamic);
+    
+	
+	DetectionSphereComponent->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+    
+	
+	DetectionSphereComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_PhysicsBody, ECollisionResponse::ECR_Overlap);
+
 }
 
 void UVRInteractor::BeginPlay()
@@ -91,6 +101,8 @@ void UVRInteractor::OnSphereOverlapBegin(UPrimitiveComponent* OverlappedComp, AA
 {
 	if (!OtherActor) return;
 
+	if (!OtherActor->Implements<UVRInteractableInterface>()) return; 
+	
 	TArray<UVRGrabComponent*> GrabComponents;
 	OtherActor->GetComponents<UVRGrabComponent>(GrabComponents);
 
