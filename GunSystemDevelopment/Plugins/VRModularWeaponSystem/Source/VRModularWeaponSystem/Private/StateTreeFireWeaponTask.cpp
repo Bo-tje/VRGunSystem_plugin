@@ -2,12 +2,13 @@
 #include "StateTreeExecutionContext.h"
 #include "VRFireComponent.h"
 #include "VRRoundProvider.h"
+#include "VRWeaponData.h"
 
 
 EStateTreeRunStatus FSTTask_FireWeapon::EnterState(FStateTreeExecutionContext& Context, const FStateTreeTransitionResult& Transition) const
 {
 	FSTTask_FireWeaponInstanceData& InstanceData = Context.GetInstanceData<FSTTask_FireWeaponInstanceData>(*this);
-
+	
 	if (!InstanceData.WeaponActor) return EStateTreeRunStatus::Failed;
 	
 	UVRFireComponent* FireComponent = InstanceData.WeaponActor->FindComponentByClass<UVRFireComponent>();
@@ -25,7 +26,7 @@ EStateTreeRunStatus FSTTask_FireWeapon::EnterState(FStateTreeExecutionContext& C
 
 		if (bOnlyFireFromChamber)
 		{
-			FireComponent->OnDryFired.Broadcast();
+			FireComponent->HandleDryFire();
 			return EStateTreeRunStatus::Failed;
 		}
 	}
@@ -35,7 +36,7 @@ EStateTreeRunStatus FSTTask_FireWeapon::EnterState(FStateTreeExecutionContext& C
 	
 	for (UActorComponent* Component : RoundProviders)
 	{
-		if (Component && Component->Implements<UVRRoundProvider>() && !Component->IsA<UVRChamberComponent>() && !Component->IsA<UVRFireComponent>())
+		if (Component && Component->Implements<UVRRoundProvider>() && !Component->IsA<UVRChamberComponent>())
 		{
 			if (IVRRoundProvider::Execute_GetRound(Component, RoundToFire))
 			{
@@ -44,6 +45,7 @@ EStateTreeRunStatus FSTTask_FireWeapon::EnterState(FStateTreeExecutionContext& C
 			}
 		}
 	}
-	FireComponent->OnDryFired.Broadcast();
-	return EStateTreeRunStatus::Failed;
+	
+	FireComponent->HandleFiring();
+	return EStateTreeRunStatus::Succeeded;
 }

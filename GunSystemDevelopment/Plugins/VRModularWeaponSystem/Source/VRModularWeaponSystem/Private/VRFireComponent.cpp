@@ -5,16 +5,37 @@
 #include "VRRoundProvider.h"
 #include "VRWeaponBase.h"
 #include "VRInteractor.h"
+#include "Components/AudioComponent.h"
 #include "Kismet/GameplayStatics.h"
 
 UVRFireComponent::UVRFireComponent()
 {
 	PrimaryComponentTick.bCanEverTick = false;
+	
+	FireAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("FireAudioComponent"));
+	FireAudioComponent->SetupAttachment(this);
+	FireAudioComponent->bAutoActivate = false;
+	DryFireAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("DryFireAudioComponent"));
+	DryFireAudioComponent->SetupAttachment(this);
+	DryFireAudioComponent->bAutoActivate = false;
 }
 
 void UVRFireComponent::InitializeComponent_Implementation(UVRWeaponData* InData)
 {
 	WeaponData = InData;
+	
+	if (WeaponData)
+	{
+		if (WeaponData->FireSound)
+		{
+			FireAudioComponent->SetSound(WeaponData->FireSound);
+		}
+		
+		if (WeaponData->DryFireSound)
+		{
+			DryFireAudioComponent->SetSound(WeaponData->DryFireSound);
+		}
+	}
 }
 
 FTransform UVRFireComponent::GetMuzzleTransform() const
@@ -35,6 +56,7 @@ FTransform UVRFireComponent::GetMuzzleTransform() const
 void UVRFireComponent::OnRegister()
 {
 	Super::OnRegister();
+	
 }
 
 void UVRFireComponent::PullTrigger_Implementation()
@@ -46,8 +68,13 @@ void UVRFireComponent::ReleaseTrigger_Implementation()
 {
 }
 
-void UVRFireComponent::HandleFiring(UProjectileData* ProjectileData) const
+void UVRFireComponent::HandleFiring(UProjectileData* ProjectileData)
 {
+	if (!ProjectileData && WeaponData)
+	{
+		ProjectileData = WeaponData->DefaultProjectile;
+	}
+	
 	if (!ProjectileData) return;
 	
 	const FTransform SpawnTransform = GetMuzzleTransform();
@@ -75,39 +102,42 @@ void UVRFireComponent::HandleFiring(UProjectileData* ProjectileData) const
 	
 	if (WeaponData->FireSound)
 	{
-		UGameplayStatics::PlaySoundAtLocation(this, WeaponData->FireSound, MuzzleLocation);
+		FireAudioComponent->Play();
 	}
 
 	if (WeaponData->FireHapticEffect)
 	{
-		if (AVRWeaponBase* Weapon = Cast<AVRWeaponBase>(GetOwner()))
-		{
-			if (UVRInteractor* Interactor = Weapon->GetHoldingInteractor())
-			{
-				if (APlayerController* PC = Interactor->GetProvidingPlayerController())
-				{
-					PC->PlayHapticEffect(WeaponData->FireHapticEffect, Interactor->HandSide);
-				}
-			}
-		}
+		PlayHaptics(WeaponData->FireHapticEffect, FireHapticScale);
 	}
 	OnFired.Broadcast();
 }
 
-void UVRFireComponent::HandleDryFire() const
+void UVRFireComponent::HandleDryFire() 
 {
 	if (WeaponData && WeaponData->DryFireSound)
 	{
-		UGameplayStatics::PlaySoundAtLocation(this, WeaponData->DryFireSound, GetMuzzleTransform().GetLocation());
+		DryFireAudioComponent->Play();
 	}
 
+	if (WeaponData->FireHapticEffect)
+	{
+		PlayHaptics(WeaponData->FireHapticEffect, DryFireHapticScale);
+	}
 	OnDryFired.Broadcast();
 }
 
-void UVRFireComponent::SpawnProjectile(UProjectileData* ProjectileData)
+void UVRFireComponent::PlayHaptics(UHapticFeedbackEffect_Base* HapticEffect, float InHapticScale) 
 {
-	// Will implement custom spawning logic here later
+	if (AVRWeaponBase* Weapon = Cast<AVRWeaponBase>(GetOwner()))
+	{
+		if (UVRInteractor* Interactor = Weapon->GetHoldingInteractor())
+		{
+			Interactor->PlayHapticFeedback(HapticEffect, InHapticScale);
+		}
+	}
 }
+
+
 
 void UVRFireComponent::PerformHitscan(const UProjectileData* Data, const FVector& StartLocation, const FRotator& StartRotation) const
 {

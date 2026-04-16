@@ -44,7 +44,12 @@ public:
 
 	virtual APlayerController* GetProvidingPlayerController() const override;
 	
+	UFUNCTION(BlueprintCallable, Category = "VR Plugin | Haptics")
+	void PlayHapticFeedback(UHapticFeedbackEffect_Base* HapticEffect, float Scale = 1.0f, bool bLoop = false);
+	
 protected:
+	
+	float LastHapticTime = 0.0f;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Plugin | Components") 
 	class USphereComponent* DetectionSphereComponent;

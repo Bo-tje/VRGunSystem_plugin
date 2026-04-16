@@ -20,7 +20,7 @@ EStateTreeRunStatus FSTTask_ChamberRound::EnterState(FStateTreeExecutionContext&
 	
 	for (UActorComponent* Component : RoundProviders)
 	{
-		if (Component && Component->Implements<UVRRoundProvider>() && Component != ChamberComponent)
+		if (Component && Component->Implements<UVRRoundProvider>() && !Component->IsA<UVRChamberComponent>())
 		{
 			if (IVRRoundProvider::Execute_GetRound(Component, RoundToChamber))
 			{

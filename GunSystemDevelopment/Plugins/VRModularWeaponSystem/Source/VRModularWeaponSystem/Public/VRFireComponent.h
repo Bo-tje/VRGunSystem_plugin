@@ -28,6 +28,12 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Weapon | Config")
 	FName MuzzleSocketName = TEXT("Muzzle");
+	
+	UPROPERTY(EditAnywhere, Category = "VR Weapon | Config")
+	float FireHapticScale = 1.0f;
+	
+	UPROPERTY(EditAnywhere, Category = "VR Weapon | Config")
+	float DryFireHapticScale = .5f;
 
 	UFUNCTION(BlueprintCallable, Category = "VR Weapon | Logic")
 	FTransform GetMuzzleTransform() const;
@@ -41,6 +47,7 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "VR Weapon | Events")
 	FOnWeaponDryFired OnDryFired;
+	
 
 
 	// IVRWeaponInterface
@@ -53,11 +60,22 @@ public:
 	virtual bool IsTriggerPulled_Implementation() const override { return false; }
 
 	UFUNCTION(BlueprintCallable, Category = "VR Weapon | Actions")
-	void HandleFiring(UProjectileData* ProjectileData) const;
+	void HandleFiring(UProjectileData* ProjectileData = nullptr);
 
 	UFUNCTION(BlueprintCallable, Category = "VR Weapon | Actions")
-	void HandleDryFire() const;
+	void HandleDryFire();
+	
+	UFUNCTION(BlueprintCallable, Category = "VR Weapon | Actions")
+	void PlayHaptics(UHapticFeedbackEffect_Base* HapticEffect, float HapticScale);
 
 	void PerformHitscan(const UProjectileData* Data, const FVector& StartLocation, const FRotator& StartRotation) const;
-	static void SpawnProjectile(UProjectileData* Data);
+	
+private:
+	UPROPERTY()
+	TObjectPtr<UAudioComponent> FireAudioComponent;
+	UPROPERTY()
+	TObjectPtr<UAudioComponent> DryFireAudioComponent;
+	
+	
+
 };

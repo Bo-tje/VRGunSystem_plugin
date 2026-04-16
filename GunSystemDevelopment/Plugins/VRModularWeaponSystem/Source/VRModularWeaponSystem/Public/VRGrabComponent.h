@@ -125,5 +125,5 @@ private:
 	void Attach(AActor* MyOwner, UVRInteractor* TargetInteractor) const;
 	void CalculateVelocity(float DeltaTime);
 	void Throw(UPrimitiveComponent* RootPrim);
-	void PlayHaptics(EControllerHand Side) const;
+	void PlayHaptics() const;
 };

@@ -53,7 +53,7 @@ void UVRGrabComponent::TryGrab(UVRInteractor* Interactor)
 		OnGrabbed.Broadcast(Interactor->GetOwner());
 	}
     
-	PlayHaptics(Interactor->HandSide);
+	PlayHaptics();
 }
 
 void UVRGrabComponent::TryRelease()
@@ -210,13 +210,12 @@ void UVRGrabComponent::Throw(UPrimitiveComponent* RootPrim)
 	}
 }
 
-void UVRGrabComponent::PlayHaptics(const EControllerHand Side) const
+
+
+void UVRGrabComponent::PlayHaptics() const
 {
 	if (CurrentInteractor.IsValid())
 	{
-		if (APlayerController* PlayerController = CurrentInteractor->GetProvidingPlayerController())
-		{
-			PlayerController->PlayHapticEffect(GrabHapticEffect, Side, HapticScale, bLoopHaptics);
-		}
+		CurrentInteractor->PlayHapticFeedback(GrabHapticEffect, HapticScale, bLoopHaptics);
 	}
 }

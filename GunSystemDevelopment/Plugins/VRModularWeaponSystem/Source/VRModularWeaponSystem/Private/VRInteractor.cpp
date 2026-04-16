@@ -136,6 +136,23 @@ APlayerController* UVRInteractor::GetProvidingPlayerController() const
 	return nullptr;
 }
 
+void UVRInteractor::PlayHapticFeedback(UHapticFeedbackEffect_Base* HapticEffect, float Scale, bool bLoop)
+{
+	if (!HapticEffect) return;
+	
+	if (GetWorld()->GetTimeSeconds() - LastHapticTime < 0.05f) 
+	{
+		return;
+	}
+
+	if (APlayerController* PC = GetProvidingPlayerController())
+	{
+		PC->PlayHapticEffect(HapticEffect, HandSide, Scale, bLoop);
+		LastHapticTime = GetWorld()->GetTimeSeconds();
+	}
+}
+
+
 void UVRInteractor::UpdateBestHoverTarget()
 {
 	UVRGrabComponent* NewBest = GetBestGrabTarget(); 

@@ -100,6 +100,7 @@ void AVRWeaponBase::OnGrabbed(AActor* InteractingHand)
 {
 	if (StateTreeComponent)
 	{
+		StateTreeComponent->SetComponentTickEnabled(true);
 		StateTreeComponent->StartLogic();
 	}
 }
@@ -167,6 +168,7 @@ void AVRWeaponBase::PullTrigger_Implementation()
 
 	if (StateTreeComponent)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("Trigger recieved"));
 		StateTreeComponent->SendStateTreeEvent(VRNativeTags::Trigger);
 	}
 }
