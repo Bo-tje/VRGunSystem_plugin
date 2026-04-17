@@ -126,16 +126,22 @@ void UVRFireComponent::HandleDryFire()
 	OnDryFired.Broadcast();
 }
 
-void UVRFireComponent::PlayHaptics(UHapticFeedbackEffect_Base* HapticEffect, float InHapticScale) 
+void UVRFireComponent::PlayHaptics(UHapticFeedbackEffect_Base* HapticEffect, float InHapticScale)
 {
 	if (AVRWeaponBase* Weapon = Cast<AVRWeaponBase>(GetOwner()))
 	{
-		if (UVRInteractor* Interactor = Weapon->GetHoldingInteractor())
+		TArray<UVRInteractor*> Interactors = Weapon->GetHoldingInteractors();
+		
+		for (UVRInteractor* Interactor : Interactors)
 		{
-			Interactor->PlayHapticFeedback(HapticEffect, InHapticScale);
+			if (Interactor)
+			{
+				Interactor->PlayHapticFeedback(HapticEffect, InHapticScale);
+			}
 		}
 	}
 }
+
 
 
 

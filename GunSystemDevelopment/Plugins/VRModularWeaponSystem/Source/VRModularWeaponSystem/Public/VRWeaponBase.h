@@ -77,10 +77,22 @@ protected:
 	UFUNCTION(BlueprintCallable, Category = "VR Weapon")
 	void InitializeWeapon();
 
+	UPROPERTY(BlueprintReadOnly, Category = "VR Weapon | Interaction")
+	int32 ActiveGrabCount = 0;
+
+	UPROPERTY(Transient)
+	TArray<UVRGrabComponent*> CachedGrabComponents;
+
 public:
-	/** Returns the interactor currently holding this weapon via its GrabComponent. */
+
+	UPROPERTY(Transient, BlueprintReadOnly, Category = "VR Weapon | Parts")
+	TArray<UActorComponent*> CachedRoundProviders;
+
 	UFUNCTION(BlueprintPure, Category = "VR Weapon | Interaction")
 	class UVRInteractor* GetHoldingInteractor() const;
+
+	UFUNCTION(BlueprintPure, Category = "VR Weapon | Interaction")
+	TArray<class UVRInteractor*> GetHoldingInteractors() const;
 
 	// --- Interaction Callbacks ---
 

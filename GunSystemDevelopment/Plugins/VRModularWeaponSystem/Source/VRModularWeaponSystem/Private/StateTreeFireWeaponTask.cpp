@@ -1,8 +1,8 @@
-﻿#include "StateTreeFireWeaponTask.h"
+﻿#include "VRWeaponBase.h"
+#include "StateTreeFireWeaponTask.h"
 #include "StateTreeExecutionContext.h"
 #include "VRFireComponent.h"
 #include "VRRoundProvider.h"
-#include "VRWeaponData.h"
 
 
 EStateTreeRunStatus FSTTask_FireWeapon::EnterState(FStateTreeExecutionContext& Context, const FStateTreeTransitionResult& Transition) const
@@ -31,17 +31,20 @@ EStateTreeRunStatus FSTTask_FireWeapon::EnterState(FStateTreeExecutionContext& C
 		}
 	}
 	
-	TArray<UActorComponent*> RoundProviders;
-	InstanceData.WeaponActor->GetComponents(RoundProviders);
-	
-	for (UActorComponent* Component : RoundProviders)
+if (AVRWeaponBase* Weapon = Cast<AVRWeaponBase>(InstanceData.WeaponActor))
 	{
-		if (Component && Component->Implements<UVRRoundProvider>() && !Component->IsA<UVRChamberComponent>())
+		for (UActorComponent* Component : Weapon->CachedRoundProviders)
 		{
-			if (IVRRoundProvider::Execute_GetRound(Component, RoundToFire))
+			if (Component && !Component->IsA<UVRChamberComponent>())
 			{
-				FireComponent->HandleFiring(RoundToFire);
-				return EStateTreeRunStatus::Succeeded;
+				if (IVRRoundProvider::Execute_GetRound(Component, RoundToFire))
+				{
+					FireComponent->HandleFiring(RoundToFire);
+					return EStateTreeRunStatus::Succeeded;
+				}
+
+				FireComponent->HandleDryFire();
+				return EStateTreeRunStatus::Failed;
 			}
 		}
 	}

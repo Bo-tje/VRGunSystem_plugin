@@ -3,6 +3,7 @@
 #include "VRWeaponComponentInterface.h"
 #include "VRGrabComponent.h"
 #include "VRNativeTags.h"
+#include "VRRoundProvider.h"
 #include "VRWeaponStateTreeComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/BoxComponent.h"
@@ -40,7 +41,9 @@ void AVRWeaponBase::BeginPlay()
 		StateTreeComponent->StopLogic(TEXT("Init"));
 	}
 	
-	if (UVRGrabComponent* GrabComponent = FindComponentByClass<UVRGrabComponent>())
+	TArray<UVRGrabComponent*> AllGrabComponents;
+	GetComponents(AllGrabComponents);
+	for (UVRGrabComponent* GrabComponent : AllGrabComponents)
 	{
 		GrabComponent->OnGrabbed.AddDynamic(this, &AVRWeaponBase::OnGrabbed);
 		GrabComponent->OnReleased.AddDynamic(this, &AVRWeaponBase::OnReleased);
@@ -55,6 +58,7 @@ void AVRWeaponBase::InitializeWeapon()
 	
 	CachedWeaponComponents.Empty();
 	CachedInputComponents.Empty();
+	CachedRoundProviders.Empty();
 
 	TArray<UActorComponent*> AllComponents;
 	GetComponents(AllComponents);
@@ -70,6 +74,11 @@ void AVRWeaponBase::InitializeWeapon()
 		if (Component->Implements<UVRWeaponInterface>())
 		{
 			CachedInputComponents.Add(Component);
+		}
+
+		if (Component->Implements<UVRRoundProvider>())
+		{
+			CachedRoundProviders.Add(Component);
 		}
 	}
 }
@@ -151,14 +160,28 @@ void AVRWeaponBase::StopAction_Implementation(UObject* Interactor, FGameplayTag 
 	}
 }
 
+TArray<UVRInteractor*> AVRWeaponBase::GetHoldingInteractors() const
+{
+	TArray<UVRInteractor*> ActiveInteractors;
+	
+	for (UVRGrabComponent* GrabComponent : CachedGrabComponents)
+	{
+		if (GrabComponent->IsHeld() && GrabComponent->GetCurrentInteractor())
+		{
+			ActiveInteractors.Add(GrabComponent->GetCurrentInteractor());
+		}
+	}
+	
+	return ActiveInteractors;
+}
+
 UVRInteractor* AVRWeaponBase::GetHoldingInteractor() const
 {
-	if (UVRGrabComponent* GC = FindComponentByClass<UVRGrabComponent>())
-	{
-		return GC->GetCurrentInteractor();
-	}
-	return nullptr;
+	TArray<UVRInteractor*> ActiveInteractors = GetHoldingInteractors();
+	return ActiveInteractors.Num() > 0 ? ActiveInteractors[0] : nullptr;
 }
+
+
 
 void AVRWeaponBase::PullTrigger_Implementation()
 {
