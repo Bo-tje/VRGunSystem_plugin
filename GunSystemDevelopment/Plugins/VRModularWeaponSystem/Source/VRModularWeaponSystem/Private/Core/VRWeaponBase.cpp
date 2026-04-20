@@ -13,7 +13,7 @@ AVRWeaponBase::AVRWeaponBase()
 	PrimaryActorTick.bCanEverTick = false;
 
 	WeaponRoot = CreateDefaultSubobject<UBoxComponent>(TEXT("WeaponRoot"));
-	// Shrink the root to a tiny 1x1x1 core so it doesn't cause clipping
+	
 	WeaponRoot->SetBoxExtent(FVector(1.0f, 1.0f, 1.0f));
 
 	WeaponRoot->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
@@ -47,7 +47,7 @@ void AVRWeaponBase::BeginPlay()
 	for (UVRGrabComponent* GrabComponent : AllGrabComponents)
 	{
 		GrabComponent->OnGrabbed.AddDynamic(this, &AVRWeaponBase::OnGrabbed);
-		GrabComponent->OnReleased.AddDynamic(this, &AVRWeaponBase::OnReleased);
+		GrabComponent->OnGrabReleased.AddDynamic(this, &AVRWeaponBase::OnReleased);
 	}
 	
 	InitializeWeapon();
@@ -88,23 +88,19 @@ void AVRWeaponBase::ApplyWeaponDataVisuals()
 {
 	if (!WeaponData) return;
 	
-	// --- Process Visual Parts ---
 	for (const FVRWeaponPart& Part : WeaponData->WeaponParts)
 	{
 		if (Part.PartName.IsNone() || Part.Mesh.IsNull()) continue;
-
-		// Dynamically create the component based on the socket system
-		UStaticMeshComponent* NewComp = NewObject<UStaticMeshComponent>(this, Part.PartName);
-		if (NewComp)
+		
+		UStaticMeshComponent* NewComponent = NewObject<UStaticMeshComponent>(this, Part.PartName);
+		if (NewComponent)
 		{
-			NewComp->CreationMethod = EComponentCreationMethod::UserConstructionScript;
-			NewComp->SetStaticMesh(Part.Mesh.LoadSynchronous());
+			NewComponent->CreationMethod = EComponentCreationMethod::UserConstructionScript;
+			NewComponent->SetStaticMesh(Part.Mesh.LoadSynchronous());
 			
-			// Determine what to attach to based on the socket name
 			USceneComponent* AttachTarget = WeaponRoot;
 			if (!Part.ParentSocket.IsNone())
 			{
-				// Search existing components for one that has this socket
 				TArray<UStaticMeshComponent*> TrackedComps;
 				GetComponents(TrackedComps);
 				for (UStaticMeshComponent* MC : TrackedComps)
@@ -117,38 +113,35 @@ void AVRWeaponBase::ApplyWeaponDataVisuals()
 				}
 			}
 
-			NewComp->SetupAttachment(AttachTarget, Part.ParentSocket);
-			NewComp->RegisterComponent();
-			NewComp->SetRelativeTransform(Part.PartOffset);
+			NewComponent->SetupAttachment(AttachTarget, Part.ParentSocket);
+			NewComponent->RegisterComponent();
+			NewComponent->SetRelativeTransform(Part.PartOffset);
 			
-			// Enable collision so Unreal welds this shape to the Root physics body
-			NewComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-			NewComp->SetCollisionProfileName(TEXT("PhysicsBody"));
+			NewComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+			NewComponent->SetCollisionProfileName(TEXT("PhysicsBody"));
 		}
 	}
-
-	// --- Process Dynamic Components (Grab points, logic, etc.) ---
-	for (const FVRWeaponDynamicComponent& CompGen : WeaponData->AdditionalComponents)
+	
+	for (const FVRWeaponDynamicComponent& GeneratedComponent : WeaponData->AdditionalComponents)
 	{
-		if (!CompGen.ComponentClass) continue;
+		if (!GeneratedComponent.ComponentClass) continue;
 
-		UActorComponent* NewObj = NewObject<UActorComponent>(this, CompGen.ComponentClass, CompGen.ComponentName);
+		UActorComponent* NewObj = NewObject<UActorComponent>(this, GeneratedComponent.ComponentClass, GeneratedComponent.ComponentName);
 		if (NewObj)
 		{
 			NewObj->CreationMethod = EComponentCreationMethod::UserConstructionScript;
 
-			// If it is a SceneComponent, we might need to attach it
 			if (USceneComponent* SceneComp = Cast<USceneComponent>(NewObj))
 			{
 				USceneComponent* AttachTarget = WeaponRoot;
-				
-				if (!CompGen.ParentSocket.IsNone())
+
+				if (!GeneratedComponent.ParentSocket.IsNone())
 				{
 					TArray<UStaticMeshComponent*> TrackedComps;
 					GetComponents(TrackedComps);
 					for (UStaticMeshComponent* MC : TrackedComps)
 					{
-						if (MC->DoesSocketExist(CompGen.ParentSocket))
+						if (MC->DoesSocketExist(GeneratedComponent.ParentSocket))
 						{
 							AttachTarget = MC;
 							break;
@@ -156,13 +149,25 @@ void AVRWeaponBase::ApplyWeaponDataVisuals()
 					}
 				}
 
-				SceneComp->SetupAttachment(AttachTarget, CompGen.ParentSocket);
+				if (UStaticMeshComponent* SMComp = Cast<UStaticMeshComponent>(NewObj))
+				{
+					if (!GeneratedComponent.OptionalMesh.IsNull())
+					{
+						SMComp->SetStaticMesh(GeneratedComponent.OptionalMesh.LoadSynchronous());
+						if (GeneratedComponent.bWeldCollision)
+						{
+							SMComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+							SMComp->SetCollisionProfileName(TEXT("PhysicsBody"));
+						}
+					}
+				}
+
+				SceneComp->SetupAttachment(AttachTarget, GeneratedComponent.ParentSocket);
 				SceneComp->RegisterComponent();
-				SceneComp->SetRelativeTransform(CompGen.RelativeOffset);
+				SceneComp->SetRelativeTransform(GeneratedComponent.RelativeOffset);
 			}
 			else
 			{
-				// It's a pure logic component, just register it
 				NewObj->RegisterComponent();
 			}
 		}
@@ -185,7 +190,6 @@ void AVRWeaponBase::OnReleased()
 		StateTreeComponent->StopLogic(TEXT("Released"));
 	}
 	
-	// Reset trigger state if released
 	if (bIsTriggerPulled)
 	{
 		IVRWeaponInterface::Execute_ReleaseTrigger(this);

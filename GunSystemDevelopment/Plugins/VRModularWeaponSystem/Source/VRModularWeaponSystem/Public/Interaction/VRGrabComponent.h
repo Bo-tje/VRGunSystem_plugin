@@ -2,7 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Interfaces/VRInteractableInterface.h"
-#include "Components/SceneComponent.h"
+#include "Components/SphereComponent.h"
 #include "VRGrabComponent.generated.h"
 
 class UVRInteractor;
@@ -14,10 +14,10 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FStopAction, UObject*, Interactor, 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnInputActionValue, UObject*, Interactor, float, Value);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnInputAction, UObject*, Interactor);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGrabbed, AActor*, InteractingHand);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnReleased);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnGrabReleased);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class VRMODULARWEAPONSYSTEM_API UVRGrabComponent : public USceneComponent, public IVRInteractableInterface
+class VRMODULARWEAPONSYSTEM_API UVRGrabComponent : public USphereComponent, public IVRInteractableInterface
 {
 	GENERATED_BODY()
 
@@ -86,7 +86,7 @@ public:
 	FOnGrabbed OnGrabbed;
 
 	UPROPERTY(BlueprintAssignable, Category = "VR Plugin | VR Interaction")
-	FOnReleased OnReleased;
+	FOnGrabReleased OnGrabReleased;
 	
 #pragma endregion
 	
@@ -103,10 +103,7 @@ public:
 	float ThrowMultiplier = 1.2f;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Plugin | Setup")
-	bool bUseSocketSnap = false;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Plugin | Setup", meta = (EditCondition = "bUseSocketSnap"))
-	FName GrabSocketName = FName("GripSocket");
+	bool bSnapToInteractor = true;
 	
 protected:
 	

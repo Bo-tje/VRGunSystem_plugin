@@ -11,6 +11,16 @@ UVRGrabComponent::UVRGrabComponent()
 	PrimaryComponentTick.bStartWithTickEnabled = false;
 	bIsHeld = false;
 	bWasSimulating = false;
+
+	InitSphereRadius(12.0f);
+	
+
+	UPrimitiveComponent::SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	UPrimitiveComponent::SetCollisionObjectType(ECollisionChannel::ECC_PhysicsBody);
+	UPrimitiveComponent::SetCollisionResponseToAllChannels(ECR_Ignore);
+
+	UPrimitiveComponent::SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Overlap);
+	SetGenerateOverlapEvents(true);
 }
 
 void UVRGrabComponent::BeginPlay()
@@ -70,7 +80,7 @@ void UVRGrabComponent::TryRelease()
 	Throw(RootPrim);
     
 	CurrentInteractor.Reset();
-	OnReleased.Broadcast();
+	OnGrabReleased.Broadcast();
 	
 	SetComponentTickEnabled(false);
 }
@@ -154,21 +164,24 @@ void UVRGrabComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 
 void UVRGrabComponent::Attach(AActor* MyOwner, UVRInteractor* TargetInteractor) const
 {
-	FTransform GrabRelativeTransform = GetRelativeTransform();
-	FVector GrabRelativeLocation = GrabRelativeTransform.GetLocation();
-	FRotator GrabRelativeRotation = GrabRelativeTransform.Rotator();
+	FTransform RootTransform = MyOwner->GetRootComponent()->GetComponentTransform();
+	FTransform GrabTransform = GetComponentTransform();
+	FTransform GrabRelativeToRoot = GrabTransform.GetRelativeTransform(RootTransform);
+
+	FVector GrabRelativeLocation = GrabRelativeToRoot.GetLocation();
+	FRotator GrabRelativeRotation = GrabRelativeToRoot.Rotator();
 
 	FAttachmentTransformRules AttachmentRules(EAttachmentRule::KeepWorld, true);
 	
-	if (bUseSocketSnap)
+	if (bSnapToInteractor)
 	{
 		AttachmentRules.LocationRule = EAttachmentRule::SnapToTarget;
 		AttachmentRules.RotationRule = EAttachmentRule::SnapToTarget;
 	}
 	
-	MyOwner->AttachToComponent(TargetInteractor, AttachmentRules, bUseSocketSnap ? GrabSocketName : NAME_None);
+	MyOwner->AttachToComponent(TargetInteractor, AttachmentRules);
 
-	if (bUseSocketSnap)
+	if (bSnapToInteractor)
 	{
 		MyOwner->AddActorLocalOffset(-GrabRelativeLocation);
 		MyOwner->AddActorLocalRotation(GrabRelativeRotation.GetInverse());

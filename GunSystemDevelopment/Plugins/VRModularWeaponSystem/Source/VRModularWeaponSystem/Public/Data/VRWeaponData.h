@@ -36,6 +36,12 @@ struct FVRWeaponDynamicComponent
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Component")
 	TSubclassOf<UActorComponent> ComponentClass;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Component|Overrides")
+	TSoftObjectPtr<UStaticMesh> OptionalMesh;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Component|Physics")
+	bool bWeldCollision = false;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Component|Sockets")
 	FName ParentSocket;
 
