@@ -16,7 +16,31 @@ struct FVRWeaponPart
 	FName PartName;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Part")
-	UStaticMesh* Mesh;
+	TSoftObjectPtr<UStaticMesh> Mesh;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Part|Sockets")
+	FName ParentSocket;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Part|Sockets")
+	FTransform PartOffset;
+};
+
+USTRUCT(BlueprintType)
+struct FVRWeaponDynamicComponent
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Component")
+	FName ComponentName;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Component")
+	TSubclassOf<UActorComponent> ComponentClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Component|Sockets")
+	FName ParentSocket;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Component|Sockets")
+	FTransform RelativeOffset;
 };
 
 /**
@@ -49,6 +73,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Composition")
 	TArray<FVRWeaponPart> WeaponParts;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Composition")
+	TArray<FVRWeaponDynamicComponent> AdditionalComponents;
 
 	/** The projectile this weapon fires. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Specs")

@@ -1,0 +1,3 @@
+i started with a udemy course about learning c++ in unreal engine i bought prior to the start of this minor as a knew that was what i wanted to do. I also went in with a game idea i wanted to make, a game about waking up in a altered world forest with a monster hearding the player towards points of interest to discover what this forest is and eventually the end. This idea is further detailed in [[Design (old)/Threshold Protocol GDD|Threshold Protocol GDD]].
+
+The udemy course consists of making 4 games from really the basics and handholding to more complex and doing things yourselve. Currently, I am working on the [[System design/System design|VR Modular Weapon System]].

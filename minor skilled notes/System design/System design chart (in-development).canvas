@@ -1,0 +1,40 @@
+{
+	"nodes":[
+		{"id":"g_core","type":"group","x":-440,"y":-120,"width":1190,"height":1080,"color":"5","label":"Core Architecture"},
+		{"id":"g_proj_data","type":"group","x":-1020,"y":100,"width":400,"height":800,"color":"3","label":"Ammo Data"},
+		{"id":"g_interaction","type":"group","x":800,"y":-120,"width":900,"height":340,"color":"2","label":"VR Interaction System"},
+		{"id":"n_proj_data","type":"text","text":"### Data Asset: UProjectileData\nProperties of a round.\n\n**Variables:**\nDamage, HitscanDamage\nInitialSpeed, GravityScale, ProjectileClass\nHitscanRange\nLiveRoundMesh, SpentCasingMesh","x":-995,"y":350,"width":350,"height":250},
+		{"id":"n_mag_data","type":"text","text":"### Data Asset: UMagazineData\nProperties of a magazine.\n\n**Variables:**\nMaxAmmo, MagazineType, MagazineMesh","x":-995,"y":650,"width":350,"height":180},
+		{"id":"n_i_round","type":"text","text":"### Interface: IVRRoundProvider\n**Functions:**\nGetRound(UProjectileData*& OutRound)","x":-995,"y":150,"width":350,"height":140},
+		{"id":"n_state_tree","type":"text","text":"### Logic: VR Weapon State Tree\nDrives weapon states dynamically via schema context.\n\n**Evaluators:**\n- \bIsTriggerPulled\n- \bHasRoundReady\n- ChamberStateTag\n\n**Tasks:**\n- FSTTask_FireWeapon\n- FSTTask_EjectRound\n- FSTTask_ChamberRound","x":-50,"y":720,"width":400,"height":220},
+		{"id":"n_chamber","type":"text","text":"### Component: UVRChamberComponent\nManages the round currently in the firing position.\n\n**Variables:** CurrentChamberState, LoadedProjectile\n**Functions:** TryLoad(), TryEject(), TryGiveBullet(), IsRoundReady(), IsEmpty()","x":-400,"y":340,"width":350,"height":240},
+		{"id":"n_weapon_base","type":"text","text":"### Actor: AVRWeaponBase\nBase Weapon actor, container for modular components.\nRoutes VR interaction and manages initialization.\n\n**Variables:** WeaponData, WeaponRoot, PartRoot, StateTreeComponent\n**Functions:** InitializeWeapon(), ApplyWeaponDataVisuals(), PrimaryAction(), PullTrigger()","x":-50,"y":-90,"width":400,"height":260},
+		{"id":"n_fire","type":"text","text":"### Component: UVRFireComponent\nHandles the actual firing logic (hitscan / projectile spawning).\n\n**Variables:** MuzzleSocketName, FireHapticScale, DryFireHapticScale\n**Functions:** HandleFiring(), HandleDryFire(), GetMuzzleTransform()","x":350,"y":290,"width":350,"height":240},
+		{"id":"n_i_weapon","type":"text","text":"### Interface: IVRWeaponInterface\n**Functions:**\nPullTrigger(), PrimaryAction(), SecondaryAction(), IsTriggerPulled()","x":1200,"y":450,"width":350,"height":160},
+		{"id":"n_i_weapon_comp","type":"text","text":"### Interface: IVRWeaponComponentInterface\n**Functions:**\nInitializeComponent(UVRWeaponData* InData)","x":1200,"y":650,"width":350,"height":140},
+		{"id":"n_i_interact","type":"text","text":"### Interface: IVRInteractableInterface\n**Functions:**\nStartAction(), StopAction(), OnHoverStart(), OnHoverEnd()","x":750,"y":-560,"width":350,"height":160},
+		{"id":"n_i_interactor","type":"text","text":"### Interface: IVRInteractorInterface\n**Functions:**\nGetProvidingPlayerController()","x":1200,"y":-560,"width":350,"height":140},
+		{"id":"n_grab_comp","type":"text","text":"### Component: UVRGrabComponent\nPlaced on grabbable actors.\n\n**Variables:**\n\bIsHeld, \bUseSocketSnap, GrabSocketName\nThrowMultiplier, GrabHapticEffect\n**Functions:**\nTryGrab(), TryRelease(), IsHeld(), GetHoldingHand()","x":850,"y":-80,"width":350,"height":260},
+		{"id":"n_interactor","type":"text","text":"### Component: UVRInteractor\nPlaced on VR hands.\n\n**Variables:**\nHandSide, ActiveGrabComponent, HoverHapticEffect, HoverTarget\n**Functions:**\nIntendGrab(), IntendRelease(), IntendActionStart(), IntendActionStop(), PlayHapticFeedback()","x":1300,"y":-80,"width":350,"height":260},
+		{"id":"n_weapon_data","type":"text","text":"### Data Asset: UVRWeaponData\nDefines the configuration for a weapon.\n\n**Variables:**\nFireRate, \bUseHitscan, RecoilAmount, CompatibleMagazinesTag\nWeaponParts, DefaultProjectile\nFireSound, MuzzleFlash","x":-50,"y":-610,"width":400,"height":240}
+	],
+	"edges":[
+		{"id":"e_weapdata_base","fromNode":"n_weapon_data","fromSide":"bottom","toNode":"n_weapon_base","toSide":"top"},
+		{"id":"e_proj_chamber","fromNode":"n_proj_data","fromSide":"right","toNode":"n_chamber","toSide":"left"},
+		{"id":"e_base_chamber","fromNode":"n_weapon_base","fromSide":"bottom","toNode":"n_chamber","toSide":"top","label":"Owns"},
+		{"id":"e_base_fire","fromNode":"n_weapon_base","fromSide":"bottom","toNode":"n_fire","toSide":"top","label":"Owns"},
+		{"id":"e_base_statetree","fromNode":"n_weapon_base","fromSide":"bottom","toNode":"n_state_tree","toSide":"top","label":"Owns"},
+		{"id":"e_tree_chamber","fromNode":"n_state_tree","fromSide":"left","toNode":"n_chamber","toSide":"bottom","label":"Tasks/Evaluates"},
+		{"id":"e_tree_fire","fromNode":"n_state_tree","fromSide":"right","toNode":"n_fire","toSide":"bottom","label":"Task: Fire"},
+		{"id":"e_interactor_grab","fromNode":"n_interactor","fromSide":"left","toNode":"n_grab_comp","toSide":"right","label":"Interacts with"},
+		{"id":"e_grab_base","fromNode":"n_grab_comp","fromSide":"left","toNode":"n_weapon_base","toSide":"right","label":"Attached to"},
+		{"id":"e_base_iweap","fromNode":"n_weapon_base","fromSide":"right","toNode":"n_i_weapon","toSide":"left","label":"Implements"},
+		{"id":"e_fire_iweap","fromNode":"n_fire","fromSide":"right","toNode":"n_i_weapon","toSide":"left","label":"Implements"},
+		{"id":"e_chamber_icomp","fromNode":"n_chamber","fromSide":"right","toNode":"n_i_weapon_comp","toSide":"left","label":"Implements"},
+		{"id":"e_fire_icomp","fromNode":"n_fire","fromSide":"right","toNode":"n_i_weapon_comp","toSide":"left","label":"Implements"},
+		{"id":"e_chamber_iround","fromNode":"n_chamber","fromSide":"left","toNode":"n_i_round","toSide":"right","label":"Implements"},
+		{"id":"e_base_iinteract","fromNode":"n_weapon_base","fromSide":"right","toNode":"n_i_interact","toSide":"left","label":"Implements"},
+		{"id":"e_grab_iinteract","fromNode":"n_grab_comp","fromSide":"top","toNode":"n_i_interact","toSide":"bottom","label":"Implements"},
+		{"id":"e_interactor_iintctor","fromNode":"n_interactor","fromSide":"top","toNode":"n_i_interactor","toSide":"bottom","label":"Implements"}
+	]
+}

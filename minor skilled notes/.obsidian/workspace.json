@@ -1,0 +1,436 @@
+{
+  "main": {
+    "id": "d10122f9123e7dcb",
+    "type": "split",
+    "children": [
+      {
+        "id": "b791021657d825fa",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "6b83cc957880b799",
+            "type": "leaf",
+            "state": {
+              "type": "canvas",
+              "state": {
+                "file": "Planning/Goal mindmap.canvas",
+                "viewState": {
+                  "x": -397.1146346949006,
+                  "y": -61.03859033100241,
+                  "zoom": -1.3771820126084595
+                }
+              },
+              "icon": "lucide-layout-dashboard",
+              "title": "Goal mindmap"
+            }
+          },
+          {
+            "id": "9611dc3bccff0eab",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Design/Threshold Protocol GDD.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "Threshold Protocol GDD"
+            }
+          },
+          {
+            "id": "5ff0f9ba91665b95",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Planning/Logs.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "Logs"
+            }
+          },
+          {
+            "id": "b53d4dac5505cf4d",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Documentation.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "Documentation"
+            }
+          },
+          {
+            "id": "30b9067d11067b81",
+            "type": "leaf",
+            "state": {
+              "type": "image",
+              "state": {
+                "file": "Planning/Goal mindmap.png"
+              },
+              "icon": "lucide-image",
+              "title": "Goal mindmap"
+            }
+          },
+          {
+            "id": "24968aac8f838819",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Planning/Logs.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "Logs"
+            }
+          },
+          {
+            "id": "326645b11677ffc5",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Planning/Logs.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "Logs"
+            }
+          },
+          {
+            "id": "45fa99baf2449bfa",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Weekly/weekly reflection.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "weekly reflection"
+            }
+          },
+          {
+            "id": "2e5b89b6dbb5be44",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "System design/System design.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "System design"
+            }
+          },
+          {
+            "id": "c35f8763f5505ce4",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Weekly/weekly reflection.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "weekly reflection"
+            }
+          },
+          {
+            "id": "0acc105e398c3cd3",
+            "type": "leaf",
+            "state": {
+              "type": "image",
+              "state": {
+                "file": "System design/System design chart.png"
+              },
+              "icon": "lucide-image",
+              "title": "System design chart"
+            }
+          },
+          {
+            "id": "e0f993be59df8c60",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "market analysis/analyzing other products.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "analyzing other products"
+            }
+          },
+          {
+            "id": "0dcce4f7649f3e11",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Weekly/weekly reflection.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "weekly reflection"
+            }
+          },
+          {
+            "id": "9fa4a5da9fde6b6d",
+            "type": "leaf",
+            "state": {
+              "type": "smart-release-notes-view",
+              "state": {},
+              "icon": "file-text",
+              "title": "Release Notes"
+            }
+          },
+          {
+            "id": "f71166d33d7707e4",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "System design/documentation.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "documentation"
+            }
+          }
+        ],
+        "currentTab": 14
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "23f15c872c689df1",
+    "type": "split",
+    "children": [
+      {
+        "id": "a2f1630112942eb6",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "5265ea2790c0cbfe",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "93b7fa978cb99a98",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "42931a8d816a6a24",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "266a20af6a057b2c",
+    "type": "split",
+    "children": [
+      {
+        "id": "2bc20a6d248392a8",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "3d40729ef3dbb25d",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "Design/Threshold_Protocol_GDD.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks for Threshold_Protocol_GDD"
+            }
+          },
+          {
+            "id": "7e1325a1603eec72",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "QA.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links from QA"
+            }
+          },
+          {
+            "id": "4871cb56cd19dbd7",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "0f3cc91962138a6d",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "All properties"
+            }
+          },
+          {
+            "id": "ede342a14e1b5699",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "Weekly/weekly reflection.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Outline of weekly reflection"
+            }
+          },
+          {
+            "id": "512d262b37d8c25f",
+            "type": "leaf",
+            "state": {
+              "type": "smart-connections-view",
+              "state": {},
+              "icon": "smart-connections",
+              "title": "Connections"
+            }
+          }
+        ],
+        "currentTab": 5
+      }
+    ],
+    "direction": "horizontal",
+    "width": 200
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false,
+      "bases:Create new base": false,
+      "obsidian-kanban:Create new board": false,
+      "smart-connections:Smart Connections: Open connections view": false,
+      "smart-connections:Smart Connections: Open random connection": false,
+      "smart-connections:Smart Lookup: Open lookup view": false
+    }
+  },
+  "active": "f71166d33d7707e4",
+  "lastOpenFiles": [
+    "Documentation.md",
+    "QA.md",
+    "System design/System design chart (pre-development).canvas",
+    "System design/System design.md",
+    "QA3.m4a",
+    "17 apr om 14-36.m4a",
+    "System design/documentation.md",
+    "Other possibilities.md",
+    "unreal notes.md",
+    "Docs/State tree.md",
+    "Weekly/weekly reflection.md",
+    "System design/System design chart (in-development).canvas",
+    "System design/System design research.md",
+    "System design/System design chart.png",
+    "market analysis/analyzing other products.md",
+    "System 1.md",
+    "market analysis/Analysed systems/Untitled.md",
+    "market analysis/Analysed systems",
+    "market analysis",
+    "C++ notes.md",
+    "Planning/Goal mindmap.canvas",
+    "Planning/Goal mindmap.png",
+    "Planning/Logs.md",
+    "Docs",
+    "Docs/Dynamic multicast delagates.md",
+    "copilot/copilot-conversations/summarise_this_note@20260317_142420.md",
+    "copilot/copilot-conversations/sumarise_this_note@20260317_142118.md",
+    "copilot/copilot-conversations",
+    "copilot/copilot-custom-prompts/Clip Web Page.md",
+    "copilot/copilot-custom-prompts/Clip YouTube Transcript.md",
+    "copilot/copilot-custom-prompts/Rewrite as tweet thread.md",
+    "copilot/copilot-custom-prompts/Rewrite as tweet.md",
+    "copilot/copilot-custom-prompts/Remove URLs.md",
+    "copilot/copilot-custom-prompts/Generate glossary.md",
+    "copilot/copilot-custom-prompts/Generate table of contents.md",
+    "copilot/copilot-custom-prompts/Make longer.md",
+    "copilot/copilot-custom-prompts",
+    "copilot",
+    "System design",
+    "Weekly",
+    "@Goal mindmap.canvas"
+  ]
+}
