@@ -4,6 +4,7 @@
 #include "Interfaces/VRInteractorInterface.h"
 #include "GameFramework/PlayerController.h"
 #include "Core/VRNativeTags.h"
+#include "Data/VRWeaponData.h"
 
 UVRGrabComponent::UVRGrabComponent()
 {
@@ -230,5 +231,22 @@ void UVRGrabComponent::PlayHaptics() const
 	if (CurrentInteractor.IsValid())
 	{
 		CurrentInteractor->PlayHapticFeedback(GrabHapticEffect, HapticScale, bLoopHaptics);
+	}
+}
+
+void UVRGrabComponent::InitializeComponent_Implementation(UVRWeaponData* InData)
+{
+	// Standard initialization logic here if needed
+}
+
+void UVRGrabComponent::InitializeComponentWithSettings_Implementation(UVRWeaponData* InData, UVRWeaponComponentSettings* InSettings)
+{
+	if (UVRGrabSettings* GrabSettings = Cast<UVRGrabSettings>(InSettings))
+	{
+		GrabHapticEffect = GrabSettings->GrabHapticEffect;
+		HapticScale = GrabSettings->HapticScale;
+		ThrowMultiplier = GrabSettings->ThrowMultiplier;
+		bSnapToInteractor = GrabSettings->bUseSocketSnap;
+		SetSphereRadius(GrabSettings->SphereRadius);
 	}
 }

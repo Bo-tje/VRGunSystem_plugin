@@ -5,6 +5,55 @@
 #include "GameplayTagContainer.h"
 #include "VRWeaponData.generated.h"
 
+/** Base class for custom component settings overridden in the Data Asset. */
+UCLASS(BlueprintType, EditInlineNew, DefaultToInstanced, Abstract)
+class VRMODULARWEAPONSYSTEM_API UVRWeaponComponentSettings : public UObject
+{
+	GENERATED_BODY()
+	
+	
+};
+
+/** Specific settings for VR Grab Components. */
+UCLASS(BlueprintType, EditInlineNew, DefaultToInstanced)
+class VRMODULARWEAPONSYSTEM_API UVRGrabSettings : public UVRWeaponComponentSettings
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Grab Settings")
+	UHapticFeedbackEffect_Base* GrabHapticEffect;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Grab Settings")
+	float HapticScale = 1.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Grab Settings")
+	float ThrowMultiplier = 1.2f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Grab Settings")
+	bool bUseSocketSnap = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Grab Settings")
+	float SphereRadius = 12.0f;
+};
+
+/** Specific settings for VR Fire Components (Muzzles). */
+UCLASS(BlueprintType, EditInlineNew, DefaultToInstanced)
+class VRMODULARWEAPONSYSTEM_API UVRFireSettings : public UVRWeaponComponentSettings
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Fire Settings")
+	FName MuzzleSocketName = TEXT("Muzzle");
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Fire Settings")
+	float FireHapticScale = 1.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Fire Settings")
+	float DryFireHapticScale = 0.5f;
+};
+
 class UProjectileData;
 
 USTRUCT(BlueprintType)
@@ -41,6 +90,9 @@ struct FVRWeaponDynamicComponent
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Component|Physics")
 	bool bWeldCollision = false;
+
+	UPROPERTY(EditAnywhere, Instanced, BlueprintReadOnly, Category = "Component|Overrides")
+	TObjectPtr<UVRWeaponComponentSettings> Settings;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Component|Sockets")
 	FName ParentSocket;

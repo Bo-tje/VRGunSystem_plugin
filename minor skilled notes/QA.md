@@ -1,15 +1,15 @@
 
-## Iain Douglas 02/03/2026
+## Iain Douglas Week 3
 The original idea sound a bit ambitious, there are a lot of possible assets and your just one person. This game might not be the right fit for showing of your c++ skills. Think in terms of mechanics and what could be cool and fun to make instead of making mechanics around a story.  Look at it more from a Engineering point of view than a Designer point of view.
 focus on engagement loops - gameplay loops - economy
 
-## Daniel Valente de Macedo 03/03/2026
+## Daniel Valente de Macedo Week 3
 We came up with a new idea while talking about previous unreal work that i did using blueprints and a good way to show my c++ skills was to create a specific purpose system and creating a plugin from it so its easy to implement in other projects, this would also be a great portfolio peace. For one of my personal portfolio projects I created a Manually reloadable gun system using blueprints recreating this using c++ would be good practice and a solid peace of work. He also gave me a few pointers like recreating all the logic in c++ but also combine it with blueprints for customization. 
 
-## Daniel Valente de Macedo 24/03/2026
+## Daniel Valente de Macedo Week 7
 We discussed the [[System design chart (pre-development).canvas]] looking at the components and actors, Daniel was enthusiastic about it. It looked good. He says a good research and idea of how the system might look helps start the start of the development process. We also looked at the blueprint version of the system. I also asked about already existing systems on fab and he told me that it can help to read their documentation if available as seeing how others solved the problem can help you.
 
-## Daniel Valente de Macedo 17/04/2026
+## Daniel Valente de Macedo Week 11
 **Synopsis:**
 We discussed the technical implementation of the VR Gun System plugin, focusing on modularity, C++ interfaces, and content organization. Daniel recommended providing example scenes with various gun types to demonstrate the system's flexibility. We reviewed the C++ GrabComponent, the transition to StateTree for weapon logic, and the use of DataAssets for configuration. Daniel advised moving away from string-based mesh matching in favor of gameplay tags and explained how to structure the plugin's content folder so assets are bundled with the code.
 

@@ -204,12 +204,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "System design/documentation.md",
+                "file": "QA.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "documentation"
+              "title": "QA"
             }
           }
         ],
@@ -391,17 +391,17 @@
   },
   "active": "f71166d33d7707e4",
   "lastOpenFiles": [
-    "Documentation.md",
+    "QA3.m4a",
     "QA.md",
+    "Weekly/weekly reflection.md",
+    "System design/documentation.md",
+    "Documentation.md",
     "System design/System design chart (pre-development).canvas",
     "System design/System design.md",
-    "QA3.m4a",
     "17 apr om 14-36.m4a",
-    "System design/documentation.md",
     "Other possibilities.md",
     "unreal notes.md",
     "Docs/State tree.md",
-    "Weekly/weekly reflection.md",
     "System design/System design chart (in-development).canvas",
     "System design/System design research.md",
     "System design/System design chart.png",

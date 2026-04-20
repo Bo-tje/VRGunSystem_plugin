@@ -7,6 +7,7 @@
 #include "VRFireComponent.generated.h"
 
 class UVRWeaponData;
+class UVRWeaponComponentSettings;
 class UProjectileData;
 class UStaticMeshComponent;
 
@@ -24,6 +25,7 @@ public:
 	virtual void OnRegister() override;
 
 	virtual void InitializeComponent_Implementation(UVRWeaponData* InData) override;
+	virtual void InitializeComponentWithSettings_Implementation(UVRWeaponData* InData, UVRWeaponComponentSettings* InSettings) override;
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Weapon | Config")

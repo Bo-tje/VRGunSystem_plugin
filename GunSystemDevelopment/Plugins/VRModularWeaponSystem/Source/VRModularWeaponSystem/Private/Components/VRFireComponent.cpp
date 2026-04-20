@@ -38,6 +38,18 @@ void UVRFireComponent::InitializeComponent_Implementation(UVRWeaponData* InData)
 	}
 }
 
+void UVRFireComponent::InitializeComponentWithSettings_Implementation(UVRWeaponData* InData, UVRWeaponComponentSettings* InSettings)
+{
+	InitializeComponent_Implementation(InData);
+
+	if (UVRFireSettings* FireSettings = Cast<UVRFireSettings>(InSettings))
+	{
+		MuzzleSocketName = FireSettings->MuzzleSocketName;
+		FireHapticScale = FireSettings->FireHapticScale;
+		DryFireHapticScale = FireSettings->DryFireHapticScale;
+	}
+}
+
 FTransform UVRFireComponent::GetMuzzleTransform() const
 {
 	AActor* MyOwner = GetOwner();

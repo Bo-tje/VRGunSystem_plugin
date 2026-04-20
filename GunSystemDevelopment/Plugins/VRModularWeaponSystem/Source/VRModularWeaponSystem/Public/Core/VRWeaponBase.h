@@ -39,6 +39,10 @@ public:
 	/** Components that receive input events (PullTrigger, etc). */
 	UPROPERTY(Transient)
 	TArray<UActorComponent*> CachedInputComponents;
+
+	/** Map of dynamically spawned components by their name for Blueprint access. */
+	UPROPERTY(Transient, BlueprintReadOnly, Category = "VR Weapon | Parts")
+	TMap<FName, UActorComponent*> DynamicComponentsMap;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VR Weapon | Logic")
 	class UVRWeaponStateTreeComponent* StateTreeComponent;
@@ -87,6 +91,9 @@ public:
 
 	UPROPERTY(Transient, BlueprintReadOnly, Category = "VR Weapon | Parts")
 	TArray<UActorComponent*> CachedRoundProviders;
+
+	UFUNCTION(BlueprintPure, Category = "VR Weapon | Interaction")
+	UActorComponent* GetDynamicComponentByName(FName ComponentName) const;
 
 	UFUNCTION(BlueprintPure, Category = "VR Weapon | Interaction")
 	class UVRInteractor* GetHoldingInteractor() const;

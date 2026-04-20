@@ -5,6 +5,7 @@
 #include "VRWeaponComponentInterface.generated.h"
 
 class UVRWeaponData;
+class UVRWeaponComponentSettings;
 
 UINTERFACE(MinimalAPI)
 class UVRWeaponComponentInterface : public UInterface
@@ -23,4 +24,7 @@ public:
 	
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "VR Weapon Component")
 	void InitializeComponent(UVRWeaponData* InData);
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "VR Weapon Component")
+	void InitializeComponentWithSettings(UVRWeaponData* InData, UVRWeaponComponentSettings* InSettings);
 };

@@ -3,9 +3,12 @@
 #include "CoreMinimal.h"
 #include "Interfaces/VRInteractableInterface.h"
 #include "Components/SphereComponent.h"
+#include "Interfaces/VRWeaponComponentInterface.h"
 #include "VRGrabComponent.generated.h"
 
 class UVRInteractor;
+class UVRWeaponData;
+class UVRWeaponComponentSettings;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnHoverStart, UObject*, Interactor);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnHoverEnd, UObject*, Interactor);
@@ -17,7 +20,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGrabbed, AActor*, InteractingHand
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnGrabReleased);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class VRMODULARWEAPONSYSTEM_API UVRGrabComponent : public USphereComponent, public IVRInteractableInterface
+class VRMODULARWEAPONSYSTEM_API UVRGrabComponent : public USphereComponent, public IVRInteractableInterface, public IVRWeaponComponentInterface
 {
 	GENERATED_BODY()
 
@@ -49,6 +52,10 @@ public:
 	virtual void OnHoverEnd_Implementation(UObject* Interactor) override;
 	virtual void StartAction_Implementation(UObject* Interactor, float ActionValue, FGameplayTag ActionTag) override;
 	virtual void StopAction_Implementation(UObject* Interactor, FGameplayTag ActionTag) override;
+
+	// IVRWeaponComponentInterface implementation
+	virtual void InitializeComponent_Implementation(UVRWeaponData* InData) override;
+	virtual void InitializeComponentWithSettings_Implementation(UVRWeaponData* InData, UVRWeaponComponentSettings* InSettings) override;
 
 #pragma region events for designers to bind to
 	

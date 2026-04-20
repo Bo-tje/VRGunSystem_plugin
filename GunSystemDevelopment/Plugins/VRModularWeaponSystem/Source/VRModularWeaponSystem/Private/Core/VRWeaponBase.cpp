@@ -122,49 +122,64 @@ void AVRWeaponBase::ApplyWeaponDataVisuals()
 		}
 	}
 	
-	for (const FVRWeaponDynamicComponent& GeneratedComponent : WeaponData->AdditionalComponents)
+	for (const FVRWeaponDynamicComponent& CompGen : WeaponData->AdditionalComponents)
 	{
-		if (!GeneratedComponent.ComponentClass) continue;
+		if (!CompGen.ComponentClass) continue;
 
-		UActorComponent* NewObj = NewObject<UActorComponent>(this, GeneratedComponent.ComponentClass, GeneratedComponent.ComponentName);
+		UActorComponent* NewObj = NewObject<UActorComponent>(this, CompGen.ComponentClass, CompGen.ComponentName);
 		if (NewObj)
 		{
 			NewObj->CreationMethod = EComponentCreationMethod::UserConstructionScript;
-
+			
+			DynamicComponentsMap.Add(CompGen.ComponentName, NewObj);
+			
+			if (NewObj->Implements<UVRWeaponComponentInterface>())
+			{
+				if (CompGen.Settings)
+				{
+					IVRWeaponComponentInterface::Execute_InitializeComponentWithSettings(NewObj, WeaponData, CompGen.Settings);
+				}
+				else
+				{
+					IVRWeaponComponentInterface::Execute_InitializeComponent(NewObj, WeaponData);
+				}
+			}
+			
 			if (USceneComponent* SceneComp = Cast<USceneComponent>(NewObj))
 			{
 				USceneComponent* AttachTarget = WeaponRoot;
-
-				if (!GeneratedComponent.ParentSocket.IsNone())
+				
+				if (!CompGen.ParentSocket.IsNone())
 				{
 					TArray<UStaticMeshComponent*> TrackedComps;
 					GetComponents(TrackedComps);
 					for (UStaticMeshComponent* MC : TrackedComps)
 					{
-						if (MC->DoesSocketExist(GeneratedComponent.ParentSocket))
+						if (MC->DoesSocketExist(CompGen.ParentSocket))
 						{
 							AttachTarget = MC;
 							break;
 						}
 					}
 				}
-
+				
 				if (UStaticMeshComponent* SMComp = Cast<UStaticMeshComponent>(NewObj))
 				{
-					if (!GeneratedComponent.OptionalMesh.IsNull())
+					if (!CompGen.OptionalMesh.IsNull())
 					{
-						SMComp->SetStaticMesh(GeneratedComponent.OptionalMesh.LoadSynchronous());
-						if (GeneratedComponent.bWeldCollision)
+						SMComp->SetStaticMesh(CompGen.OptionalMesh.LoadSynchronous());
+						
+						if (CompGen.bWeldCollision)
 						{
-							SMComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+							SMComp->SetCollisionEnabled(ECollisionEnabled::QueryOnly); 
 							SMComp->SetCollisionProfileName(TEXT("PhysicsBody"));
 						}
 					}
 				}
 
-				SceneComp->SetupAttachment(AttachTarget, GeneratedComponent.ParentSocket);
+				SceneComp->SetupAttachment(AttachTarget, CompGen.ParentSocket);
 				SceneComp->RegisterComponent();
-				SceneComp->SetRelativeTransform(GeneratedComponent.RelativeOffset);
+				SceneComp->SetRelativeTransform(CompGen.RelativeOffset);
 			}
 			else
 			{
@@ -172,6 +187,15 @@ void AVRWeaponBase::ApplyWeaponDataVisuals()
 			}
 		}
 	}
+}
+
+UActorComponent* AVRWeaponBase::GetDynamicComponentByName(FName ComponentName) const
+{
+	if (UActorComponent* const* Component = DynamicComponentsMap.Find(ComponentName))
+	{
+		return *Component;
+	}
+	return nullptr;
 }
 
 void AVRWeaponBase::OnGrabbed(AActor* InteractingHand)
@@ -259,7 +283,6 @@ void AVRWeaponBase::PullTrigger_Implementation()
 
 	if (StateTreeComponent)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Trigger recieved"));
 		StateTreeComponent->SendStateTreeEvent(VRNativeTags::Trigger);
 	}
 }
