@@ -13,16 +13,33 @@ AVRWeaponBase::AVRWeaponBase()
 	PrimaryActorTick.bCanEverTick = false;
 
 	WeaponRoot = CreateDefaultSubobject<UBoxComponent>(TEXT("WeaponRoot"));
-	
-	WeaponRoot->SetBoxExtent(FVector(1.0f, 1.0f, 1.0f));
-
+	SetRootComponent(WeaponRoot);
+	WeaponRoot->SetBoxExtent(FVector(1.0f)); // Tiny core for physics welding
 	WeaponRoot->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	WeaponRoot->SetCollisionProfileName(TEXT("PhysicsBody"));
 
-	WeaponRoot->SetSimulatePhysics(true);
-	RootComponent = WeaponRoot;
+	PartRoot = CreateDefaultSubobject<USceneComponent>(TEXT("PartRoot"));
+	PartRoot->SetupAttachment(WeaponRoot);
 
-	StateTreeComponent = CreateDefaultSubobject<UVRWeaponStateTreeComponent>(TEXT("StateTree"));
+	StateTreeComponent = CreateDefaultSubobject<UVRWeaponStateTreeComponent>(TEXT("StateTreeComponent"));
+}
+
+AVRWeaponBase* AVRWeaponBase::SpawnWeaponFromData(const UObject* WorldContextObject, UVRWeaponData* InData, FTransform SpawnTransform, TSubclassOf<AVRWeaponBase> WeaponClass)
+{
+	if (!WorldContextObject || !InData || !WeaponClass) return nullptr;
+
+	UWorld* World = WorldContextObject->GetWorld();
+	if (!World) return nullptr;
+
+	// Use Deferred Spawning so we can inject the DataAsset BEFORE the Construction Script / ApplyVisuals runs
+	AVRWeaponBase* NewWeapon = World->SpawnActorDeferred<AVRWeaponBase>(WeaponClass, SpawnTransform);
+	if (NewWeapon)
+	{
+		NewWeapon->WeaponData = InData;
+		NewWeapon->FinishSpawning(SpawnTransform);
+	}
+
+	return NewWeapon;
 }
 
 void AVRWeaponBase::OnConstruction(const FTransform& Transform)

@@ -19,10 +19,10 @@ Saturday Feb 21: 3 Hours Levels and ui
 
 Monday Feb 23:  3 Hours  Finishing up Battle Blaster project
 
-Monday Mar 2: 1,5 Hours preparing and having [[QA|QA session]] with Iain Douglas
+Monday Mar 2: 1,5 Hours preparing and having [[QA 1|QA session]] with Iain Douglas
 			 5 Hours custom animation setup and blending
 
-Tuesday Mar 3: 0,5 Hours [[QA|QA with Daniel Valente de Macedo]]
+Tuesday Mar 3: 0,5 Hours [[QA 1|QA with Daniel Valente de Macedo]]
 			 1 Hour researching and restructuring my [[System design/System design research#5. Performance Pillar: Memory Management|object pooler as a unreal engine plugin]]
 			 1 Hour making progress presentation
 

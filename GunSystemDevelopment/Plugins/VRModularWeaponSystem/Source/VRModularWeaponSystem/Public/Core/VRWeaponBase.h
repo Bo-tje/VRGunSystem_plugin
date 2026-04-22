@@ -24,6 +24,10 @@ class VRMODULARWEAPONSYSTEM_API AVRWeaponBase : public AActor, public IVRWeaponI
 public:
 	AVRWeaponBase();
 
+	/** Optimized Factory: Spawns a weapon and injects DataAsset before construction. */
+	UFUNCTION(BlueprintCallable, Category = "VR Weapon | Factory", meta = (WorldContext = "WorldContextObject", UnsafeDuringActorConstruction = "true"))
+	static AVRWeaponBase* SpawnWeaponFromData(const UObject* WorldContextObject, UVRWeaponData* InData, FTransform SpawnTransform, TSubclassOf<AVRWeaponBase> WeaponClass);
+
 	// --- Components ---
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VR Weapon | Parts")
