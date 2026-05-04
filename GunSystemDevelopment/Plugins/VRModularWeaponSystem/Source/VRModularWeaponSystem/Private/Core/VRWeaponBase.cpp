@@ -6,6 +6,7 @@
 #include "Components/VRWeaponStateTreeComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/BoxComponent.h"
+#include "Components/VRMechanicalComponent.h"
 
 AVRWeaponBase::AVRWeaponBase()
 {
@@ -190,17 +191,15 @@ void AVRWeaponBase::ApplyWeaponDataVisuals()
 					if (!CompGen.OptionalMesh.IsNull())
 					{
 						SMComp->SetStaticMesh(CompGen.OptionalMesh.LoadSynchronous());
-						
-						if (CompGen.bWeldCollision)
-						{
-							SMComp->SetCollisionEnabled(ECollisionEnabled::QueryOnly); 
-							SMComp->SetCollisionProfileName(TEXT("PhysicsBody"));
-						}
 					}
 				}
-				SceneComp->SetupAttachment(AttachTarget, CompGen.ParentSocket);
-				SceneComp->RegisterComponent();
-				SceneComp->SetRelativeTransform(CompGen.RelativeOffset);
+				else if (UVRMechanicalComponent* MechComp = Cast<UVRMechanicalComponent>(NewObj))
+				{
+					if (!CompGen.OptionalMesh.IsNull())
+					{
+						MechComp->ConstructVisuals(CompGen.OptionalMesh.LoadSynchronous(), CompGen.bWeldCollision);
+					}
+				}
 			}
 			else
 			{

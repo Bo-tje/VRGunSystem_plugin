@@ -37,6 +37,27 @@ public:
 	float SphereRadius = 12.0f;
 };
 
+/** Specific settings for the Mechanical component */
+UCLASS(BlueprintType, EditInlineNew, DefaultToInstanced)
+class VRMODULARWEAPONSYSTEM_API UVRMechanicalSettings : public UVRWeaponComponentSettings
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mechanical", meta = (Categories = "VRModularWeaponSystem.MechanicalMovement"))
+	FGameplayTag MechanicalMovementType;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mechanical")
+	FVector LocalAxis;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mechanical")
+	float MaxRange;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mechanical")
+	bool bInvertDirection;
+};
+
+
 /** Specific settings for VR Fire Components (Muzzles). */
 UCLASS(BlueprintType, EditInlineNew, DefaultToInstanced)
 class VRMODULARWEAPONSYSTEM_API UVRFireSettings : public UVRWeaponComponentSettings

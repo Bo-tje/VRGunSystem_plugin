@@ -23,4 +23,11 @@ namespace  VRNativeTags
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Chamber_Jammed);
 	
 #pragma endregion
+	
+#pragma region Mechanical movement
+	
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Linear);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Rotational);
+	
+#pragma endregion
 };

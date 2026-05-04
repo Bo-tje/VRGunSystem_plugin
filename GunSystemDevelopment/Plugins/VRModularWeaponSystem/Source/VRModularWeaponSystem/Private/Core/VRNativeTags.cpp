@@ -22,4 +22,11 @@ namespace VRNativeTags
 	UE_DEFINE_GAMEPLAY_TAG(Chamber_Jammed, "VRModularWeaponSystem.ChamberState.Jammed");
 	
 #pragma endregion
+	
+#pragma region Mechanical movement
+	
+	UE_DEFINE_GAMEPLAY_TAG(Linear, "VRModularWeaponSystem.MechanicalMovement.Linear");
+	UE_DEFINE_GAMEPLAY_TAG(Rotational, "VRModularWeaponSystem.MechanicalMovement.Rotational");
+
+#pragma endregion
 }
