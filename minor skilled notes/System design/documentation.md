@@ -100,6 +100,16 @@ The component on the VR pawn/hand that initiates interactions with `UVRGrabCompo
   - `PlayHapticFeedback(UHapticFeedbackEffect_Base* Effect, float Scale, ...)`: Triggers hand haptics.
 - **Interfaces:** Implements `IVRInteractorInterface`.
 
+### `UVRCustomActionComponent` (Actor Component)
+A utility component that listens to tagged interaction events to trigger custom blueprint logic.
+
+- **Key Properties:**
+  - `FilterTag`: `FGameplayTag` - Only routes actions matching this tag.
+  - `CachedGrabComp`: `UVRGrabComponent*` - Automatically binds to the nearest grab component.
+- **Delegates (Blueprint Assignable):**
+  - `OnActionStart`
+  - `OnActionStop`
+
 ### `UVRWeaponStateTreeComponent` (StateTree Component)
 A specialized component that runs the State Tree logic for the weapon. It automatically binds `WeaponData` as context for the tree. See [[Docs/State tree|State Tree Overview]] for system details.
 
@@ -128,6 +138,12 @@ Defines the properties of a bullet/round.
 - `LiveRoundMesh` / `SpentCasingMesh`: Visual representations.
 - `ImpactEffect` / `ImpactSound`: Visual/Audio played on hit.
 - `MuzzleFlashOverride` / `FireSoundOverride`: Potential overrides when fired.
+
+### `UMagazineData`
+Defines the base properties of a magazine.
+- `MaxAmmo`: Maximum rounds the magazine can hold.
+- `MagazineType`: Gameplay tag defining compatibility.
+- `MagazineMesh`: The static mesh representing the physical magazine.
 
 ---
 
@@ -178,6 +194,7 @@ The weapon logic is driven by a State Tree using the `VR Weapon State Tree Schem
   - Calls `TryEject()` on the chamber.
 - **`FSTTask_ChamberRound`**:
   - Searches for an `IVRRoundProvider` (like a Magazine) and attempts to move a round into the `UVRChamberComponent`.
+  - Parameter: `bInfiniteAmmo` - Option to chamber indefinitely.
 
 ---
 
