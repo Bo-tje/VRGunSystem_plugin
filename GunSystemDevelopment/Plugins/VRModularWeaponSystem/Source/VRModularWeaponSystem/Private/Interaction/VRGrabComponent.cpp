@@ -41,19 +41,25 @@ void UVRGrabComponent::TryGrab(UVRInteractor* Interactor)
 
 	AActor* MyOwner = GetOwner();
 	
-	if (UPrimitiveComponent* RootPrim = Cast<UPrimitiveComponent>(MyOwner->GetRootComponent()))
+	if (bAttachOwnerOnGrab)
 	{
-		if (!bIsHeld)
+		if (UPrimitiveComponent* RootPrim = Cast<UPrimitiveComponent>(MyOwner->GetRootComponent()))
 		{
-			bWasSimulating = RootPrim->IsSimulatingPhysics();
+			if (!bIsHeld)
+			{
+				bWasSimulating = RootPrim->IsSimulatingPhysics();
+			}
+			RootPrim->SetSimulatePhysics(false);
 		}
-		RootPrim->SetSimulatePhysics(false);
 	}
 	
 	bIsHeld = true;
 	CurrentInteractor = Interactor;
     
-	Attach(MyOwner, Interactor);
+	if (bAttachOwnerOnGrab)
+	{
+		Attach(MyOwner, Interactor);
+	}
     
 	SetComponentTickEnabled(true);
 	LastPosition = MyOwner->GetActorLocation();
@@ -74,12 +80,15 @@ void UVRGrabComponent::TryRelease()
 	AActor* MyOwner = GetOwner();
 	UPrimitiveComponent* RootPrim = Cast<UPrimitiveComponent>(MyOwner->GetRootComponent());
 
-	const FDetachmentTransformRules DetachmentRules(EDetachmentRule::KeepWorld, true);
-	MyOwner->DetachFromActor(DetachmentRules);
+	if (bAttachOwnerOnGrab)
+	{
+		const FDetachmentTransformRules DetachmentRules(EDetachmentRule::KeepWorld, true);
+		MyOwner->DetachFromActor(DetachmentRules);
+    
+		Throw(RootPrim);
+	}
     
 	bIsHeld = false;
-	Throw(RootPrim);
-    
 	CurrentInteractor.Reset();
 	OnGrabReleased.Broadcast();
 	

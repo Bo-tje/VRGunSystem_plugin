@@ -111,6 +111,10 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Plugin | Setup")
 	bool bSnapToInteractor = true;
+
+	/** If true, the entire owner actor will be attached to the interactor. Set to false for sub-components like slides. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Plugin | Setup")
+	bool bAttachOwnerOnGrab = true;
 	
 protected:
 	

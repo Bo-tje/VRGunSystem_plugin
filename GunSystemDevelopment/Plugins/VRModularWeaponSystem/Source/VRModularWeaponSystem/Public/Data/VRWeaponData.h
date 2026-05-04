@@ -55,6 +55,18 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mechanical")
 	bool bInvertDirection;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mechanical")
+	bool bHasReturnSpring;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mechanical", meta = (EditCondition = "bHasReturnSpring"))
+	float ReturnSpeed = 15.0f;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mechanical | Events")
+	FGameplayTag OnReachedMaxTag;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mechanical | Events")
+	FGameplayTag OnReachedMinTag;
 };
 
 

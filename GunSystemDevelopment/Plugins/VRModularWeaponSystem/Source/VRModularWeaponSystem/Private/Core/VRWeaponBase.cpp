@@ -171,21 +171,45 @@ void AVRWeaponBase::ApplyWeaponDataVisuals()
 			if (USceneComponent* SceneComp = Cast<USceneComponent>(NewObj))
 			{
 				USceneComponent* AttachTarget = WeaponRoot;
+				FName TargetSocket = CompGen.ParentSocket;
 				
 				if (!CompGen.ParentSocket.IsNone())
 				{
-					TArray<UStaticMeshComponent*> TrackedComps;
-					GetComponents(TrackedComps);
-					for (UStaticMeshComponent* MC : TrackedComps)
+					bool bAttachedToDynamic = false;
+					// First, try to find a dynamic component by this name
+					if (UActorComponent* ParentComp = GetDynamicComponentByName(CompGen.ParentSocket))
 					{
-						if (MC->DoesSocketExist(CompGen.ParentSocket))
+						if (ParentComp != NewObj) // Prevent case-insensitive self-attachment!
 						{
-							AttachTarget = MC;
-							break;
+							if (USceneComponent* ParentScene = Cast<USceneComponent>(ParentComp))
+							{
+								AttachTarget = ParentScene;
+								TargetSocket = NAME_None; // Clear socket as we are attaching to the component itself
+								bAttachedToDynamic = true;
+							}
+						}
+					}
+					
+					if (!bAttachedToDynamic)
+					{
+						// Otherwise, look for a socket on existing meshes
+						TArray<UStaticMeshComponent*> TrackedComps;
+						GetComponents(TrackedComps);
+						for (UStaticMeshComponent* MC : TrackedComps)
+						{
+							if (MC->DoesSocketExist(CompGen.ParentSocket))
+							{
+								AttachTarget = MC;
+								break;
+							}
 						}
 					}
 				}
-				
+
+				SceneComp->SetupAttachment(AttachTarget, TargetSocket);
+				SceneComp->RegisterComponent();
+				SceneComp->SetRelativeTransform(CompGen.RelativeOffset);
+
 				if (UStaticMeshComponent* SMComp = Cast<UStaticMeshComponent>(NewObj))
 				{
 					if (!CompGen.OptionalMesh.IsNull())
@@ -244,7 +268,10 @@ void AVRWeaponBase::StartAction_Implementation(UObject* Interactor, float Action
 {
 	if (ActionTag.MatchesTag(VRNativeTags::Trigger))
 	{
-		IVRWeaponInterface::Execute_PullTrigger(this);
+		if (UVRMechanicalComponent* VisualTrigger = Cast<UVRMechanicalComponent>(GetDynamicComponentByName("Trigger")))
+		{
+			VisualTrigger->SetNormalizedValue(ActionValue);
+		}
 	}
 	else if (ActionTag.MatchesTag(VRNativeTags::PrimaryInput))
 	{
@@ -253,6 +280,10 @@ void AVRWeaponBase::StartAction_Implementation(UObject* Interactor, float Action
 	else if (ActionTag.MatchesTag(VRNativeTags::SecondaryInput))
 	{
 		IVRWeaponInterface::Execute_SecondaryAction(this);
+	}
+	if (ActionTag.MatchesTag(VRNativeTags::Trigger) && ActionValue > 0.8f)
+	{
+		IVRWeaponInterface::Execute_PullTrigger(this);
 	}
 }
 
