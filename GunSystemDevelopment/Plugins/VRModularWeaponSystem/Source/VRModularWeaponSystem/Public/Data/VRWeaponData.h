@@ -119,17 +119,22 @@ public:
 
 	// --- Base Stats ---
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Stats")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Default Weapon Stats")
 	bool bUseHitscan = false;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Stats")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Default Weapon Stats")
 	float FireRate = 600.0f;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Stats")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Default Weapon Stats")
 	float RecoilAmount = 1.0f;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Stats")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Default Weapon Stats")
 	FGameplayTag CompatibleMagazinesTag;
+	
+	/** The default projectile of this weapon fires when no other projectile is provided. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Default Weapon Stats")
+	TObjectPtr<UProjectileData> DefaultProjectile;
+
 
 	// --- Modular Parts ---
 
@@ -139,9 +144,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Composition")
 	TArray<FVRWeaponDynamicComponent> AdditionalComponents;
 
-	/** The default projectile this weapon fires. */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Specs")
-	TObjectPtr<UProjectileData> DefaultProjectile;
 
 	// --- Visual FX ---
 	

@@ -1,5 +1,4 @@
 #include "Core/VRWeaponBase.h"
-#include "Data/VRWeaponData.h"
 #include "Interfaces/VRWeaponComponentInterface.h"
 #include "Interaction/VRGrabComponent.h"
 #include "Core/VRNativeTags.h"
@@ -17,6 +16,7 @@ AVRWeaponBase::AVRWeaponBase()
 	WeaponRoot->SetBoxExtent(FVector(1.0f)); // Tiny core for physics welding
 	WeaponRoot->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	WeaponRoot->SetCollisionProfileName(TEXT("PhysicsBody"));
+	WeaponRoot->SetSimulatePhysics(true);
 
 	PartRoot = CreateDefaultSubobject<USceneComponent>(TEXT("PartRoot"));
 	PartRoot->SetupAttachment(WeaponRoot);
@@ -53,15 +53,15 @@ void AVRWeaponBase::OnConstruction(const FTransform& Transform)
 void AVRWeaponBase::BeginPlay()
 {
 	Super::BeginPlay();
-	
 	if (StateTreeComponent)
 	{
 		StateTreeComponent->StopLogic(TEXT("Init"));
 	}
 	
-	TArray<UVRGrabComponent*> AllGrabComponents;
-	GetComponents(AllGrabComponents);
-	for (UVRGrabComponent* GrabComponent : AllGrabComponents)
+	CachedGrabComponents.Empty();
+	GetComponents(CachedGrabComponents);
+	
+	for (UVRGrabComponent* GrabComponent : CachedGrabComponents)
 	{
 		GrabComponent->OnGrabbed.AddDynamic(this, &AVRWeaponBase::OnGrabbed);
 		GrabComponent->OnGrabReleased.AddDynamic(this, &AVRWeaponBase::OnReleased);

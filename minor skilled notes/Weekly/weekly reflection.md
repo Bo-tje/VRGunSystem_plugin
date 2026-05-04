@@ -24,4 +24,6 @@ This week i tried to improve on the weapon base a bit, i wanted the code to set 
 
 # Week 11
 I finished the state tree this Monday i wanted to make a feature where the data asset was automatically pushed to the state tree but was really struggling with it using SetContextDate was not working or didn't exist so i decided to create my own helper function for that purpose. When i tested the state tree on tuesday there were some issues in logic and how i understood the state tree, i came a long way but just couldnt find the mistake. So i tried fixing it with ai, this was a pretty bad idea because it ended up being worse and i was stupid eneugh to delete all my changes without having pushed the improvements i made. so i had some setback. I took a day off on wednesday and came back with a fresh pair of eyes on thursday i spent some time rebuilding my changes noticed some things that could be improved and eventually found the mistake. A [[Docs/State tree|state tree]] is heavaly hierarchal and the root task on start of the state tree transitions to the first task it can transition to this was the error causing my state tree to get in a loop. Taking a step back from a problem to return later can really help. 
- 
+
+# Week 12
+This week i made some minor improvements mainly to improve my new data asset only logic. Other than that I mostly worked on my personal branding and portfolio redo this week
