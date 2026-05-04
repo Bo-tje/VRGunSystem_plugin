@@ -105,6 +105,11 @@ void AVRWeaponBase::ApplyWeaponDataVisuals()
 {
 	if (!WeaponData) return;
 	
+	if (StateTreeComponent)
+	{
+		StateTreeComponent->SetStateTree(WeaponData->StateTree);
+	}
+	
 	for (const FVRWeaponPart& Part : WeaponData->WeaponParts)
 	{
 		if (Part.PartName.IsNone() || Part.Mesh.IsNull()) continue;
@@ -193,7 +198,6 @@ void AVRWeaponBase::ApplyWeaponDataVisuals()
 						}
 					}
 				}
-
 				SceneComp->SetupAttachment(AttachTarget, CompGen.ParentSocket);
 				SceneComp->RegisterComponent();
 				SceneComp->SetRelativeTransform(CompGen.RelativeOffset);

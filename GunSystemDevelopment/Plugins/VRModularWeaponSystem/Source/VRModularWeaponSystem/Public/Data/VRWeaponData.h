@@ -54,6 +54,7 @@ public:
 	float DryFireHapticScale = 0.5f;
 };
 
+class UStateTree;
 class UProjectileData;
 
 USTRUCT(BlueprintType)
@@ -104,7 +105,7 @@ struct FVRWeaponDynamicComponent
 /**
  * UVRWeaponData defines the configuration for a weapon.
  */
-UCLASS(BlueprintType, Blueprintable)
+UCLASS(BlueprintType)
 class VRMODULARWEAPONSYSTEM_API UVRWeaponData : public UDataAsset
 {
 	GENERATED_BODY()
@@ -112,6 +113,9 @@ class VRMODULARWEAPONSYSTEM_API UVRWeaponData : public UDataAsset
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Info")
 	FString WeaponName;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VR Weapon | Logic")
+	TObjectPtr<UStateTree> StateTree;
 
 	// --- Base Stats ---
 	
@@ -135,7 +139,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Composition")
 	TArray<FVRWeaponDynamicComponent> AdditionalComponents;
 
-	/** The projectile this weapon fires. */
+	/** The default projectile this weapon fires. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Specs")
 	TObjectPtr<UProjectileData> DefaultProjectile;
 

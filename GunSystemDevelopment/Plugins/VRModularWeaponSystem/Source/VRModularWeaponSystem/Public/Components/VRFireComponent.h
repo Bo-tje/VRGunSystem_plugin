@@ -4,9 +4,9 @@
 #include "Components/SceneComponent.h"
 #include "Interfaces/VRWeaponInterface.h"
 #include "Interfaces/VRWeaponComponentInterface.h"
+#include "Data/VRWeaponData.h"
 #include "VRFireComponent.generated.h"
 
-class UVRWeaponData;
 class UVRWeaponComponentSettings;
 class UProjectileData;
 class UStaticMeshComponent;
@@ -42,7 +42,7 @@ public:
 
 
 	UPROPERTY()
-	UVRWeaponData* WeaponData;
+	TObjectPtr<UVRWeaponData> WeaponData;
 
 	UPROPERTY(BlueprintAssignable, Category = "VR Weapon | Events")
 	FOnWeaponFired OnFired;

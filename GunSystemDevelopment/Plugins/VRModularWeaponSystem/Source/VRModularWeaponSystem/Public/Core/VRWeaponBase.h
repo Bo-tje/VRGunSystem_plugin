@@ -7,9 +7,9 @@
 #include "GameplayTagContainer.h"
 #include "Core/VRNativeTags.h"
 #include "Components/StateTreeComponent.h"
+#include "Data/VRWeaponData.h"
 #include "VRWeaponBase.generated.h"
 
-class UVRWeaponData;
 class UStaticMeshComponent;
 class UVRGrabComponent;
 
@@ -49,12 +49,12 @@ public:
 	TMap<FName, UActorComponent*> DynamicComponentsMap;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VR Weapon | Logic")
-	class UVRWeaponStateTreeComponent* StateTreeComponent;
+	TObjectPtr<class UVRWeaponStateTreeComponent> StateTreeComponent;
 
 	// --- Data ---
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Weapon | Config")
-	UVRWeaponData* WeaponData;
+	TObjectPtr<UVRWeaponData> WeaponData;
 
 	// --- IVRWeaponInterface ---
 	virtual void PullTrigger_Implementation() override;

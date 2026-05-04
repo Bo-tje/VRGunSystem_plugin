@@ -5,10 +5,10 @@
 #include "GameplayTagContainer.h"
 #include "Interfaces/VRWeaponComponentInterface.h"
 #include "Interfaces/VRRoundProvider.h"
+#include "Data/VRWeaponData.h"
 #include "VRChamberComponent.generated.h"
 
 class UProjectileData;
-class UVRWeaponData;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnChamberStateChanged, FGameplayTag, NewState);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnRoundLoaded, UProjectileData*, LoadedRound);
@@ -91,5 +91,5 @@ protected:
 	UProjectileData* LoadedProjectile;
 
 	UPROPERTY(BlueprintReadOnly, Category = "VR Weapon | Chamber")
-	UVRWeaponData* WeaponData;
+	TObjectPtr<UVRWeaponData> WeaponData;
 };
