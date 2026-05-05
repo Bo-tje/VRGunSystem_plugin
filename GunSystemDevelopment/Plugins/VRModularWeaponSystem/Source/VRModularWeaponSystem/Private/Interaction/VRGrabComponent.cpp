@@ -170,6 +170,16 @@ void UVRGrabComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 	CalculateVelocity(DeltaTime);
+
+	// Break logic for sub-components (slides, handles)
+	if (bIsHeld && !bAttachOwnerOnGrab && CurrentInteractor.IsValid())
+	{
+		float Distance = FVector::Dist(GetComponentLocation(), CurrentInteractor->GetComponentLocation());
+		if (Distance > BreakDistance)
+		{
+			TryRelease();
+		}
+	}
 }
 
 void UVRGrabComponent::Attach(AActor* MyOwner, UVRInteractor* TargetInteractor) const
@@ -257,5 +267,7 @@ void UVRGrabComponent::InitializeComponentWithSettings_Implementation(UVRWeaponD
 		ThrowMultiplier = GrabSettings->ThrowMultiplier;
 		bSnapToInteractor = GrabSettings->bUseSocketSnap;
 		SetSphereRadius(GrabSettings->SphereRadius);
+		BreakDistance = GrabSettings->BreakDistance;
+		GrabPoseTag = GrabSettings->GrabPoseTag;
 	}
 }

@@ -41,8 +41,20 @@ public:
 	UPROPERTY(EditAnywhere, Category = "VR Plugin | Mechanical")
 	bool bHasReturnSpring;
 	
-	UPROPERTY(EditAnywhere, Category = "VR Plugin | Mechanical")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Plugin | Mechanical")
 	float ReturnSpeed = 15.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Plugin | Mechanical")
+	float RestingValue = 0.0f;
+
+	UFUNCTION(BlueprintCallable, Category = "VR Plugin | Mechanical")
+	void SetRestingValue(float NewRestingValue);
+
+	UPROPERTY(EditAnywhere, Category = "VR Plugin | Mechanical")
+	TObjectPtr<UHapticFeedbackEffect_Base> MovementHapticEffect;
+	
+	UPROPERTY(EditAnywhere, Category = "VR Plugin | Mechanical", meta = (ClampMin = "0.01", ClampMax = "1.0"))
+	float HapticTickThreshold = 0.05f;
 	
 	UPROPERTY(BlueprintReadWrite, Category = "VR Plugin | Mechanical")
 	bool bIsBeingHeld = false;
@@ -55,6 +67,21 @@ public:
 	
 	UPROPERTY(EditAnywhere, Category = "VR Plugin | Mechanical")
 	bool bInvertDirection;
+
+	UPROPERTY(BlueprintReadWrite, Category = "VR Plugin | Mechanical | State")
+	bool bIsLocked = false;
+
+	UFUNCTION(BlueprintCallable, Category = "VR Plugin | Mechanical | State")
+	void SetIsLocked(bool bNewLocked);
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Plugin | Mechanical | Physics")
+	bool bUseSimulatedInertia = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Plugin | Mechanical | Physics", meta = (EditCondition = "bUseSimulatedInertia"))
+	float InertiaMultiplier = 1.0f;
+
+	UFUNCTION(BlueprintCallable, Category = "VR Plugin | Mechanical | Physics")
+	void AddMomentum(float MomentumAmount);
 
 	UPROPERTY(EditAnywhere, Category = "VR Plugin | Mechanical | Events")
 	FGameplayTag OnReachedMaxTag;
@@ -94,4 +121,17 @@ protected:
 private:
 	bool bWasAtMax = false;
 	bool bWasAtMin = true;
+	float LastHapticValue = 0.0f;
+	
+	float InitialGrabRawValue = 0.0f;
+	float GrabbedNormalizedValue = 0.0f;
+	
+	FVector LastParentLocation = FVector::ZeroVector;
+	FVector LastParentVelocity = FVector::ZeroVector;
+	FQuat LastParentRotation = FQuat::Identity;
+	FVector LastAngularVelocity = FVector::ZeroVector;
+	float CurrentMomentum = 0.0f;
+
+	float CalculateRawHandValue(FVector HandWorldLocation) const;
+	void CalculateInertia(float DeltaTime);
 };

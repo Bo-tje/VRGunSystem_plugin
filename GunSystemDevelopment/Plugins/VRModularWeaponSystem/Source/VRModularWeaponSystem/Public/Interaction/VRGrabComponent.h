@@ -115,7 +115,15 @@ public:
 	/** If true, the entire owner actor will be attached to the interactor. Set to false for sub-components like slides. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Plugin | Setup")
 	bool bAttachOwnerOnGrab = true;
+
+	/** Distance at which the grab will automatically break. Used for sub-components like slides. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Plugin | Interaction")
+	float BreakDistance = 25.0f;
 	
+	/** A tag that can be read by the Interactor's Animation Blueprint to trigger a specific hand pose. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Plugin | Visuals")
+	FGameplayTag GrabPoseTag;
+
 protected:
 	
 	UPROPERTY(BlueprintReadOnly, Category = " VR Plugin | VR Interaction")

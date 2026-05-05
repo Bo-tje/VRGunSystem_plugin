@@ -68,6 +68,7 @@ Manages the interaction between the weapon and the VR hands (Interactors).
   - `bUseSocketSnap`: `bool` - Snaps to `GrabSocketName` if true.
   - `GrabSocketName`: `FName` - The socket name used for snapping to the hand.
   - `ThrowMultiplier`: `float` - Multiplier for velocity when throwing.
+  - `GrabPoseTag`: `FGameplayTag` - A tag used to tell the Animation Blueprint which hand pose to use when grabbed.
   - `GrabHapticEffect`: `UHapticFeedbackEffect_Base*` - Haptic played on grab.
   - `HapticScale` / `bLoopHaptics`: `float` / `bool` - Determines how grabbing haptics are played.
 - **Functions:**
@@ -84,6 +85,24 @@ Manages the interaction between the weapon and the VR hands (Interactors).
   - `OnGrabbed(AActor* InteractingHand)`
   - `OnReleased()`
 - **Interfaces:** Implements `IVRInteractableInterface`.
+
+### `UVRMechanicalComponent` (Scene Component)
+Handles moving mechanical parts on the weapon, such as slides, triggers, or break-action hinges. It calculates hand offsets and drives component transforms purely via math (kinematic) to ensure perfect tracking without VR physics jitter.
+
+- **Key Properties:**
+  - `CurrentNormalisedValue`: `float` - The current state of the mechanical part (0.0 to 1.0).
+  - `bIsLocked`: `bool` - Bypasses the return spring, allowing the component to be locked in place (e.g., slide lock on empty).
+  - `RestingValue`: `float` - The target value for the return spring.
+  - `CurrentMomentum`: `float` - Stores simulated physics force.
+- **Functions:**
+  - `SetNormalizedValue(float NewValue)`: Immediately updates the position and state of the component.
+  - `SetIsLocked(bool bNewLocked)`: Locks or unlocks the return spring.
+  - `SetRestingValue(float NewRestingValue)`: Dynamically changes the target state of the component (e.g., smoothly springing open).
+  - `AddMomentum(float MomentumAmount)`: Injects simulated physical force (e.g., popping open a latch).
+- **Delegates (Blueprint Assignable):**
+  - `OnReachedMax` / `OnReachedMin`
+  - `OnValueChanged`
+- **Implementation:** Implements `IVRWeaponComponentInterface`. It correctly calculates initial offsets via `CalculateRawHandValue` for both `Linear` (distance-based) and `Rotational` (angle-based with wrap-around safety) movement types.
 
 ### `UVRInteractor` (Scene Component)
 The component on the VR pawn/hand that initiates interactions with `UVRGrabComponent`.
@@ -127,6 +146,12 @@ Defines the base configuration for a weapon. See the [[System design/System desi
 - `AdditionalComponents`: Array of `FVRWeaponDynamicComponent` for dynamically injecting arbitrary extra Actor Components (like `UVRGrabComponent` or logic nodes) directly from the Data Asset.
 - `DefaultProjectile`: The standard projectile this weapon uses.
 - `FireSound`, `DryFireSound`, `ReloadSound`, `MuzzleFlash`, `FireHapticEffect`.
+
+### Component Settings Architecture
+Settings for dynamically injected components are managed via subclasses of `UVRWeaponComponentSettings`, which are instantiated directly within `UVRWeaponData` (inside the `AdditionalComponents` array):
+- **`UVRGrabSettings`**: Configures grab haptics, throw multipliers, snap spheres, break distances, and the `GrabPoseTag` for animation routing.
+- **`UVRFireSettings`**: Defines muzzle socket names and specific fire/dry-fire haptic scaling.
+- **`UVRMechanicalSettings`**: Fully configures a mechanical part. Includes `MechanicalMovementType` (Linear/Rotational), `LocalAxis`, `MaxRange`, `bHasReturnSpring`, `RestingValue`, `HapticTickThreshold`, and physics inertia settings (`bUseSimulatedInertia`, `InertiaMultiplier`).
 
 ### `UProjectileData`
 Defines the properties of a bullet/round.

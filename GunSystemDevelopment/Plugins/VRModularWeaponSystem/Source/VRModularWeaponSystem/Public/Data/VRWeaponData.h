@@ -35,6 +35,13 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Grab Settings")
 	float SphereRadius = 12.0f;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Grab Settings")
+	float BreakDistance = 25.0f;
+
+	/** A tag that can be read by the Interactor's Animation Blueprint to trigger a specific hand pose. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Grab Settings | Visuals")
+	FGameplayTag GrabPoseTag;
 };
 
 /** Specific settings for the Mechanical component */
@@ -56,11 +63,29 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mechanical")
 	bool bInvertDirection;
 	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mechanical | State")
+	bool bIsLocked = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mechanical | Physics")
+	bool bUseSimulatedInertia = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mechanical | Physics", meta = (EditCondition = "bUseSimulatedInertia"))
+	float InertiaMultiplier = 1.0f;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mechanical")
 	bool bHasReturnSpring;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mechanical", meta = (EditCondition = "bHasReturnSpring"))
 	float ReturnSpeed = 15.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mechanical")
+	float RestingValue = 0.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mechanical")
+	TObjectPtr<UHapticFeedbackEffect_Base> MovementHapticEffect;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mechanical", meta = (ClampMin = "0.01", ClampMax = "1.0"))
+	float HapticTickThreshold = 0.05f;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mechanical | Events")
 	FGameplayTag OnReachedMaxTag;

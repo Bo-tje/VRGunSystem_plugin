@@ -111,6 +111,8 @@ void AVRWeaponBase::ApplyWeaponDataVisuals()
 		StateTreeComponent->SetStateTree(WeaponData->StateTree);
 	}
 	
+	FAttachmentTransformRules StaticAttachRules(EAttachmentRule::KeepRelative, true);
+
 	for (const FVRWeaponPart& Part : WeaponData->WeaponParts)
 	{
 		if (Part.PartName.IsNone() || Part.Mesh.IsNull()) continue;
@@ -136,9 +138,11 @@ void AVRWeaponBase::ApplyWeaponDataVisuals()
 				}
 			}
 
-			NewComponent->SetupAttachment(AttachTarget, Part.ParentSocket);
-			NewComponent->RegisterComponent();
+			// CRITICAL: Use AttachToComponent with welding (true) for static parts.
+			// Using SetupAttachment without explicit welding causes physics fighting between overlapping components.
 			NewComponent->SetRelativeTransform(Part.PartOffset);
+			NewComponent->AttachToComponent(AttachTarget, StaticAttachRules, Part.ParentSocket);
+			NewComponent->RegisterComponent();
 			
 			NewComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 			NewComponent->SetCollisionProfileName(TEXT("PhysicsBody"));
@@ -179,12 +183,12 @@ void AVRWeaponBase::ApplyWeaponDataVisuals()
 					// First, try to find a dynamic component by this name
 					if (UActorComponent* ParentComp = GetDynamicComponentByName(CompGen.ParentSocket))
 					{
-						if (ParentComp != NewObj) // Prevent case-insensitive self-attachment!
+						if (ParentComp != NewObj)
 						{
 							if (USceneComponent* ParentScene = Cast<USceneComponent>(ParentComp))
 							{
 								AttachTarget = ParentScene;
-								TargetSocket = NAME_None; // Clear socket as we are attaching to the component itself
+								TargetSocket = NAME_None;
 								bAttachedToDynamic = true;
 							}
 						}
@@ -206,15 +210,37 @@ void AVRWeaponBase::ApplyWeaponDataVisuals()
 					}
 				}
 
-				SceneComp->SetupAttachment(AttachTarget, TargetSocket);
-				SceneComp->RegisterComponent();
-				SceneComp->SetRelativeTransform(CompGen.RelativeOffset);
+				// Welding should only be done if specifically requested for dynamic parts,
+				// or if they are static decorations (UStaticMeshComponent).
+				// Mechanical parts should NOT be welded if they move.
+				bool bShouldWeld = CompGen.bWeldCollision;
+				if (NewObj->IsA<UStaticMeshComponent>() && !NewObj->IsA<UVRMechanicalComponent>())
+				{
+					bShouldWeld = true;
+				}
 
+				FAttachmentTransformRules DynAttachRules(EAttachmentRule::KeepRelative, bShouldWeld);
+				SceneComp->SetRelativeTransform(CompGen.RelativeOffset);
+				SceneComp->AttachToComponent(AttachTarget, DynAttachRules, TargetSocket);
+				SceneComp->RegisterComponent();
+				
 				if (UStaticMeshComponent* SMComp = Cast<UStaticMeshComponent>(NewObj))
 				{
 					if (!CompGen.OptionalMesh.IsNull())
 					{
 						SMComp->SetStaticMesh(CompGen.OptionalMesh.LoadSynchronous());
+					}
+
+					if (bShouldWeld)
+					{
+						SMComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+						SMComp->SetCollisionProfileName(TEXT("PhysicsBody"));
+					}
+					else
+					{
+						// Safe defaults for moving or non-physical dynamic parts
+						SMComp->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+						SMComp->SetCollisionProfileName(TEXT("NoCollision"));
 					}
 				}
 				else if (UVRMechanicalComponent* MechComp = Cast<UVRMechanicalComponent>(NewObj))
