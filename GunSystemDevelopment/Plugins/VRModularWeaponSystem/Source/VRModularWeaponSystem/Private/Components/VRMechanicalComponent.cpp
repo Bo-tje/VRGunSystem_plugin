@@ -22,7 +22,7 @@ void UVRMechanicalComponent::BeginPlay()
 	if (!DrivingGrabComponent)
 	{
 		TArray<USceneComponent*> Children;
-		GetChildrenComponents(true, Children);
+		GetChildrenComponents(false, Children); // Immediate children only
 		for (USceneComponent* Child : Children)
 		{
 			if (UVRGrabComponent* GrabComp = Cast<UVRGrabComponent>(Child))
@@ -37,13 +37,13 @@ void UVRMechanicalComponent::BeginPlay()
 	{
 		DrivingGrabComponent->OnGrabbed.AddDynamic(this, &UVRMechanicalComponent::OnGrabbed);
 		DrivingGrabComponent->OnGrabReleased.AddDynamic(this, &UVRMechanicalComponent::OnReleased);
-		DrivingGrabComponent->bAttachOwnerOnGrab = false; // Ensure it doesn't move the whole gun
+		DrivingGrabComponent->bAttachOwnerOnGrab = false; 
 	}
 
-	if (GetAttachParent())
+	if (USceneComponent* Parent = GetAttachParent())
 	{
-		LastParentLocation = GetAttachParent()->GetComponentLocation();
-		LastParentRotation = GetAttachParent()->GetComponentQuat();
+		ParentMotion.LastLocation = Parent->GetComponentLocation();
+		ParentMotion.LastRotation = Parent->GetComponentQuat();
 	}
 }
 
@@ -51,6 +51,12 @@ void UVRMechanicalComponent::TickComponent(float DeltaTime, enum ELevelTick Tick
 	FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	// Always track parent motion if inertia is enabled, so it's ready when released
+	if (bUseSimulatedInertia)
+	{
+		TrackParentMotion(DeltaTime);
+	}
 	
 	if (bIsBeingHeld && DrivingGrabComponent && DrivingGrabComponent->GetCurrentInteractor())
 	{
@@ -58,7 +64,10 @@ void UVRMechanicalComponent::TickComponent(float DeltaTime, enum ELevelTick Tick
 	}
 	else if (!bIsBeingHeld)
 	{
-		CalculateInertia(DeltaTime);
+		if (bUseSimulatedInertia)
+		{
+			CalculateInertia(DeltaTime);
+		}
 		
 		if (bHasReturnSpring && !bIsLocked && !FMath::IsNearlyEqual(CurrentNormalisedValue, RestingValue, 0.001f))
 		{
@@ -78,47 +87,21 @@ void UVRMechanicalComponent::InitializeComponentWithSettings_Implementation(UVRW
 
 void UVRMechanicalComponent::SetNormalizedValue(float NewValue)
 {
-	float OldValue = CurrentNormalisedValue;
+	const float OldValue = CurrentNormalisedValue;
 	CurrentNormalisedValue = FMath::Clamp(NewValue, 0.0f, 1.0f);
 	
-	if (OldValue != CurrentNormalisedValue)
-	{
-		OnValueChanged.Broadcast(CurrentNormalisedValue);
-		
-		// Movement Haptics
-		if (bIsBeingHeld && MovementHapticEffect && DrivingGrabComponent && DrivingGrabComponent->GetCurrentInteractor())
-		{
-			// Pulse based on threshold
-			if (FMath::Abs(CurrentNormalisedValue - LastHapticValue) >= HapticTickThreshold)
-			{
-				DrivingGrabComponent->GetCurrentInteractor()->PlayHapticFeedback(MovementHapticEffect, 0.3f);
-				LastHapticValue = CurrentNormalisedValue;
-			}
-		}
+	if (FMath::IsNearlyEqual(OldValue, CurrentNormalisedValue, 0.00001f)) return;
 
-		// Trigger Reached Min/Max events
-		if (CurrentNormalisedValue >= 1.0f && !bWasAtMax)
-		{
-			OnReachedMax.Broadcast();
-			bWasAtMax = true;
-		}
-		else if (CurrentNormalisedValue < 1.0f)
-		{
-			bWasAtMax = false;
-		}
+	OnValueChanged.Broadcast(CurrentNormalisedValue);
+	
+	HandleHaptics();
+	CheckThresholdEvents();
+	UpdateVisuals();
+}
 
-		if (CurrentNormalisedValue <= 0.0f && !bWasAtMin)
-		{
-			OnReachedMin.Broadcast();
-			bWasAtMin = true;
-		}
-		else if (CurrentNormalisedValue > 0.0f)
-		{
-			bWasAtMin = false;
-		}
-	}
-
-	float CurrentTargetOffset = CurrentNormalisedValue * MaxRange * (bInvertDirection ? -1.0f : 1.0f);
+void UVRMechanicalComponent::UpdateVisuals()
+{
+	const float CurrentTargetOffset = CurrentNormalisedValue * MaxRange * (bInvertDirection ? -1.0f : 1.0f);
 	
 	if (MechanicalMovementType == VRNativeTags::Linear)
 	{
@@ -130,6 +113,125 @@ void UVRMechanicalComponent::SetNormalizedValue(float NewValue)
 		FQuat NewRotation = HomeTransform.GetRotation() * FQuat(LocalAxis, FMath::DegreesToRadians(CurrentTargetOffset));
 		SetRelativeRotation(NewRotation);
 	}
+}
+
+void UVRMechanicalComponent::CheckThresholdEvents()
+{
+	// Reached Max
+	if (CurrentNormalisedValue >= 1.0f && !bWasAtMax)
+	{
+		OnReachedMax.Broadcast();
+		bWasAtMax = true;
+	}
+	else if (CurrentNormalisedValue < 1.0f)
+	{
+		bWasAtMax = false;
+	}
+
+	// Reached Min
+	if (CurrentNormalisedValue <= 0.0f && !bWasAtMin)
+	{
+		OnReachedMin.Broadcast();
+		bWasAtMin = true;
+	}
+	else if (CurrentNormalisedValue > 0.0f)
+	{
+		bWasAtMin = false;
+	}
+}
+
+void UVRMechanicalComponent::HandleHaptics()
+{
+	if (bIsBeingHeld && MovementHapticEffect && DrivingGrabComponent && DrivingGrabComponent->GetCurrentInteractor())
+	{
+		if (FMath::Abs(CurrentNormalisedValue - LastHapticValue) >= HapticTickThreshold)
+		{
+			DrivingGrabComponent->GetCurrentInteractor()->PlayHapticFeedback(MovementHapticEffect, 0.3f);
+			LastHapticValue = CurrentNormalisedValue;
+		}
+	}
+}
+
+void UVRMechanicalComponent::TrackParentMotion(float DeltaTime)
+{
+	USceneComponent* Parent = GetAttachParent();
+	if (!Parent || DeltaTime <= 0.0f) return;
+
+	const FVector CurrentLocation = Parent->GetComponentLocation();
+	ParentMotion.LastVelocity = (CurrentLocation - ParentMotion.LastLocation) / DeltaTime;
+	ParentMotion.LastLocation = CurrentLocation;
+	
+	const FQuat CurrentRot = Parent->GetComponentQuat();
+	const FQuat DeltaRot = CurrentRot * ParentMotion.LastRotation.Inverse();
+	ParentMotion.LastRotation = CurrentRot;
+
+	FVector Axis; float Angle;
+	DeltaRot.ToAxisAndAngle(Axis, Angle);
+	if (Angle > PI) Angle -= 2.0f * PI;
+	
+	ParentMotion.LastAngularVelocity = Axis * (Angle / DeltaTime);
+}
+
+void UVRMechanicalComponent::CalculateInertia(float DeltaTime)
+{
+	if (!GetAttachParent() || DeltaTime <= 0.0f || bIsLocked) 
+	{
+		CurrentMomentum = 0.0f;
+		return;
+	}
+
+	// Constants for inertia sensitivity
+	const float LinearSensitivity = -0.0005f;
+	const float RotationalSensitivity = -0.001f;
+	const float MaxAccel = 20000.0f;
+
+	float Force = 0.0f;
+	const FVector WorldAxis = GetComponentTransform().TransformVectorNoScale(LocalAxis.GetSafeNormal());
+
+	if (MechanicalMovementType == VRNativeTags::Linear)
+	{
+		// Derive acceleration from parent motion
+		const FVector CurrentParentLoc = GetAttachParent()->GetComponentLocation();
+		const FVector ParentVelocity = (CurrentParentLoc - ParentMotion.LastLocation) / DeltaTime;
+		FVector Acceleration = (ParentVelocity - ParentMotion.LastVelocity) / DeltaTime;
+		Acceleration = Acceleration.GetClampedToMaxSize(MaxAccel);
+		
+		Force = FVector::DotProduct(Acceleration, WorldAxis) * LinearSensitivity * InertiaMultiplier;
+	}
+	else if (MechanicalMovementType == VRNativeTags::Rotational)
+	{
+		// Derive angular acceleration
+		const FQuat CurrentRot = GetAttachParent()->GetComponentQuat();
+		const FQuat DeltaRot = CurrentRot * ParentMotion.LastRotation.Inverse();
+		FVector Axis; float Angle;
+		DeltaRot.ToAxisAndAngle(Axis, Angle);
+		if (Angle > PI) Angle -= 2.0f * PI;
+		
+		const FVector AngularVelocity = Axis * (Angle / DeltaTime);
+		FVector AngularAcceleration = (AngularVelocity - ParentMotion.LastAngularVelocity) / DeltaTime;
+		AngularAcceleration = AngularAcceleration.GetClampedToMaxSize(MaxAccel);
+		
+		Force = FVector::DotProduct(AngularAcceleration, WorldAxis) * RotationalSensitivity * InertiaMultiplier;
+	}
+
+	if (FMath::Abs(Force) > 0.1f) 
+	{
+		CurrentMomentum += Force * DeltaTime;
+	}
+	
+	if (FMath::Abs(CurrentMomentum) > 0.001f)
+	{
+		const float ProposedValue = CurrentNormalisedValue + (CurrentMomentum * DeltaTime);
+		
+		if (ProposedValue >= 1.0f || ProposedValue <= 0.0f)
+		{
+			CurrentMomentum = 0.0f; // Hard stop at boundaries
+		}
+		
+		SetNormalizedValue(ProposedValue);
+	}
+	
+	CurrentMomentum = FMath::FInterpTo(CurrentMomentum, 0.0f, DeltaTime, 8.0f); // Friction
 }
 
 void UVRMechanicalComponent::SetIsLocked(bool bNewLocked)
@@ -149,12 +251,11 @@ void UVRMechanicalComponent::AddMomentum(float MomentumAmount)
 
 void UVRMechanicalComponent::UpdateFromHandLocation(FVector HandWorldLocation)
 {
-	float CurrentRawValue = CalculateRawHandValue(HandWorldLocation);
+	const float CurrentRawValue = CalculateRawHandValue(HandWorldLocation);
 	float DeltaRaw = 0.0f;
 
 	if (MechanicalMovementType == VRNativeTags::Rotational)
 	{
-		// FindDeltaAngleDegrees safely handles the 180/-180 wrap-around
 		DeltaRaw = FMath::FindDeltaAngleDegrees(InitialGrabRawValue, CurrentRawValue);
 	}
 	else
@@ -162,8 +263,8 @@ void UVRMechanicalComponent::UpdateFromHandLocation(FVector HandWorldLocation)
 		DeltaRaw = CurrentRawValue - InitialGrabRawValue;
 	}
 
-	float DirectionModifier = bInvertDirection ? -1.0f : 1.0f;
-	float NormalizedValue = GrabbedNormalizedValue + ((DeltaRaw / MaxRange) * DirectionModifier);
+	const float DirectionModifier = bInvertDirection ? -1.0f : 1.0f;
+	const float NormalizedValue = GrabbedNormalizedValue + ((DeltaRaw / MaxRange) * DirectionModifier);
 	
 	SetNormalizedValue(NormalizedValue);
 }
@@ -172,8 +273,8 @@ float UVRMechanicalComponent::CalculateRawHandValue(FVector HandWorldLocation) c
 {
 	if (!GetAttachParent()) return 0.0f;
 	
-	FVector HandLocalSpace = GetAttachParent()->GetComponentTransform().InverseTransformPosition(HandWorldLocation);
-	FVector HandOffset = HandLocalSpace - HomeTransform.GetLocation();
+	const FVector HandLocalSpace = GetAttachParent()->GetComponentTransform().InverseTransformPosition(HandWorldLocation);
+	const FVector HandOffset = HandLocalSpace - HomeTransform.GetLocation();
 	
 	if (MechanicalMovementType == VRNativeTags::Linear)
 	{
@@ -181,7 +282,7 @@ float UVRMechanicalComponent::CalculateRawHandValue(FVector HandWorldLocation) c
 	}
 	else if (MechanicalMovementType == VRNativeTags::Rotational)
 	{
-		FVector SafeAxis = LocalAxis.GetSafeNormal();
+		const FVector SafeAxis = LocalAxis.GetSafeNormal();
 		
 		// Create a consistent reference frame around the pivot axis
 		FVector RefAxis = FVector::ForwardVector;
@@ -190,82 +291,18 @@ float UVRMechanicalComponent::CalculateRawHandValue(FVector HandWorldLocation) c
 			RefAxis = FVector::RightVector;
 		}
 		
-		FVector OrthogonalY = FVector::CrossProduct(SafeAxis, RefAxis).GetSafeNormal();
-		FVector OrthogonalX = FVector::CrossProduct(OrthogonalY, SafeAxis).GetSafeNormal();
+		const FVector OrthogonalY = FVector::CrossProduct(SafeAxis, RefAxis).GetSafeNormal();
+		const FVector OrthogonalX = FVector::CrossProduct(OrthogonalY, SafeAxis).GetSafeNormal();
 		
-		FVector ProjectedHand = FVector::VectorPlaneProject(HandOffset, SafeAxis).GetSafeNormal();
+		const FVector ProjectedHand = FVector::VectorPlaneProject(HandOffset, SafeAxis).GetSafeNormal();
 		
-		float DotX = FVector::DotProduct(ProjectedHand, OrthogonalX);
-		float DotY = FVector::DotProduct(ProjectedHand, OrthogonalY);
+		const float DotX = FVector::DotProduct(ProjectedHand, OrthogonalX);
+		const float DotY = FVector::DotProduct(ProjectedHand, OrthogonalY);
 		
 		return FMath::RadiansToDegrees(FMath::Atan2(DotY, DotX));
 	}
 	
 	return 0.0f;
-}
-
-void UVRMechanicalComponent::CalculateInertia(float DeltaTime)
-{
-	if (!GetAttachParent() || DeltaTime <= 0.0f) return;
-
-	FVector CurrentLocation = GetAttachParent()->GetComponentLocation();
-	FVector Velocity = (CurrentLocation - LastParentLocation) / DeltaTime;
-	FVector Acceleration = (Velocity - LastParentVelocity) / DeltaTime;
-	Acceleration = Acceleration.GetClampedToMaxSize(20000.0f); // Prevent VR tracking jumps
-	
-	LastParentLocation = CurrentLocation;
-	LastParentVelocity = Velocity;
-	
-	FQuat CurrentRot = GetAttachParent()->GetComponentQuat();
-	FQuat DeltaRot = CurrentRot * LastParentRotation.Inverse();
-	LastParentRotation = CurrentRot;
-
-	FVector Axis; float Angle;
-	DeltaRot.ToAxisAndAngle(Axis, Angle);
-	if (Angle > PI) Angle -= 2.0f * PI;
-	
-	FVector AngularVelocity = Axis * (Angle / DeltaTime);
-	FVector AngularAcceleration = (AngularVelocity - LastAngularVelocity) / DeltaTime;
-	AngularAcceleration = AngularAcceleration.GetClampedToMaxSize(20000.0f);
-	LastAngularVelocity = AngularVelocity;
-
-	if (bUseSimulatedInertia && !bIsBeingHeld && !bIsLocked)
-	{
-		float Force = 0.0f;
-		FVector WorldAxis = GetAttachParent()->GetComponentTransform().TransformVectorNoScale(LocalAxis.GetSafeNormal());
-
-		if (MechanicalMovementType == VRNativeTags::Linear)
-		{
-			Force = FVector::DotProduct(Acceleration, WorldAxis) * -0.0005f * InertiaMultiplier;
-		}
-		else if (MechanicalMovementType == VRNativeTags::Rotational)
-		{
-			Force = FVector::DotProduct(AngularAcceleration, WorldAxis) * -0.001f * InertiaMultiplier;
-		}
-
-		if (FMath::Abs(Force) > 0.1f) 
-		{
-			CurrentMomentum += Force * DeltaTime;
-		}
-		
-		if (FMath::Abs(CurrentMomentum) > 0.001f)
-		{
-			float ProposedValue = CurrentNormalisedValue + (CurrentMomentum * DeltaTime);
-			
-			if (ProposedValue >= 1.0f || ProposedValue <= 0.0f)
-			{
-				CurrentMomentum = 0.0f; // Hard stop
-			}
-			
-			SetNormalizedValue(ProposedValue);
-		}
-		
-		CurrentMomentum = FMath::FInterpTo(CurrentMomentum, 0.0f, DeltaTime, 8.0f); // Friction
-	}
-	else
-	{
-		CurrentMomentum = 0.0f;
-	}
 }
 
 void UVRMechanicalComponent::ConstructVisuals(UStaticMesh* InMesh, bool bWeldToParent)
@@ -276,14 +313,8 @@ void UVRMechanicalComponent::ConstructVisuals(UStaticMesh* InMesh, bool bWeldToP
 	VisualMesh->CreationMethod = EComponentCreationMethod::UserConstructionScript;
 	VisualMesh->SetStaticMesh(InMesh);
 	
-	// Mechanical parts should generally NOT be welded if they are meant to move relative to a physics-simulating root.
-	// If welded, manual SetRelativeLocation calls will fight the physics simulation.
 	bool bActualWeld = bWeldToParent;
-	
-	FAttachmentTransformRules AttachRules(
-		EAttachmentRule::KeepRelative,
-		bActualWeld
-		);	
+	FAttachmentTransformRules AttachRules(EAttachmentRule::KeepRelative, bActualWeld);	
 	
 	VisualMesh->AttachToComponent(this, AttachRules);
 	VisualMesh->RegisterComponent();
@@ -295,7 +326,6 @@ void UVRMechanicalComponent::ConstructVisuals(UStaticMesh* InMesh, bool bWeldToP
 	}
 	else
 	{
-		// Default to QueryOnly for moving parts to allow interaction without physics fighting.
 		VisualMesh->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 		VisualMesh->SetCollisionProfileName(TEXT("NoCollision")); 
 		VisualMesh->SetGenerateOverlapEvents(false);

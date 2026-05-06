@@ -68,7 +68,7 @@ FTransform UVRFireComponent::GetMuzzleTransform() const
 void UVRFireComponent::OnRegister()
 {
 	Super::OnRegister();
-	
+
 }
 
 void UVRFireComponent::PullTrigger_Implementation()

@@ -13,7 +13,7 @@ UVRChamberComponent::UVRChamberComponent()
 	RoundVisualMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("RoundVisualMesh"));
 	RoundVisualMesh->SetupAttachment(this);
 	
-	// CRITICAL: Disable collision so the round doesn't fight with the weapon physics body
+	//Disable collision so the round doesn't fight with the weapon physics body
 	RoundVisualMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	RoundVisualMesh->SetCollisionProfileName(TEXT("NoCollision"));
 	RoundVisualMesh->SetGenerateOverlapEvents(false);

@@ -40,8 +40,8 @@ public:
 	float BreakDistance = 25.0f;
 
 	/** A tag that can be read by the Interactor's Animation Blueprint to trigger a specific hand pose. */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Grab Settings | Visuals")
-	FGameplayTag GrabPoseTag;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Grab Settings")
+	FGameplayTag AnimationGrabPoseTag;
 };
 
 /** Specific settings for the Mechanical component */

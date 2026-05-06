@@ -148,7 +148,7 @@ APlayerController* UVRInteractor::GetProvidingPlayerController() const
 	return nullptr;
 }
 
-void UVRInteractor::PlayHapticFeedback(UHapticFeedbackEffect_Base* HapticEffect, float Scale, bool bLoop)
+void UVRInteractor::(UHapticFeedbackEffect_Base* HapticEffect, float Scale, bool bLoop)
 {
 	if (!HapticEffect) return;
 	

@@ -113,10 +113,22 @@ protected:
 	TObjectPtr<UVRGrabComponent> DrivingGrabComponent;
 
 	UFUNCTION()
-	void OnGrabbed(AActor* Interactor);
+	virtual void OnGrabbed(AActor* InteractingActor);
 
 	UFUNCTION()
-	void OnReleased();
+	virtual void OnReleased();
+
+	/** Updates the component's transform based on the current normalized value */
+	void UpdateVisuals();
+
+	/** Checks if we've crossed min/max thresholds and broadcasts events */
+	void CheckThresholdEvents();
+
+	/** Handles haptic pulses based on movement threshold */
+	void HandleHaptics();
+
+	/** Tracks the motion of the parent component for inertia calculations */
+	void TrackParentMotion(float DeltaTime);
 
 private:
 	bool bWasAtMax = false;
@@ -125,11 +137,15 @@ private:
 	
 	float InitialGrabRawValue = 0.0f;
 	float GrabbedNormalizedValue = 0.0f;
+
+	struct FParentMotionData
+	{
+		FVector LastLocation = FVector::ZeroVector;
+		FVector LastVelocity = FVector::ZeroVector;
+		FQuat LastRotation = FQuat::Identity;
+		FVector LastAngularVelocity = FVector::ZeroVector;
+	} ParentMotion;
 	
-	FVector LastParentLocation = FVector::ZeroVector;
-	FVector LastParentVelocity = FVector::ZeroVector;
-	FQuat LastParentRotation = FQuat::Identity;
-	FVector LastAngularVelocity = FVector::ZeroVector;
 	float CurrentMomentum = 0.0f;
 
 	float CalculateRawHandValue(FVector HandWorldLocation) const;

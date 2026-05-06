@@ -268,6 +268,6 @@ void UVRGrabComponent::InitializeComponentWithSettings_Implementation(UVRWeaponD
 		bSnapToInteractor = GrabSettings->bUseSocketSnap;
 		SetSphereRadius(GrabSettings->SphereRadius);
 		BreakDistance = GrabSettings->BreakDistance;
-		GrabPoseTag = GrabSettings->GrabPoseTag;
+		GrabPoseTag = GrabSettings->AnimationGrabPoseTag;
 	}
 }
