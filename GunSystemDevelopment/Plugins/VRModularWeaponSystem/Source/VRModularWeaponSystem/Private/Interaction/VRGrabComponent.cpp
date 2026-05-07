@@ -269,5 +269,6 @@ void UVRGrabComponent::InitializeComponentWithSettings_Implementation(UVRWeaponD
 		SetSphereRadius(GrabSettings->SphereRadius);
 		BreakDistance = GrabSettings->BreakDistance;
 		GrabPoseTag = GrabSettings->AnimationGrabPoseTag;
+		bIsMainGrip = GrabSettings->bIsMainGrip;
 	}
 }

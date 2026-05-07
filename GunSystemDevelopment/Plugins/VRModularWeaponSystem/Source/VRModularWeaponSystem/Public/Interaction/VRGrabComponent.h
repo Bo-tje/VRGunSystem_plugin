@@ -124,6 +124,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Plugin | Visuals")
 	FGameplayTag GrabPoseTag;
 
+	/** If true, this grip is considered the main handle for haptics scaling. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Plugin | Setup")
+	bool bIsMainGrip = false;
+
 protected:
 	
 	UPROPERTY(BlueprintReadOnly, Category = " VR Plugin | VR Interaction")

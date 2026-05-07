@@ -2,6 +2,7 @@
 #include "StateTreeExecutionContext.h"
 #include "Components/VRChamberComponent.h"
 #include "Data/VRWeaponData.h"
+#include "Core/VRWeaponBase.h"
 
 void FSTEval_Weapon::Tick(FStateTreeExecutionContext& Context, const float DeltaTime) const
 {
@@ -26,9 +27,10 @@ void FSTEval_Weapon::Tick(FStateTreeExecutionContext& Context, const float Delta
 		if (AVRWeaponBase* Weapon = Cast<AVRWeaponBase>(InstanceData.WeaponActor))
 		{
 			// Calculate the delay in seconds (60 seconds / Rounds Per Minute)
-			if (Weapon->WeaponData && Weapon->WeaponData->FireRate > 0)
+			float FireRate = Weapon->GetCalculatedStats().FireRate;
+			if (FireRate > 0.0f)
 			{
-				InstanceData.TimeBetweenShots = 60.0f / Weapon->WeaponData->FireRate;
+				InstanceData.TimeBetweenShots = 60.0f / FireRate;
 			}
 		}
 	}	

@@ -4,9 +4,11 @@
 #include "Core/VRNativeTags.h"
 #include "Interfaces/VRRoundProvider.h"
 #include "Components/VRWeaponStateTreeComponent.h"
+#include "Components/VRWeaponFeedbackComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/BoxComponent.h"
 #include "Components/VRMechanicalComponent.h"
+#include "Data/VRWeaponStats.h"
 
 AVRWeaponBase::AVRWeaponBase()
 {
@@ -14,7 +16,7 @@ AVRWeaponBase::AVRWeaponBase()
 
 	WeaponRoot = CreateDefaultSubobject<UBoxComponent>(TEXT("WeaponRoot"));
 	SetRootComponent(WeaponRoot);
-	WeaponRoot->SetBoxExtent(FVector(1.0f)); // Tiny core for physics welding
+	WeaponRoot->SetBoxExtent(FVector(1.0f)); 
 	WeaponRoot->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	WeaponRoot->SetCollisionProfileName(TEXT("PhysicsBody"));
 	WeaponRoot->SetSimulatePhysics(true);
@@ -23,6 +25,7 @@ AVRWeaponBase::AVRWeaponBase()
 	PartRoot->SetupAttachment(WeaponRoot);
 
 	StateTreeComponent = CreateDefaultSubobject<UVRWeaponStateTreeComponent>(TEXT("StateTreeComponent"));
+	FeedbackComponent = CreateDefaultSubobject<UVRWeaponFeedbackComponent>(TEXT("FeedbackComponent"));
 }
 
 AVRWeaponBase* AVRWeaponBase::SpawnWeaponFromData(const UObject* WorldContextObject, UVRWeaponData* InData, FTransform SpawnTransform, TSubclassOf<AVRWeaponBase> WeaponClass)
@@ -32,7 +35,6 @@ AVRWeaponBase* AVRWeaponBase::SpawnWeaponFromData(const UObject* WorldContextObj
 	UWorld* World = WorldContextObject->GetWorld();
 	if (!World) return nullptr;
 
-	// Use Deferred Spawning so we can inject the DataAsset BEFORE the Construction Script / ApplyVisuals runs
 	AVRWeaponBase* NewWeapon = World->SpawnActorDeferred<AVRWeaponBase>(WeaponClass, SpawnTransform);
 	if (NewWeapon)
 	{
@@ -100,6 +102,30 @@ void AVRWeaponBase::InitializeWeapon()
 			CachedRoundProviders.Add(Component);
 		}
 	}
+
+	UpdateCalculatedStats();
+}
+
+void AVRWeaponBase::UpdateCalculatedStats()
+{
+	if (!WeaponData) return;
+
+	CalculatedStats = WeaponData->BaseStats;
+
+	for (UActorComponent* Component : CachedWeaponComponents)
+	{
+		if (UVRWeaponStatModifier* Modifier = IVRWeaponComponentInterface::Execute_GetStatModifier(Component))
+		{
+			CalculatedStats.FireRate += Modifier->FireRateOffset;
+			CalculatedStats.RecoilMultiplier *= Modifier->RecoilMultiplier;
+			CalculatedStats.DamageMultiplier *= Modifier->DamageMultiplier;
+			CalculatedStats.BulletVelocityMultiplier *= Modifier->BulletVelocityMultiplier;
+			CalculatedStats.ReloadSpeedMultiplier *= Modifier->ReloadSpeedMultiplier;
+
+			if (Modifier->MuzzleFlashOverride) CalculatedStats.MuzzleFlashOverride = Modifier->MuzzleFlashOverride;
+			if (Modifier->FireSoundOverride) CalculatedStats.FireSoundOverride = Modifier->FireSoundOverride;
+		}
+	}
 }
 
 void AVRWeaponBase::ApplyWeaponDataVisuals()
@@ -138,8 +164,6 @@ void AVRWeaponBase::ApplyWeaponDataVisuals()
 				}
 			}
 
-			// CRITICAL: Use AttachToComponent with welding (true) for static parts.
-			// Using SetupAttachment without explicit welding causes physics fighting between overlapping components.
 			NewComponent->SetRelativeTransform(Part.PartOffset);
 			NewComponent->AttachToComponent(AttachTarget, StaticAttachRules, Part.ParentSocket);
 			NewComponent->RegisterComponent();
@@ -157,19 +181,14 @@ void AVRWeaponBase::ApplyWeaponDataVisuals()
 		if (NewObj)
 		{
 			NewObj->CreationMethod = EComponentCreationMethod::UserConstructionScript;
-			
 			DynamicComponentsMap.Add(CompGen.ComponentName, NewObj);
 			
 			if (NewObj->Implements<UVRWeaponComponentInterface>())
 			{
 				if (CompGen.Settings)
-				{
 					IVRWeaponComponentInterface::Execute_InitializeComponentWithSettings(NewObj, WeaponData, CompGen.Settings);
-				}
 				else
-				{
 					IVRWeaponComponentInterface::Execute_InitializeComponent(NewObj, WeaponData);
-				}
 			}
 			
 			if (USceneComponent* SceneComp = Cast<USceneComponent>(NewObj))
@@ -180,7 +199,6 @@ void AVRWeaponBase::ApplyWeaponDataVisuals()
 				if (!CompGen.ParentSocket.IsNone())
 				{
 					bool bAttachedToDynamic = false;
-					// First, try to find a dynamic component by this name
 					if (UActorComponent* ParentComp = GetDynamicComponentByName(CompGen.ParentSocket))
 					{
 						if (ParentComp != NewObj)
@@ -196,7 +214,6 @@ void AVRWeaponBase::ApplyWeaponDataVisuals()
 					
 					if (!bAttachedToDynamic)
 					{
-						// Otherwise, look for a socket on existing meshes
 						TArray<UStaticMeshComponent*> TrackedComps;
 						GetComponents(TrackedComps);
 						for (UStaticMeshComponent* MC : TrackedComps)
@@ -210,14 +227,8 @@ void AVRWeaponBase::ApplyWeaponDataVisuals()
 					}
 				}
 
-				// Welding should only be done if specifically requested for dynamic parts,
-				// or if they are static decorations (UStaticMeshComponent).
-				// Mechanical parts should NOT be welded if they move.
 				bool bShouldWeld = CompGen.bWeldCollision;
-				if (NewObj->IsA<UStaticMeshComponent>() && !NewObj->IsA<UVRMechanicalComponent>())
-				{
-					bShouldWeld = true;
-				}
+				if (NewObj->IsA<UStaticMeshComponent>() && !NewObj->IsA<UVRMechanicalComponent>()) bShouldWeld = true;
 
 				FAttachmentTransformRules DynAttachRules(EAttachmentRule::KeepRelative, bShouldWeld);
 				SceneComp->SetRelativeTransform(CompGen.RelativeOffset);
@@ -226,11 +237,7 @@ void AVRWeaponBase::ApplyWeaponDataVisuals()
 				
 				if (UStaticMeshComponent* SMComp = Cast<UStaticMeshComponent>(NewObj))
 				{
-					if (!CompGen.OptionalMesh.IsNull())
-					{
-						SMComp->SetStaticMesh(CompGen.OptionalMesh.LoadSynchronous());
-					}
-
+					if (!CompGen.OptionalMesh.IsNull()) SMComp->SetStaticMesh(CompGen.OptionalMesh.LoadSynchronous());
 					if (bShouldWeld)
 					{
 						SMComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
@@ -238,17 +245,13 @@ void AVRWeaponBase::ApplyWeaponDataVisuals()
 					}
 					else
 					{
-						// Safe defaults for moving or non-physical dynamic parts
 						SMComp->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 						SMComp->SetCollisionProfileName(TEXT("NoCollision"));
 					}
 				}
 				else if (UVRMechanicalComponent* MechComp = Cast<UVRMechanicalComponent>(NewObj))
 				{
-					if (!CompGen.OptionalMesh.IsNull())
-					{
-						MechComp->ConstructVisuals(CompGen.OptionalMesh.LoadSynchronous(), CompGen.bWeldCollision);
-					}
+					if (!CompGen.OptionalMesh.IsNull()) MechComp->ConstructVisuals(CompGen.OptionalMesh.LoadSynchronous(), CompGen.bWeldCollision);
 				}
 			}
 			else
@@ -292,14 +295,21 @@ void AVRWeaponBase::OnReleased()
 
 void AVRWeaponBase::StartAction_Implementation(UObject* Interactor, float ActionValue, FGameplayTag ActionTag)
 {
-	if (ActionTag.MatchesTag(VRNativeTags::Trigger))
+	// 1. Flexible Tag Routing
+	if (WeaponData && WeaponData->InputTagToComponentName.Contains(ActionTag))
 	{
-		if (UVRMechanicalComponent* VisualTrigger = Cast<UVRMechanicalComponent>(GetDynamicComponentByName("Trigger")))
+		const FName TargetName = WeaponData->InputTagToComponentName[ActionTag];
+		if (UActorComponent* TargetComp = GetDynamicComponentByName(TargetName))
 		{
-			VisualTrigger->SetNormalizedValue(ActionValue);
+			if (UVRMechanicalComponent* MechComp = Cast<UVRMechanicalComponent>(TargetComp))
+			{
+				MechComp->SetNormalizedValue(ActionValue);
+			}
 		}
 	}
-	else if (ActionTag.MatchesTag(VRNativeTags::PrimaryInput))
+
+	// 2. Event-Driven Logic
+	if (ActionTag.MatchesTag(VRNativeTags::PrimaryInput))
 	{
 		IVRWeaponInterface::Execute_PrimaryAction(this);
 	}
@@ -307,6 +317,7 @@ void AVRWeaponBase::StartAction_Implementation(UObject* Interactor, float Action
 	{
 		IVRWeaponInterface::Execute_SecondaryAction(this);
 	}
+	
 	if (ActionTag.MatchesTag(VRNativeTags::Trigger) && ActionValue > 0.8f)
 	{
 		IVRWeaponInterface::Execute_PullTrigger(this);
@@ -315,6 +326,15 @@ void AVRWeaponBase::StartAction_Implementation(UObject* Interactor, float Action
 
 void AVRWeaponBase::StopAction_Implementation(UObject* Interactor, FGameplayTag ActionTag)
 {
+	if (WeaponData && WeaponData->InputTagToComponentName.Contains(ActionTag))
+	{
+		const FName TargetName = WeaponData->InputTagToComponentName[ActionTag];
+		if (UVRMechanicalComponent* MechComp = Cast<UVRMechanicalComponent>(GetDynamicComponentByName(TargetName)))
+		{
+			if (!MechComp->bHasReturnSpring) MechComp->SetNormalizedValue(0.0f);
+		}
+	}
+
 	if (ActionTag.MatchesTag(VRNativeTags::Trigger) || ActionTag.MatchesTag(VRNativeTags::TriggerReleased))
 	{
 		IVRWeaponInterface::Execute_ReleaseTrigger(this);
@@ -332,7 +352,6 @@ void AVRWeaponBase::StopAction_Implementation(UObject* Interactor, FGameplayTag 
 TArray<UVRInteractor*> AVRWeaponBase::GetHoldingInteractors() const
 {
 	TArray<UVRInteractor*> ActiveInteractors;
-	
 	for (UVRGrabComponent* GrabComponent : CachedGrabComponents)
 	{
 		if (GrabComponent->IsHeld() && GrabComponent->GetCurrentInteractor())
@@ -340,7 +359,6 @@ TArray<UVRInteractor*> AVRWeaponBase::GetHoldingInteractors() const
 			ActiveInteractors.Add(GrabComponent->GetCurrentInteractor());
 		}
 	}
-	
 	return ActiveInteractors;
 }
 
@@ -350,62 +368,38 @@ UVRInteractor* AVRWeaponBase::GetHoldingInteractor() const
 	return ActiveInteractors.Num() > 0 ? ActiveInteractors[0] : nullptr;
 }
 
-
-
 void AVRWeaponBase::PullTrigger_Implementation()
 {
 	if (bIsTriggerPulled) return;
-	
 	bIsTriggerPulled = true;
-
-	if (StateTreeComponent)
-	{
-		StateTreeComponent->SendStateTreeEvent(VRNativeTags::Trigger);
-	}
+	if (StateTreeComponent) StateTreeComponent->SendStateTreeEvent(VRNativeTags::Trigger);
 }
 
 void AVRWeaponBase::ReleaseTrigger_Implementation()
 {
 	if (!bIsTriggerPulled) return;
-	
 	bIsTriggerPulled = false;
-
-	if (StateTreeComponent)
-	{
-		StateTreeComponent->SendStateTreeEvent(VRNativeTags::TriggerReleased);
-	}
+	if (StateTreeComponent) StateTreeComponent->SendStateTreeEvent(VRNativeTags::TriggerReleased);
 }
 
 void AVRWeaponBase::PrimaryAction_Implementation()
 {
-	if (StateTreeComponent)
-	{
-		StateTreeComponent->SendStateTreeEvent(VRNativeTags::PrimaryInput);
-	}
+	if (StateTreeComponent) StateTreeComponent->SendStateTreeEvent(VRNativeTags::PrimaryInput);
 }
 
 void AVRWeaponBase::ReleasePrimaryAction_Implementation()
 {
-	if (StateTreeComponent)
-	{
-		StateTreeComponent->SendStateTreeEvent(VRNativeTags::PrimaryInputReleased);
-	}
+	if (StateTreeComponent) StateTreeComponent->SendStateTreeEvent(VRNativeTags::PrimaryInputReleased);
 }
 
 void AVRWeaponBase::SecondaryAction_Implementation()
 {
-	if (StateTreeComponent)
-	{
-		StateTreeComponent->SendStateTreeEvent(VRNativeTags::SecondaryInput);
-	}
+	if (StateTreeComponent) StateTreeComponent->SendStateTreeEvent(VRNativeTags::SecondaryInput);
 }
 
 void AVRWeaponBase::ReleaseSecondaryAction_Implementation()
 {
-	if (StateTreeComponent)
-	{
-		StateTreeComponent->SendStateTreeEvent(VRNativeTags::SecondaryInputReleased);
-	}
+	if (StateTreeComponent) StateTreeComponent->SendStateTreeEvent(VRNativeTags::SecondaryInputReleased);
 }
 
 bool AVRWeaponBase::IsTriggerPulled_Implementation() const

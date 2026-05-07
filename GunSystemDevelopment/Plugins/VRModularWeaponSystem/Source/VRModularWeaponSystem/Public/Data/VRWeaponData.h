@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
 #include "GameplayTagContainer.h"
+#include "Data/VRWeaponStats.h"
 #include "VRWeaponData.generated.h"
 
 /** Base class for custom component settings overridden in the Data Asset. */
@@ -42,6 +43,10 @@ public:
 	/** A tag that can be read by the Interactor's Animation Blueprint to trigger a specific hand pose. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Grab Settings")
 	FGameplayTag AnimationGrabPoseTag;
+
+	/** If true, this grip is considered the main handle for haptics scaling. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Grab Settings")
+	bool bIsMainGrip = false;
 };
 
 /** Specific settings for the Mechanical component */
@@ -153,6 +158,10 @@ struct FVRWeaponDynamicComponent
 	UPROPERTY(EditAnywhere, Instanced, BlueprintReadOnly, Category = "Component|Overrides")
 	TObjectPtr<UVRWeaponComponentSettings> Settings;
 
+	/** Stat modifiers provided by this component (for attachments like vertical grips/suppressors). */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Component|Overrides")
+	TObjectPtr<UVRWeaponStatModifier> StatModifiers;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Component|Sockets")
 	FName ParentSocket;
 
@@ -175,17 +184,18 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VR Weapon | Logic")
 	TObjectPtr<UStateTree> StateTree;
 
+	/** Maps Interaction Tags to Component Names for flexible input routing. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VR Weapon | Logic")
+	TMap<FGameplayTag, FName> InputTagToComponentName;
+
 	// --- Base Stats ---
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Default Weapon Stats")
-	bool bUseHitscan = false;
+	FVRWeaponStats BaseStats;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Default Weapon Stats")
-	float FireRate = 600.0f;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Default Weapon Stats")
-	float RecoilAmount = 1.0f;
-	
+	bool bUseHitscan = false;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Default Weapon Stats")
 	FGameplayTag CompatibleMagazinesTag;
 	
@@ -205,6 +215,10 @@ public:
 
 	// --- Visual FX ---
 	
+	/** If true, the weapon automatically plays FireSound, MuzzleFlash, and Haptics when fired. If false, you must trigger them manually (e.g. via StateTree tasks). */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Visuals")
+	bool bAutoPlayWeaponFeedback = true;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Visuals")
 	TObjectPtr<UParticleSystem> MuzzleFlash;
 

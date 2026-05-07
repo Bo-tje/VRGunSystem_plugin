@@ -6,6 +6,7 @@
 
 class UVRWeaponData;
 class UVRWeaponComponentSettings;
+class UVRWeaponStatModifier;
 
 UINTERFACE(MinimalAPI)
 class UVRWeaponComponentInterface : public UInterface
@@ -27,4 +28,8 @@ public:
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "VR Weapon Component")
 	void InitializeComponentWithSettings(UVRWeaponData* InData, UVRWeaponComponentSettings* InSettings);
+
+	/** Returns the stat modifier this component provides, if any. */
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "VR Weapon Component")
+	UVRWeaponStatModifier* GetStatModifier() const;
 };

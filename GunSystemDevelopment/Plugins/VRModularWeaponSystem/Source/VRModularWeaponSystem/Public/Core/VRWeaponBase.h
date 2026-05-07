@@ -51,10 +51,25 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VR Weapon | Logic")
 	TObjectPtr<class UVRWeaponStateTreeComponent> StateTreeComponent;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VR Weapon | Logic")
+	TObjectPtr<class UVRWeaponFeedbackComponent> FeedbackComponent;
+
 	// --- Data ---
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Weapon | Config")
 	TObjectPtr<UVRWeaponData> WeaponData;
+
+	/** The final calculated stats of the weapon, including all attachment modifiers. */
+	UPROPERTY(BlueprintReadOnly, Category = "VR Weapon | Stats")
+	FVRWeaponStats CalculatedStats;
+
+	/** Recalculates the weapon stats by polling all components for modifiers. */
+	UFUNCTION(BlueprintCallable, Category = "VR Weapon | Stats")
+	void UpdateCalculatedStats();
+
+	/** Returns the current calculated stats. */
+	UFUNCTION(BlueprintPure, Category = "VR Weapon | Stats")
+	FVRWeaponStats GetCalculatedStats() const { return CalculatedStats; }
 
 	// --- IVRWeaponInterface ---
 	virtual void PullTrigger_Implementation() override;

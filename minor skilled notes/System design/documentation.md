@@ -21,9 +21,12 @@ The base actor for all weapons in the system. It serves as a container that hold
   - `WeaponRoot`: `UBoxComponent*` - The physics root of the weapon. Shrunk to 1x1x1 core so dynamically attached parts can weld their collisions into a realistic bounding box.
   - `PartRoot`: `USceneComponent*` - The root for attaching modular weapon parts.
   - `StateTreeComponent`: `UVRWeaponStateTreeComponent*` - Handles the weapon's logic.
+  - `CalculatedStats`: `FVRWeaponStats` - Dynamic struct storing all currently applied stat modifiers.
 - **Key Functions:**
   - `InitializeWeapon()`: Distributes `WeaponData` to all child components implementing `IVRWeaponComponentInterface`.
   - `ApplyWeaponDataVisuals()`: Dynamically spawns `UStaticMeshComponent`s and logical components based on `WeaponData`, snapping them via sockets and automatically enabling collision welding.
+  - `UpdateCalculatedStats()`: Recalculates stats based on attachments and modifiers.
+  - `GetDynamicComponentByName()`: Retrieves dynamically injected custom components.
 - **Implementation:** Implements `IVRWeaponInterface` to handle primary/secondary inputs and weapon state, as well as `IVRInteractableInterface` for VR interaction routing.
 
 ### `UVRChamberComponent` (Scene Component)
@@ -60,6 +63,14 @@ Handles the actual firing logic, including hitscan or projectile spawning.
   - `OnDryFired()`: Triggered when the weapon attempts to fire but has no round.
 - **Implementation:** Implements `IVRWeaponComponentInterface` and `IVRWeaponInterface`.
 
+### `UVRWeaponFeedbackComponent` (Actor Component)
+Decoupled feedback manager that centrally handles complex haptics, recoil patterns, and audio cues for the weapon.
+
+- **Key Properties:**
+  - `WeaponOwner`: `AVRWeaponBase*` - Reference to the weapon triggering feedback.
+- **Functions:**
+  - `PlayFiringFeedback()`: Triggers the dynamic recoil and haptic sequences defined by weapon stats.
+
 ### `UVRGrabComponent` (Scene Component)
 Manages the interaction between the weapon and the VR hands (Interactors).
 
@@ -93,12 +104,18 @@ Handles moving mechanical parts on the weapon, such as slides, triggers, or brea
   - `CurrentNormalisedValue`: `float` - The current state of the mechanical part (0.0 to 1.0).
   - `bIsLocked`: `bool` - Bypasses the return spring, allowing the component to be locked in place (e.g., slide lock on empty).
   - `RestingValue`: `float` - The target value for the return spring.
-  - `CurrentMomentum`: `float` - Stores simulated physics force.
+  - `MovementHapticEffect`: `UHapticFeedbackEffect_Base*` - Haptic effect triggered during movement limits.
+  - `LocalAxis`: `FVector` - The local direction vector defining the mechanical path.
+  - `bHasReturnSpring`: `bool` - Determines whether the mechanism naturally returns to RestingValue.
+  - `bUseSimulatedInertia`: `bool` - Applies inertia properties allowing flicking or momentum transfer.
+  - `OnReachedMaxTag` / `OnReachedMinTag`: `FGameplayTag` - Event tags broadcasted at limits.
 - **Functions:**
   - `SetNormalizedValue(float NewValue)`: Immediately updates the position and state of the component.
   - `SetIsLocked(bool bNewLocked)`: Locks or unlocks the return spring.
   - `SetRestingValue(float NewRestingValue)`: Dynamically changes the target state of the component (e.g., smoothly springing open).
   - `AddMomentum(float MomentumAmount)`: Injects simulated physical force (e.g., popping open a latch).
+  - `UpdateFromHandLocation()`: Processes physics and kinematic offsets against the interactor.
+  - `OnGrabbed()` / `OnReleased()`: Interaction lifecycle events for the mechanical grip.
 - **Delegates (Blueprint Assignable):**
   - `OnReachedMax` / `OnReachedMin`
   - `OnValueChanged`
@@ -139,13 +156,14 @@ A specialized component that runs the State Tree logic for the weapon. It automa
 ### `UVRWeaponData`
 Defines the base configuration for a weapon. See the [[System design/System design research#4. Data Pillar: Data-Driven Configuration|Data Pillar]] for the design rationale.
 - `FireRate`: Shots per minute.
-- `bUseHitscan`: Toggle between hitscan and physical projectiles.
-- `RecoilAmount`: Scalar mapping for recoil implementation.
-- `CompatibleMagazinesTag`: Filter tag for finding correct magazines.
-- `WeaponParts`: Array of `FVRWeaponPart`. Enforces purely data-driven structural construction using soft object pointers (`TSoftObjectPtr<UStaticMesh>`) and explicit Sockets/Offsets to bypass the blueprint editor.
-- `AdditionalComponents`: Array of `FVRWeaponDynamicComponent` for dynamically injecting arbitrary extra Actor Components (like `UVRGrabComponent` or logic nodes) directly from the Data Asset.
-- `DefaultProjectile`: The standard projectile this weapon uses.
-- `FireSound`, `DryFireSound`, `ReloadSound`, `MuzzleFlash`, `FireHapticEffect`.
+  - `bUseHitscan`: Toggle between hitscan and physical projectiles.
+  - `RecoilAmount`: Scalar mapping for recoil implementation.
+  - `BaseStats`: `FVRWeaponStats` - The default baseline RPG-like stats before component modifiers are applied.
+  - `CompatibleMagazinesTag`: Filter tag for finding correct magazines.
+  - `WeaponParts`: Array of `FVRWeaponPart`. Enforces purely data-driven structural construction using soft object pointers (`TSoftObjectPtr<UStaticMesh>`) and explicit Sockets/Offsets to bypass the blueprint editor.
+  - `AdditionalComponents`: Array of `FVRWeaponDynamicComponent` for dynamically injecting arbitrary extra Actor Components (like `UVRGrabComponent` or logic nodes) directly from the Data Asset.
+  - `DefaultProjectile`: The standard projectile this weapon uses.
+  - `FireSound`, `DryFireSound`, `ReloadSound`, `MuzzleFlash`, `FireHapticEffect`.
 
 ### Component Settings Architecture
 Settings for dynamically injected components are managed via subclasses of `UVRWeaponComponentSettings`, which are instantiated directly within `UVRWeaponData` (inside the `AdditionalComponents` array):
@@ -169,6 +187,11 @@ Defines the base properties of a magazine.
 - `MaxAmmo`: Maximum rounds the magazine can hold.
 - `MagazineType`: Gameplay tag defining compatibility.
 - `MagazineMesh`: The static mesh representing the physical magazine.
+
+### `FVRWeaponStats`
+A structural grouping for defining and dynamically modifying weapon characteristics (RPG-like stat system).
+- **Properties:** `FireRate`, `FireRateOffset`, `RecoilMultiplier`, `DamageMultiplier`, `ReloadSpeedMultiplier`, `BulletVelocityMultiplier`.
+- **Overrides:** `MuzzleFlashOverride`, `FireSoundOverride`.
 
 ---
 
