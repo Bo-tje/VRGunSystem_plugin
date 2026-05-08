@@ -12,7 +12,10 @@ class VRMODULARWEAPONSYSTEM_API UVRWeaponComponentSettings : public UObject
 {
 	GENERATED_BODY()
 	
-	
+public:
+	/** Any input tags added here will automatically be routed to this component when the weapon receives them. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+	FGameplayTagContainer BindToInputTags;
 };
 
 /** Specific settings for VR Grab Components. */
@@ -86,17 +89,20 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mechanical")
 	float RestingValue = 0.0f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mechanical")
-	TObjectPtr<UHapticFeedbackEffect_Base> MovementHapticEffect;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mechanical", meta = (ClampMin = "0.01", ClampMax = "1.0"))
-	float HapticTickThreshold = 0.05f;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mechanical | Haptics")
+	TObjectPtr<UHapticFeedbackEffect_Base> LimitReachedHapticEffect;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mechanical | Events")
 	FGameplayTag OnReachedMaxTag;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mechanical | Events")
 	FGameplayTag OnReachedMinTag;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mechanical | Audio")
+	TObjectPtr<USoundBase> LimitReachedSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mechanical | Audio")
+	TObjectPtr<USoundBase> MovementSound;
 };
 
 
@@ -117,8 +123,46 @@ public:
 	float DryFireHapticScale = 0.5f;
 };
 
+/** Specific settings for Magwell Components. */
+UCLASS(BlueprintType, EditInlineNew, DefaultToInstanced)
+class VRMODULARWEAPONSYSTEM_API UVRMagwellSettings : public UVRWeaponComponentSettings
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Magwell Settings")
+	FName MagazineSocketName = TEXT("Magwell");
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Magwell Settings")
+	bool bEjectOnRelease = true;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Magwell Settings")
+	float GrabRadius = 10.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Magwell Settings")
+	FGameplayTag CompatibleMagazinesTag;
+};
+
 class UStateTree;
 class UProjectileData;
+
+USTRUCT(BlueprintType)
+struct FVRFireMode
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Fire Mode")
+	FName ModeName = TEXT("Single");
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Fire Mode")
+	bool bIsAutomatic = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Fire Mode")
+	int32 BurstCount = 1;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Fire Mode")
+	float RoundsPerMinute = 600.0f;
+};
 
 USTRUCT(BlueprintType)
 struct FVRWeaponPart
@@ -136,6 +180,12 @@ struct FVRWeaponPart
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Part|Sockets")
 	FTransform PartOffset;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Part|Physics")
+	bool bWeldCollision = true;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Part|Physics")
+	FName CollisionProfile = TEXT("PhysicsBody");
 };
 
 USTRUCT(BlueprintType)
@@ -184,10 +234,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VR Weapon | Logic")
 	TObjectPtr<UStateTree> StateTree;
 
-	/** Maps Interaction Tags to Component Names for flexible input routing. */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VR Weapon | Logic")
-	TMap<FGameplayTag, FName> InputTagToComponentName;
-
 	// --- Base Stats ---
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Default Weapon Stats")
@@ -195,13 +241,13 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Default Weapon Stats")
 	bool bUseHitscan = false;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Default Weapon Stats")
-	FGameplayTag CompatibleMagazinesTag;
 	
 	/** The default projectile of this weapon fires when no other projectile is provided. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Default Weapon Stats")
 	TObjectPtr<UProjectileData> DefaultProjectile;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Default Weapon Stats")
+	TArray<FVRFireMode> FireModes;
 
 
 	// --- Modular Parts ---
@@ -233,6 +279,10 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Visuals")
 	TObjectPtr<UHapticFeedbackEffect_Base> FireHapticEffect;
-	
+
+#if WITH_EDITOR
+	virtual EDataValidationResult IsDataValid(FDataValidationContext& Context) const override;
+#endif
+
 };
 

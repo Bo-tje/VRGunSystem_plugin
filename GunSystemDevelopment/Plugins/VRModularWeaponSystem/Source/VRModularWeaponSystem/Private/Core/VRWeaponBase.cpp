@@ -276,12 +276,24 @@ void AVRWeaponBase::OnGrabbed(AActor* InteractingHand)
 	if (StateTreeComponent)
 	{
 		StateTreeComponent->SetComponentTickEnabled(true);
-		StateTreeComponent->StartLogic();
+		
+		// Only start logic if this is the first interactor grabbing the weapon
+		if (GetHoldingInteractors().Num() <= 1)
+		{
+			StateTreeComponent->StartLogic();
+		}
 	}
 }
 
 void AVRWeaponBase::OnReleased()
 {
+	// If we are still being held by another interactor (e.g. still holding main grip while releasing slider), 
+	// don't stop the weapon logic.
+	if (GetHoldingInteractors().Num() > 0)
+	{
+		return;
+	}
+
 	if (StateTreeComponent)
 	{
 		StateTreeComponent->StopLogic(TEXT("Released"));

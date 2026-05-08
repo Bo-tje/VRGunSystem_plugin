@@ -120,6 +120,7 @@ void UVRMechanicalComponent::CheckThresholdEvents()
 	// Reached Max
 	if (CurrentNormalisedValue >= 1.0f && !bWasAtMax)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("Reached Max Value: %f"), CurrentNormalisedValue)
 		OnReachedMax.Broadcast();
 		bWasAtMax = true;
 	}
