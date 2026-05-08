@@ -218,12 +218,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "System design/documentation.md",
+                "file": "Weekly/weekly reflection.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "documentation"
+              "title": "weekly reflection"
             }
           }
         ],
@@ -405,10 +405,10 @@
   },
   "active": "13e03542f62e51e0",
   "lastOpenFiles": [
+    "System design/documentation.md",
     "System design/System design.md",
     "System design/System design research.md",
     "System design/System design chart (in-development).canvas",
-    "System design/documentation.md",
     "Weekly/weekly reflection.md",
     "QA's/QA 3.md",
     "QA's/QA 1.md",

@@ -27,3 +27,6 @@ I finished the state tree this Monday i wanted to make a feature where the data 
 
 # Week 12
 This week i made some minor improvements mainly to improve my new data asset only logic. Other than that I mostly worked on my personal branding and portfolio redo this week
+
+# Week 13
+This week i started working on the slide of a gun, i realised slides, break open shotguns and triggers are essentially the same thing, they all change their transform rotational or linear so i will make one component that works for all those thing, the mechanical component. once i got the basic functionality down, grabbing it and sliding i got to integrating it correct events, delegates and working together with other components. this proved to be the hardest part and does not fully work yet. Now that the project is getting bigger its also getting harder to integrate well. 
