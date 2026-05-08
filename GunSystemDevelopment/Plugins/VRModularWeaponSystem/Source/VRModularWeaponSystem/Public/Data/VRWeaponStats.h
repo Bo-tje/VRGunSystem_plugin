@@ -27,6 +27,19 @@ struct FVRWeaponStats
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
 	float ReloadSpeedMultiplier = 1.0f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats|Recoil")
+	float RecoilPitch = -1.5f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats|Recoil")
+	float RecoilYaw = 0.5f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats|Recoil")
+	float RecoilSpringStiffness = 50.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats|Recoil")
+	float RecoilSpringDamping = 4.0f;
+
+
 	// Overrides
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visuals")
 	TObjectPtr<UParticleSystem> MuzzleFlashOverride = nullptr;
@@ -60,6 +73,19 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Modifiers")
 	float ReloadSpeedMultiplier = 1.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats|Recoil")
+	float RecoilPitch = -1.5f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats|Recoil")
+	float RecoilYaw = 0.5f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats|Recoil")
+	float RecoilSpringStiffness = 50.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats|Recoil")
+	float RecoilSpringDamping = 4.0f;
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Visuals")
 	TObjectPtr<UParticleSystem> MuzzleFlashOverride;

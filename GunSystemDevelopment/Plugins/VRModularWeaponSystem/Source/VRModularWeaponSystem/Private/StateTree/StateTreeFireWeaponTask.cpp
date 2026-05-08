@@ -1,3 +1,4 @@
+#include "Components/VRMechanicalComponent.h"
 #include "StateTree/StateTreeFireWeaponTask.h"
 #include "StateTreeExecutionContext.h"
 #include "Components/VRFireComponent.h"
@@ -27,6 +28,22 @@ EStateTreeRunStatus FSTTask_FireWeapon::EnterState(FStateTreeExecutionContext& C
 		if (bOnlyFireFromChamber)
 		{
 			FireComponent->HandleDryFire();
+
+			// Slide lock on empty check
+			if (AVRWeaponBase* Weapon = Cast<AVRWeaponBase>(InstanceData.WeaponActor))
+			{
+				for (UActorComponent* Comp : Weapon->CachedWeaponComponents)
+				{
+					if (UVRMechanicalComponent* MechComp = Cast<UVRMechanicalComponent>(Comp))
+					{
+						if (MechComp->bHasReturnSpring)
+						{
+							MechComp->SetIsLocked(true);
+						}
+					}
+				}
+			}
+
 			return EStateTreeRunStatus::Failed;
 		}
 	}
@@ -44,6 +61,22 @@ if (AVRWeaponBase* Weapon = Cast<AVRWeaponBase>(InstanceData.WeaponActor))
 				}
 
 				FireComponent->HandleDryFire();
+
+				// Slide lock on empty check
+				if (AVRWeaponBase* Weapon = Cast<AVRWeaponBase>(InstanceData.WeaponActor))
+				{
+					for (UActorComponent* Comp : Weapon->CachedWeaponComponents)
+					{
+						if (UVRMechanicalComponent* MechComp = Cast<UVRMechanicalComponent>(Comp))
+						{
+							if (MechComp->bHasReturnSpring)
+							{
+								MechComp->SetIsLocked(true);
+							}
+						}
+					}
+				}
+
 				return EStateTreeRunStatus::Failed;
 			}
 		}

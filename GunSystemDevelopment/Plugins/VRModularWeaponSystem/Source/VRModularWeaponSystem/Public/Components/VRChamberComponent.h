@@ -75,6 +75,9 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Weapon | Chamber | Visuals")
 	UStaticMeshComponent* RoundVisualMesh;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Weapon | Chamber | Config")
+	float JamChance = 0.05f;
 	
 	void SetChamberState(FGameplayTag NewState);
 

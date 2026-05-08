@@ -40,6 +40,12 @@ bool UVRChamberComponent::TryGiveBullet()
 {
 	if (IsRoundReady())
 	{
+		if (FMath::FRand() <= JamChance)
+		{
+			SetChamberState(VRNativeTags::Chamber_Jammed);
+			return false;
+		}
+
 		OnRoundFired.Broadcast(LoadedProjectile);
 		
 		SetChamberState(VRNativeTags::Chamber_SpentCasing);

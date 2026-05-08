@@ -90,11 +90,30 @@ public:
 	virtual void OnConstruction(const FTransform& Transform) override;
 
 protected:
-	virtual void BeginPlay() override;
+	virtual void Tick(float DeltaTime) override;
+
+	// Procedural Recoil State
+	UPROPERTY(BlueprintReadOnly, Category = "VR Weapon | Recoil")
+	FRotator CurrentRecoilOffset = FRotator::ZeroRotator;
+
+	UPROPERTY(BlueprintReadOnly, Category = "VR Weapon | Recoil")
+	FRotator TargetRecoilOffset = FRotator::ZeroRotator;
+
+	UPROPERTY(BlueprintReadOnly, Category = "VR Weapon | Recoil")
+	FRotator RecoilVelocity = FRotator::ZeroRotator;
+
+	UPROPERTY(BlueprintReadOnly, Category = "VR Weapon | Recoil")
+	FVector HandWorldDistanceOffset = FVector::ZeroVector;
+
+virtual void BeginPlay() override;
 
 	/** Spawns and attaches meshes defined in WeaponData. */
 	UFUNCTION(BlueprintCallable, Category = "VR Weapon")
 	void ApplyWeaponDataVisuals();
+
+	/** Internal callback once assets are loaded */
+	UFUNCTION()
+	void ApplyWeaponDataVisuals_Internal();
 
 	/** Distributes WeaponData to all components. */
 	UFUNCTION(BlueprintCallable, Category = "VR Weapon")
@@ -102,6 +121,12 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly, Category = "VR Weapon | Interaction")
 	int32 ActiveGrabCount = 0;
+
+	UPROPERTY(BlueprintReadOnly, Category = "VR Weapon | Fire Mode")
+	int32 CurrentFireModeIndex = 0;
+
+	UFUNCTION(BlueprintCallable, Category = "VR Weapon | Fire Mode")
+	FVRFireMode GetCurrentFireMode() const;
 
 	UPROPERTY(Transient)
 	TArray<UVRGrabComponent*> CachedGrabComponents;

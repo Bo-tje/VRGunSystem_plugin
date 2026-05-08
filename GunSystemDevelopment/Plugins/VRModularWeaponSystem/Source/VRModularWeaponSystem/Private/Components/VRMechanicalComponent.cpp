@@ -1,3 +1,5 @@
+#include "Components/VRChamberComponent.h"
+#include "Core/VRNativeTags.h"
 #include "Components/VRMechanicalComponent.h"
 #include "Data/VRWeaponData.h"
 #include "Interaction/VRGrabComponent.h"
@@ -120,6 +122,7 @@ void UVRMechanicalComponent::CheckThresholdEvents()
 	// Reached Max
 	if (CurrentNormalisedValue >= 1.0f && !bWasAtMax)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("Reached Max Value: %f"), CurrentNormalisedValue)
 		OnReachedMax.Broadcast();
 		bWasAtMax = true;
 	}

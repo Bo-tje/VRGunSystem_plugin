@@ -1,4 +1,5 @@
 #include "Core/VRWeaponBase.h"
+#include "Engine/AssetManager.h"
 #include "Interfaces/VRWeaponComponentInterface.h"
 #include "Interaction/VRGrabComponent.h"
 #include "Core/VRNativeTags.h"
@@ -12,7 +13,7 @@
 
 AVRWeaponBase::AVRWeaponBase()
 {
-	PrimaryActorTick.bCanEverTick = false;
+	PrimaryActorTick.bCanEverTick = true;
 
 	WeaponRoot = CreateDefaultSubobject<UBoxComponent>(TEXT("WeaponRoot"));
 	SetRootComponent(WeaponRoot);
@@ -137,6 +138,37 @@ void AVRWeaponBase::ApplyWeaponDataVisuals()
 		StateTreeComponent->SetStateTree(WeaponData->StateTree);
 	}
 	
+	TArray<FSoftObjectPath> AssetsToLoad;
+	for (const FVRWeaponPart& Part : WeaponData->WeaponParts)
+	{
+		if (!Part.PartName.IsNone() && !Part.Mesh.IsNull())
+		{
+			AssetsToLoad.AddUnique(Part.Mesh.ToSoftObjectPath());
+		}
+	}
+	for (const FVRWeaponDynamicComponent& CompGen : WeaponData->AdditionalComponents)
+	{
+		if (!CompGen.OptionalMesh.IsNull())
+		{
+			AssetsToLoad.AddUnique(CompGen.OptionalMesh.ToSoftObjectPath());
+		}
+	}
+
+	if (AssetsToLoad.Num() > 0)
+	{
+		FStreamableDelegate Delegate = FStreamableDelegate::CreateUObject(this, &AVRWeaponBase::ApplyWeaponDataVisuals_Internal);
+		UAssetManager::GetStreamableManager().RequestAsyncLoad(AssetsToLoad, Delegate);
+	}
+	else
+	{
+		ApplyWeaponDataVisuals_Internal();
+	}
+}
+
+void AVRWeaponBase::ApplyWeaponDataVisuals_Internal()
+{
+	if (!WeaponData) return;
+
 	FAttachmentTransformRules StaticAttachRules(EAttachmentRule::KeepRelative, true);
 
 	for (const FVRWeaponPart& Part : WeaponData->WeaponParts)
@@ -147,7 +179,7 @@ void AVRWeaponBase::ApplyWeaponDataVisuals()
 		if (NewComponent)
 		{
 			NewComponent->CreationMethod = EComponentCreationMethod::UserConstructionScript;
-			NewComponent->SetStaticMesh(Part.Mesh.LoadSynchronous());
+			NewComponent->SetStaticMesh(Part.Mesh.Get());
 			
 			USceneComponent* AttachTarget = WeaponRoot;
 			if (!Part.ParentSocket.IsNone())
@@ -237,7 +269,7 @@ void AVRWeaponBase::ApplyWeaponDataVisuals()
 				
 				if (UStaticMeshComponent* SMComp = Cast<UStaticMeshComponent>(NewObj))
 				{
-					if (!CompGen.OptionalMesh.IsNull()) SMComp->SetStaticMesh(CompGen.OptionalMesh.LoadSynchronous());
+					if (!CompGen.OptionalMesh.IsNull()) SMComp->SetStaticMesh(CompGen.OptionalMesh.Get());
 					if (bShouldWeld)
 					{
 						SMComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
@@ -251,7 +283,7 @@ void AVRWeaponBase::ApplyWeaponDataVisuals()
 				}
 				else if (UVRMechanicalComponent* MechComp = Cast<UVRMechanicalComponent>(NewObj))
 				{
-					if (!CompGen.OptionalMesh.IsNull()) MechComp->ConstructVisuals(CompGen.OptionalMesh.LoadSynchronous(), CompGen.bWeldCollision);
+					if (!CompGen.OptionalMesh.IsNull()) MechComp->ConstructVisuals(CompGen.OptionalMesh.Get(), CompGen.bWeldCollision);
 				}
 			}
 			else
@@ -276,12 +308,24 @@ void AVRWeaponBase::OnGrabbed(AActor* InteractingHand)
 	if (StateTreeComponent)
 	{
 		StateTreeComponent->SetComponentTickEnabled(true);
-		StateTreeComponent->StartLogic();
+
+		// Only start logic if this is the first interactor grabbing the weapon
+		if (GetHoldingInteractors().Num() <= 1)
+		{
+			StateTreeComponent->StartLogic();
+		}
 	}
 }
 
 void AVRWeaponBase::OnReleased()
 {
+	// If we are still being held by another interactor (e.g. still holding main grip while releasing slider),
+	// don't stop the weapon logic.
+	if (GetHoldingInteractors().Num() > 0)
+	{
+		return;
+	}
+
 	if (StateTreeComponent)
 	{
 		StateTreeComponent->StopLogic(TEXT("Released"));
@@ -384,6 +428,10 @@ void AVRWeaponBase::ReleaseTrigger_Implementation()
 
 void AVRWeaponBase::PrimaryAction_Implementation()
 {
+	if (WeaponData && WeaponData->FireModes.Num() > 0)
+	{
+		CurrentFireModeIndex = (CurrentFireModeIndex + 1) % WeaponData->FireModes.Num();
+	}
 	if (StateTreeComponent) StateTreeComponent->SendStateTreeEvent(VRNativeTags::PrimaryInput);
 }
 
@@ -405,4 +453,61 @@ void AVRWeaponBase::ReleaseSecondaryAction_Implementation()
 bool AVRWeaponBase::IsTriggerPulled_Implementation() const
 {
 	return bIsTriggerPulled;
+}
+
+void AVRWeaponBase::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	// 1. Procedural Recoil Spring Logic
+	if (WeaponData)
+	{
+		float Stiffness = CalculatedStats.RecoilSpringStiffness;
+		float Damping = CalculatedStats.RecoilSpringDamping;
+
+		// Simple damped spring force
+		FRotator Force = (TargetRecoilOffset - CurrentRecoilOffset) * Stiffness - (RecoilVelocity * Damping);
+		RecoilVelocity += Force * DeltaTime;
+		CurrentRecoilOffset += RecoilVelocity * DeltaTime;
+
+		// Decay target offset back to zero over time to reset
+		TargetRecoilOffset = FMath::RInterpTo(TargetRecoilOffset, FRotator::ZeroRotator, DeltaTime, 10.0f);
+	}
+
+	// 2. Two-Handed "Virtual Stock" Stabilization
+	TArray<UVRInteractor*> ActiveHolders = GetHoldingInteractors();
+	FRotator FinalRotationOffset = CurrentRecoilOffset;
+	FVector FinalLocationOffset = FVector::ZeroVector;
+
+	if (ActiveHolders.Num() == 2 && ActiveHolders[0] && ActiveHolders[1])
+	{
+		// Basic implementation: Orient the weapon along the line between the two hands
+		FVector PrimaryLocation = ActiveHolders[0]->GetOwner() ? ActiveHolders[0]->GetOwner()->GetActorLocation() : ActiveHolders[0]->GetComponentLocation();
+		FVector SecondaryLocation = ActiveHolders[1]->GetOwner() ? ActiveHolders[1]->GetOwner()->GetActorLocation() : ActiveHolders[1]->GetComponentLocation();
+
+		// Example pseudo-stock math (in a real game you'd blend this with the primary hand's rotation)
+		FVector HandDir = (SecondaryLocation - PrimaryLocation).GetSafeNormal();
+		if (!HandDir.IsNearlyZero())
+		{
+			// Add some smoothing or direct overriding here based on preference
+			// For now, we scale down the recoil if held with two hands
+			FinalRotationOffset *= 0.5f;
+		}
+	}
+
+	// Apply offsets to PartRoot (or WeaponRoot)
+	if (PartRoot)
+	{
+		PartRoot->SetRelativeRotation(FinalRotationOffset);
+		PartRoot->SetRelativeLocation(FinalLocationOffset);
+	}
+}
+
+FVRFireMode AVRWeaponBase::GetCurrentFireMode() const
+{
+	if (WeaponData && WeaponData->FireModes.IsValidIndex(CurrentFireModeIndex))
+	{
+		return WeaponData->FireModes[CurrentFireModeIndex];
+	}
+	return FVRFireMode();
 }
