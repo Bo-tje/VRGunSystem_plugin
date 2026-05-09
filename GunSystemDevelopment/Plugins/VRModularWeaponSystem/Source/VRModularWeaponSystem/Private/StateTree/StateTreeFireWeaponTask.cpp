@@ -1,4 +1,5 @@
 #include "StateTree/StateTreeFireWeaponTask.h"
+#include "Components/VRMechanicalComponent.h"
 #include "StateTreeExecutionContext.h"
 #include "Components/VRFireComponent.h"
 #include "Interfaces/VRRoundProvider.h"
@@ -27,6 +28,7 @@ EStateTreeRunStatus FSTTask_FireWeapon::EnterState(FStateTreeExecutionContext& C
 		if (bOnlyFireFromChamber)
 		{
 			FireComponent->HandleDryFire();
+
 			return EStateTreeRunStatus::Failed;
 		}
 	}
@@ -44,6 +46,7 @@ if (AVRWeaponBase* Weapon = Cast<AVRWeaponBase>(InstanceData.WeaponActor))
 				}
 
 				FireComponent->HandleDryFire();
+
 				return EStateTreeRunStatus::Failed;
 			}
 		}

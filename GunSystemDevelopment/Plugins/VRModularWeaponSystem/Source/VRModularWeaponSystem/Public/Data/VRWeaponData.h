@@ -97,12 +97,18 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mechanical | Events")
 	FGameplayTag OnReachedMinTag;
-	
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mechanical | Audio")
 	TObjectPtr<USoundBase> LimitReachedSound;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mechanical | Audio")
 	TObjectPtr<USoundBase> MovementSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mechanical | Haptics")
+	TObjectPtr<UHapticFeedbackEffect_Base> MovementHapticEffect;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mechanical | Haptics")
+	float HapticTickThreshold = 2.0f;
 };
 
 
@@ -279,6 +285,9 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Visuals")
 	TObjectPtr<UHapticFeedbackEffect_Base> FireHapticEffect;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+	TMap<FGameplayTag, FName> InputTagToComponentName;
 
 #if WITH_EDITOR
 	virtual EDataValidationResult IsDataValid(FDataValidationContext& Context) const override;

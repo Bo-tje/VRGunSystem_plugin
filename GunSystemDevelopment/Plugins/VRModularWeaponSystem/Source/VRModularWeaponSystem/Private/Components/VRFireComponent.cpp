@@ -127,7 +127,17 @@ void UVRFireComponent::HandleFiring(UProjectileData* ProjectileData)
 		}
 	}
 	
+
+	// Procedural Recoil Impulse
+	if (WeaponOwner)
+	{
+		float PitchImpulse = Stats.RecoilPitch * Stats.RecoilMultiplier;
+		float YawImpulse = FMath::RandRange(-Stats.RecoilYaw, Stats.RecoilYaw) * Stats.RecoilMultiplier;
+		WeaponOwner->TargetRecoilOffset += FRotator(PitchImpulse, YawImpulse, 0.0f);
+	}
+
 	OnFired.Broadcast();
+
 }
 
 void UVRFireComponent::HandleDryFire() 

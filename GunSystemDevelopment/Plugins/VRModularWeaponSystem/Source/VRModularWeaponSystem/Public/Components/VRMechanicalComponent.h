@@ -55,6 +55,15 @@ public:
 	
 	UPROPERTY(EditAnywhere, Category = "VR Plugin | Mechanical", meta = (ClampMin = "0.01", ClampMax = "1.0"))
 	float HapticTickThreshold = 0.05f;
+
+	UPROPERTY(EditAnywhere, Category = "VR Plugin | Mechanical")
+	TObjectPtr<USoundBase> MovementSound;
+
+	UPROPERTY(EditAnywhere, Category = "VR Plugin | Mechanical | Events")
+	TObjectPtr<USoundBase> LimitReachedSound;
+
+	UPROPERTY(EditAnywhere, Category = "VR Plugin | Mechanical | Events")
+	TObjectPtr<UHapticFeedbackEffect_Base> LimitReachedHapticEffect;
 	
 	UPROPERTY(BlueprintReadWrite, Category = "VR Plugin | Mechanical")
 	bool bIsBeingHeld = false;

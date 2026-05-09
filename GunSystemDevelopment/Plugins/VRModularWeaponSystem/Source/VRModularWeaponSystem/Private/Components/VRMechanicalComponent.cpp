@@ -1,7 +1,13 @@
 #include "Components/VRMechanicalComponent.h"
+#include "Core/VRNativeTags.h"
+#include "Kismet/GameplayStatics.h"
+
 #include "Data/VRWeaponData.h"
 #include "Interaction/VRGrabComponent.h"
 #include "Interaction/VRInteractor.h"
+#include "Components/VRChamberComponent.h"
+#include "Components/VRWeaponStateTreeComponent.h"
+
 
 UVRMechanicalComponent::UVRMechanicalComponent()
 {
@@ -58,20 +64,36 @@ void UVRMechanicalComponent::TickComponent(float DeltaTime, enum ELevelTick Tick
 		TrackParentMotion(DeltaTime);
 	}
 	
-	if (bIsBeingHeld && DrivingGrabComponent && DrivingGrabComponent->GetCurrentInteractor())
+	// Safety: Check if we are actually being held by a valid interactor
+	const bool bActuallyHeld = bIsBeingHeld && DrivingGrabComponent && DrivingGrabComponent->GetCurrentInteractor();
+	
+	if (bActuallyHeld)
 	{
 		UpdateFromHandLocation(DrivingGrabComponent->GetCurrentInteractor()->GetComponentLocation());
 	}
-	else if (!bIsBeingHeld)
+	else
 	{
+		// If we were supposed to be held but the interactor is gone, clear the flag
+		if (bIsBeingHeld)
+		{
+			bIsBeingHeld = false;
+		}
+
 		if (bUseSimulatedInertia)
 		{
 			CalculateInertia(DeltaTime);
 		}
 		
-		if (bHasReturnSpring && !bIsLocked && !FMath::IsNearlyEqual(CurrentNormalisedValue, RestingValue, 0.001f))
+		if (bHasReturnSpring && !bIsLocked && !FMath::IsNearlyEqual(CurrentNormalisedValue, RestingValue, 0.00001f))
 		{
 			float SprungValue = FMath::FInterpTo(CurrentNormalisedValue, RestingValue, DeltaTime, ReturnSpeed);
+			
+			// Snap to resting value if we are very close to ensure events trigger
+			if (FMath::IsNearlyEqual(SprungValue, RestingValue, 0.001f))
+			{
+				SprungValue = RestingValue;
+			}
+			
 			SetNormalizedValue(SprungValue);
 		}
 	}
@@ -90,7 +112,9 @@ void UVRMechanicalComponent::SetNormalizedValue(float NewValue)
 	const float OldValue = CurrentNormalisedValue;
 	CurrentNormalisedValue = FMath::Clamp(NewValue, 0.0f, 1.0f);
 	
-	if (FMath::IsNearlyEqual(OldValue, CurrentNormalisedValue, 0.00001f)) return;
+	// Always allow boundary hits (0 or 1) to pass through so events trigger reliably
+	const bool bIsAtBoundary = FMath::IsNearlyZero(CurrentNormalisedValue) || FMath::IsNearlyEqual(CurrentNormalisedValue, 1.0f);
+	if (FMath::IsNearlyEqual(OldValue, CurrentNormalisedValue, 0.00001f) && !bIsAtBoundary) return;
 
 	OnValueChanged.Broadcast(CurrentNormalisedValue);
 	
@@ -117,11 +141,25 @@ void UVRMechanicalComponent::UpdateVisuals()
 
 void UVRMechanicalComponent::CheckThresholdEvents()
 {
+	UVRWeaponStateTreeComponent* StateTree = GetOwner() ? GetOwner()->FindComponentByClass<UVRWeaponStateTreeComponent>() : nullptr;
+
 	// Reached Max
 	if (CurrentNormalisedValue >= 1.0f && !bWasAtMax)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Reached Max Value: %f"), CurrentNormalisedValue)
+		UE_LOG(LogTemp, Warning, TEXT("%s Reached Max Value: %f"), *GetName(), CurrentNormalisedValue)
 		OnReachedMax.Broadcast();
+		
+		if (StateTree && OnReachedMaxTag.IsValid())
+		{
+			StateTree->SendStateTreeEvent(OnReachedMaxTag);
+		}
+
+		if (LimitReachedSound) UGameplayStatics::PlaySoundAtLocation(this, LimitReachedSound, GetComponentLocation());
+		if (LimitReachedHapticEffect && DrivingGrabComponent && DrivingGrabComponent->GetCurrentInteractor())
+		{
+			DrivingGrabComponent->GetCurrentInteractor()->PlayHapticFeedback(LimitReachedHapticEffect, 0.5f);
+		}
+		
 		bWasAtMax = true;
 	}
 	else if (CurrentNormalisedValue < 1.0f)
@@ -133,6 +171,18 @@ void UVRMechanicalComponent::CheckThresholdEvents()
 	if (CurrentNormalisedValue <= 0.0f && !bWasAtMin)
 	{
 		OnReachedMin.Broadcast();
+
+		if (StateTree && OnReachedMinTag.IsValid())
+		{
+			StateTree->SendStateTreeEvent(OnReachedMinTag);
+		}
+
+		if (LimitReachedSound) UGameplayStatics::PlaySoundAtLocation(this, LimitReachedSound, GetComponentLocation());
+		if (LimitReachedHapticEffect && DrivingGrabComponent && DrivingGrabComponent->GetCurrentInteractor())
+		{
+			DrivingGrabComponent->GetCurrentInteractor()->PlayHapticFeedback(LimitReachedHapticEffect, 0.5f);
+		}
+
 		bWasAtMin = true;
 	}
 	else if (CurrentNormalisedValue > 0.0f)
@@ -148,6 +198,7 @@ void UVRMechanicalComponent::HandleHaptics()
 		if (FMath::Abs(CurrentNormalisedValue - LastHapticValue) >= HapticTickThreshold)
 		{
 			DrivingGrabComponent->GetCurrentInteractor()->PlayHapticFeedback(MovementHapticEffect, 0.3f);
+			if (MovementSound) UGameplayStatics::PlaySoundAtLocation(this, MovementSound, GetComponentLocation());
 			LastHapticValue = CurrentNormalisedValue;
 		}
 	}
@@ -237,7 +288,11 @@ void UVRMechanicalComponent::CalculateInertia(float DeltaTime)
 
 void UVRMechanicalComponent::SetIsLocked(bool bNewLocked)
 {
-	bIsLocked = bNewLocked;
+	if (bIsLocked != bNewLocked)
+	{
+		UE_LOG(LogTemp, Log, TEXT("%s: bIsLocked set to %s"), *GetName(), bNewLocked ? TEXT("True") : TEXT("False"))
+		bIsLocked = bNewLocked;
+	}
 }
 
 void UVRMechanicalComponent::SetRestingValue(float NewRestingValue)
@@ -252,6 +307,8 @@ void UVRMechanicalComponent::AddMomentum(float MomentumAmount)
 
 void UVRMechanicalComponent::UpdateFromHandLocation(FVector HandWorldLocation)
 {
+	if (bIsLocked) return;
+
 	const float CurrentRawValue = CalculateRawHandValue(HandWorldLocation);
 	float DeltaRaw = 0.0f;
 
@@ -349,6 +406,11 @@ void UVRMechanicalComponent::ApplyMechanicalSettings(UVRMechanicalSettings* Sett
 	RestingValue = Settings->RestingValue;
 	MovementHapticEffect = Settings->MovementHapticEffect;
 	HapticTickThreshold = Settings->HapticTickThreshold;
+	OnReachedMaxTag = Settings->OnReachedMaxTag;
+	OnReachedMinTag = Settings->OnReachedMinTag;
+	MovementSound = Settings->MovementSound;
+	LimitReachedSound = Settings->LimitReachedSound;
+	LimitReachedHapticEffect = Settings->LimitReachedHapticEffect;
 }
 
 void UVRMechanicalComponent::OnGrabbed(AActor* InteractingActor)
