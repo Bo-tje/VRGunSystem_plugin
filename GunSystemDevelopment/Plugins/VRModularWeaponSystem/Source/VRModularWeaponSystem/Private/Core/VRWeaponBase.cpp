@@ -10,6 +10,7 @@
 #include "Components/BoxComponent.h"
 #include "Components/VRMechanicalComponent.h"
 #include "Data/VRWeaponStats.h"
+#include "Interaction/VRInteractor.h"
 
 AVRWeaponBase::AVRWeaponBase()
 {

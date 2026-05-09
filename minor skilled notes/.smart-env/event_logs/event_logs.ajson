@@ -42,3 +42,4 @@
 "event_logs:blocks:cleaned": {"key":"blocks:cleaned","ct":7,"first_at":1775233633334,"last_at":1778070300788,"class_name":"EventLog"},
 "event_logs:connections:opened": {"key":"connections:opened","ct":96,"first_at":1775233634389,"last_at":1778070301218,"class_name":"EventLog"},
 "event_logs:plugin:new_version_available": {"key":"plugin:new_version_available","ct":1,"first_at":1778070303964,"last_at":1778070303964,"class_name":"EventLog","event_sources":{"check_for_update":1}},
+"event_logs:sources:modified": {"key":"sources:modified","ct":2350,"first_at":1776427711130,"last_at":1778268009794,"class_name":"EventLog","event_sources":{"obsidian:vault.modify":381,"obsidian:workspace.editor-change":1969}},
