@@ -10,19 +10,21 @@
 /**
  * 
  */
-UCLASS()
-class VRMODULARWEAPONSYSTEM_API UMagazineData : public UDataAsset
+UCLASS(BlueprintType)
+class VRMODULARWEAPONSYSTEM_API UMagazineData : public UPrimaryDataAsset
 {
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "tMagazine Data")
+	// Let Unreal use the default PrimaryAssetType ("MagazineData")
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Magazine Data")
 	int32 MaxAmmo;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Magazine Data")
 	FGameplayTag MagazineType;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Magazine Data")
-	TSubclassOf<UStaticMesh> MagazineMesh;
+	TObjectPtr<UStaticMesh> MagazineMesh;
 
 };

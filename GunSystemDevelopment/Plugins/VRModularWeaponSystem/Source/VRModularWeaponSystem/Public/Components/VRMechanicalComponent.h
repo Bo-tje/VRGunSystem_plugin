@@ -27,7 +27,7 @@ public:
 	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	// --- IVRWeaponComponentInterface ---
-	virtual void InitializeComponent_Implementation(UVRWeaponData* InData) override {}
+	virtual void InitializeComponent_Implementation(UVRWeaponData* InData) override;
 	virtual void InitializeComponentWithSettings_Implementation(UVRWeaponData* InData, UVRWeaponComponentSettings* InSettings) override;
 	
 	UPROPERTY(EditAnywhere, Category = "VR Plugin | Mechanical", meta = (Categories = "VRModularWeaponSystem.MechanicalMovement"))
@@ -113,7 +113,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "VR Plugin | Mechanical")
 	void UpdateFromHandLocation(FVector HandWorldLocation);
 	
-	void ConstructVisuals(UStaticMesh* InMesh, bool bWeldToParent);
+	UFUNCTION(BlueprintCallable, Category = "VR Mechanical")
+	void ConstructVisuals(UStaticMesh* InMesh, bool bWeldToParent, EComponentCreationMethod InCreationMethod = EComponentCreationMethod::UserConstructionScript);
 	
 	void ApplyMechanicalSettings(UVRMechanicalSettings* Settings);
 

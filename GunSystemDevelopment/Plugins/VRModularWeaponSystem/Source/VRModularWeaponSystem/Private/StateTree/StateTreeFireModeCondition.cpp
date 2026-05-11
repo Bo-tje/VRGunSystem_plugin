@@ -9,10 +9,17 @@ bool FSTCondition_FireMode::TestCondition(FStateTreeExecutionContext& Context) c
 	{
 		FVRFireMode CurrentMode = Weapon->GetCurrentFireMode();
 
-		// This condition can be expanded to check BurstCount, etc.
-		// For now, it simply ensures the fire mode is valid and returns true,
-		// but allows the StateTree to branch based on mode properties.
-		return CurrentMode.ModeName != NAME_None;
+		if (bCheckIsAutomatic)
+		{
+			if (CurrentMode.bIsAutomatic != bIsAutomaticValue) return false;
+		}
+
+		if (bCheckModeName)
+		{
+			if (CurrentMode.ModeName != ModeName) return false;
+		}
+
+		return true;
 	}
 
 	return false;

@@ -24,28 +24,6 @@ void UVRMechanicalComponent::BeginPlay()
 	Super::BeginPlay();
 	HomeTransform = GetRelativeTransform();
 
-	// Automatically find child grab component if not set
-	if (!DrivingGrabComponent)
-	{
-		TArray<USceneComponent*> Children;
-		GetChildrenComponents(false, Children); // Immediate children only
-		for (USceneComponent* Child : Children)
-		{
-			if (UVRGrabComponent* GrabComp = Cast<UVRGrabComponent>(Child))
-			{
-				DrivingGrabComponent = GrabComp;
-				break;
-			}
-		}
-	}
-
-	if (DrivingGrabComponent)
-	{
-		DrivingGrabComponent->OnGrabbed.AddDynamic(this, &UVRMechanicalComponent::OnGrabbed);
-		DrivingGrabComponent->OnGrabReleased.AddDynamic(this, &UVRMechanicalComponent::OnReleased);
-		DrivingGrabComponent->bAttachOwnerOnGrab = false; 
-	}
-
 	if (USceneComponent* Parent = GetAttachParent())
 	{
 		ParentMotion.LastLocation = Parent->GetComponentLocation();
@@ -96,6 +74,30 @@ void UVRMechanicalComponent::TickComponent(float DeltaTime, enum ELevelTick Tick
 			
 			SetNormalizedValue(SprungValue);
 		}
+	}
+}
+
+void UVRMechanicalComponent::InitializeComponent_Implementation(UVRWeaponData* InData)
+{
+	// Automatically find child grab component if not set
+	if (!DrivingGrabComponent)
+	{
+		TArray<USceneComponent*> Children;
+		GetChildrenComponents(false, Children); // Immediate children only
+		for (USceneComponent* Child : Children)
+		{
+			if (UVRGrabComponent* GrabComp = Cast<UVRGrabComponent>(Child))
+			{
+				DrivingGrabComponent = GrabComp;
+				break;
+			}
+		}
+	}
+
+	if (DrivingGrabComponent)
+	{
+		DrivingGrabComponent->OnGrabbed.AddDynamic(this, &UVRMechanicalComponent::OnGrabbed);
+		DrivingGrabComponent->OnGrabReleased.AddDynamic(this, &UVRMechanicalComponent::OnReleased);
 	}
 }
 
@@ -363,12 +365,12 @@ float UVRMechanicalComponent::CalculateRawHandValue(FVector HandWorldLocation) c
 	return 0.0f;
 }
 
-void UVRMechanicalComponent::ConstructVisuals(UStaticMesh* InMesh, bool bWeldToParent)
+void UVRMechanicalComponent::ConstructVisuals(UStaticMesh* InMesh, bool bWeldToParent, EComponentCreationMethod InCreationMethod)
 {
 	if (!InMesh) return;
 	
 	VisualMesh = NewObject<UStaticMeshComponent>(this, "VisualMesh");
-	VisualMesh->CreationMethod = EComponentCreationMethod::UserConstructionScript;
+	VisualMesh->CreationMethod = InCreationMethod;
 	VisualMesh->SetStaticMesh(InMesh);
 	
 	bool bActualWeld = bWeldToParent;

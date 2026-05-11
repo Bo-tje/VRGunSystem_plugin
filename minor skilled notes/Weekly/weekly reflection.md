@@ -30,3 +30,37 @@ This week i made some minor improvements mainly to improve my new data asset onl
 
 # Week 13
 This week i started working on the slide of a gun, i realised slides, break open shotguns and triggers are essentially the same thing, they all change their transform rotational or linear so i will make one component that works for all those thing, the mechanical component. once i got the basic functionality down, grabbing it and sliding i got to integrating it correct events, delegates and working together with other components. this proved to be the hardest part and does not fully work yet. Now that the project is getting bigger its also getting harder to integrate well. 
+
+# Week 14
+This Monday, I finalized the slide mechanics. I successfully created a unified mechanical component that works almost perfectly for slides, triggers, and break-action shotguns. I also developed a specific StateTree task to animate these mechanical components (e.g., simulating blowback when fired, or locking/unlocking the slide).
+
+However, when I made my first packaged build to test stability and performance, the weapons completely failed to render—they were entirely invisible, even though they worked perfectly in the Editor. After several hours of frustrating debugging and deep-diving into Unreal's documentation, I uncovered critical flaws in how my script constructed the guns. 
+
+Initially, I used asynchronous loading and soft pointers (`TSoftObjectPtr`) to construct the weapon parts. I believed this was the most optimized approach, as it prevents missing references from breaking the game and avoids blocking the main thread. However, this caused three major engine-level issues in a packaged build:
+
+### 1. The "Cooker" Problem
+In the Editor, C++ has access to every file on the hard drive. In a **Packaged Build**, Unreal only includes (or "cooks") files it knows are needed. 
+- **Hard Pointers** (`UStaticMesh*`) are automatically detected and cooked.
+- **Soft Pointers** (`TSoftObjectPtr`) are **ignored** by the Cooker unless the Asset Manager is explicitly told to scan the Data Asset holding them.
+Because my gun meshes were soft-referenced and not registered as Primary Assets, the Cooker assumed they were unused and left them out of the build entirely.
+
+### 2. The Render Proxy Race Condition
+Unreal optimizes rendering by creating lightweight "Proxies" for the GPU. 
+- During synchronous construction, Unreal waits for the script to finish before creating all Proxies at once.
+- With my asynchronous method, the Construction Script "finished" instantly, telling the engine the gun was ready to render *before* the meshes arrived. When the async callback finally fired a few frames later, it caused a race condition. Adding components dynamically during a heavy level-load can result in the actor's render state being locked or ignored by the initial visibility pass.
+
+### 3. Construction Script Serialization Quirks
+Even after fixing the Cooker issue by registering my Data Assets with the Asset Manager, the gun remained invisible. I discovered a notorious Unreal Engine quirk: **Packaged builds aggressively discard dynamically created components** generated during C++ `OnConstruction` if they aren't explicitly serialized into the map.
+
+**The Solution:**
+To resolve this, I overhauled the visual construction pipeline:
+1. I configured the `DefaultGame.ini` to force the Asset Manager to scan and cook my `WeaponData`, `ProjectileData`, and `MagazineData` assets.
+2. I switched to **synchronous loading** to prevent the render proxy race condition.
+3. I bypassed the Construction Script serialization issue entirely by forcing the weapon to rebuild its visual components at runtime during `BeginPlay()`. By explicitly calling `AddInstanceComponent()`, I ensured the engine treats these dynamically spawned parts as persistent, runtime-instanced components. The weapon now renders perfectly in the packaged build!
+
+### 4. Runtime Rebuild Race Conditions & Physics Explosions
+Moving the component reconstruction to `BeginPlay()` solved the visibility issue but immediately introduced new bugs: grabbing the weapon stopped working, triggers failed to fire, and grabbing a sub-component (like the slide) attached the *entire* gun to the player's off-hand.
+Through debugging, I learned:
+- **Physics Desyncs:** Destroying and recreating collision components while the parent root is actively simulating physics causes severe overlap desyncs. The fix was to temporarily suspend the physics simulation during the `BeginPlay()` rebuild, safely swap the components, and then restore the simulation.
+- **Component Initialization Order:** Because components spawned sequentially at runtime fire their `BeginPlay()` the moment they are registered, the Slide (`UVRMechanicalComponent`) was trying to find its child Grab Box before the Grab Box was even created. I fixed this by moving the discovery logic to a custom `InitializeComponent` interface function that guarantees it only runs *after* the entire weapon hierarchy is fully constructed.
+- **Missing Data Asset Properties:** The "grab the slide and the whole gun moves" bug was caused by an oversight in the Data Asset structure. `bAttachOwnerOnGrab` was missing from the `UVRGrabSettings`, meaning dynamically spawned sub-components defaulted to `true`. Exposing this setting allowed me to properly configure slides to detach from the owner's transform and move independently.

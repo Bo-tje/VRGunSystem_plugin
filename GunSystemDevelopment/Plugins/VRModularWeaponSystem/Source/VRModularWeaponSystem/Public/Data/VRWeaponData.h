@@ -50,6 +50,10 @@ public:
 	/** If true, this grip is considered the main handle for haptics scaling. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Grab Settings")
 	bool bIsMainGrip = false;
+
+	/** If true, the entire weapon will attach to the hand. Must be FALSE for slides, bolts, and pumps. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Grab Settings")
+	bool bAttachOwnerOnGrab = true;
 };
 
 /** Specific settings for the Mechanical component */
@@ -229,7 +233,7 @@ struct FVRWeaponDynamicComponent
  * UVRWeaponData defines the configuration for a weapon.
  */
 UCLASS(BlueprintType)
-class VRMODULARWEAPONSYSTEM_API UVRWeaponData : public UDataAsset
+class VRMODULARWEAPONSYSTEM_API UVRWeaponData : public UPrimaryDataAsset
 {
 	GENERATED_BODY()
 	

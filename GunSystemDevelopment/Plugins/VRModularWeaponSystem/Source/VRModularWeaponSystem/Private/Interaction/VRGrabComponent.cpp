@@ -270,5 +270,6 @@ void UVRGrabComponent::InitializeComponentWithSettings_Implementation(UVRWeaponD
 		BreakDistance = GrabSettings->BreakDistance;
 		GrabPoseTag = GrabSettings->AnimationGrabPoseTag;
 		bIsMainGrip = GrabSettings->bIsMainGrip;
+		bAttachOwnerOnGrab = GrabSettings->bAttachOwnerOnGrab;
 	}
 }

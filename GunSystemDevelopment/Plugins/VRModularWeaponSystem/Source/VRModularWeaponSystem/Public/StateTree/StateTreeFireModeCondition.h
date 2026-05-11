@@ -21,4 +21,17 @@ struct VRMODULARWEAPONSYSTEM_API FSTCondition_FireMode : public FStateTreeCondit
 
 	virtual const UScriptStruct* GetInstanceDataType() const override { return FSTCondition_FireModeInstanceData::StaticStruct(); }
 	virtual bool TestCondition(FStateTreeExecutionContext& Context) const override;
+
+	UPROPERTY(EditAnywhere, Category = "Parameter")
+	bool bCheckIsAutomatic = false;
+
+	UPROPERTY(EditAnywhere, Category = "Parameter")
+	bool bIsAutomaticValue = false;
+
+	UPROPERTY(EditAnywhere, Category = "Parameter")
+	bool bCheckModeName = false;
+
+	UPROPERTY(EditAnywhere, Category = "Parameter", meta = (EditCondition = "bCheckModeName"))
+	FName ModeName;
 };
+

@@ -51,28 +51,56 @@ void AVRWeaponBase::OnConstruction(const FTransform& Transform)
 {
 	Super::OnConstruction(Transform);
 	
-	ApplyWeaponDataVisuals();
-	InitializeWeapon();
+	// Ensure we don't duplicate components when construction script re-runs
+	ClearDynamicComponents();
+	
+	if (WeaponData)
+	{
+		ApplyWeaponDataVisuals();
+		InitializeWeapon();
+	}
 }
 
 void AVRWeaponBase::BeginPlay()
 {
 	Super::BeginPlay();
-	if (StateTreeComponent)
+
+	// Packaged builds do not serialize components created dynamically in the Construction Script.
+	// We MUST rebuild them at runtime. To prevent physics explosions, we temporarily disable physics.
+	bool bWasSimulating = false;
+	if (WeaponRoot)
 	{
-		StateTreeComponent->StopLogic(TEXT("Init"));
+		bWasSimulating = WeaponRoot->IsSimulatingPhysics();
+		WeaponRoot->SetSimulatePhysics(false);
 	}
+
+	ClearDynamicComponents();
+	ApplyWeaponDataVisuals();
+
+	if (WeaponRoot && bWasSimulating)
+	{
+		WeaponRoot->SetSimulatePhysics(true);
+	}
+	
+	InitializeWeapon();
 	
 	CachedGrabComponents.Empty();
 	GetComponents(CachedGrabComponents);
 	
 	for (UVRGrabComponent* GrabComponent : CachedGrabComponents)
 	{
-		GrabComponent->OnGrabbed.AddDynamic(this, &AVRWeaponBase::OnGrabbed);
-		GrabComponent->OnGrabReleased.AddDynamic(this, &AVRWeaponBase::OnReleased);
+		// Only bind to valid components, as DestroyComponent leaves old ones around until GC
+		if (IsValid(GrabComponent))
+		{
+			GrabComponent->OnGrabbed.AddDynamic(this, &AVRWeaponBase::OnGrabbed);
+			GrabComponent->OnGrabReleased.AddDynamic(this, &AVRWeaponBase::OnReleased);
+		}
 	}
-	
-	InitializeWeapon();
+
+	if (StateTreeComponent)
+	{
+		StateTreeComponent->StopLogic(TEXT("Init"));
+	}
 }
 
 void AVRWeaponBase::InitializeWeapon()
@@ -140,35 +168,50 @@ void AVRWeaponBase::ApplyWeaponDataVisuals()
 	}
 	
 	TArray<FSoftObjectPath> AssetsToLoad;
+	bool bAllLoaded = true;
+
 	for (const FVRWeaponPart& Part : WeaponData->WeaponParts)
 	{
 		if (!Part.PartName.IsNone() && !Part.Mesh.IsNull())
 		{
-			AssetsToLoad.AddUnique(Part.Mesh.ToSoftObjectPath());
+			if (Part.Mesh.IsPending())
+			{
+				AssetsToLoad.AddUnique(Part.Mesh.ToSoftObjectPath());
+				bAllLoaded = false;
+			}
 		}
 	}
 	for (const FVRWeaponDynamicComponent& CompGen : WeaponData->AdditionalComponents)
 	{
 		if (!CompGen.OptionalMesh.IsNull())
 		{
-			AssetsToLoad.AddUnique(CompGen.OptionalMesh.ToSoftObjectPath());
+			if (CompGen.OptionalMesh.IsPending())
+			{
+				AssetsToLoad.AddUnique(CompGen.OptionalMesh.ToSoftObjectPath());
+				bAllLoaded = false;
+			}
 		}
 	}
 
+	// Always use synchronous loading here to ensure the meshes are ready immediately.
+	// This prevents race conditions where InitializeWeapon() runs before components exist.
 	if (AssetsToLoad.Num() > 0)
 	{
-		FStreamableDelegate Delegate = FStreamableDelegate::CreateUObject(this, &AVRWeaponBase::ApplyWeaponDataVisuals_Internal);
-		UAssetManager::GetStreamableManager().RequestAsyncLoad(AssetsToLoad, Delegate);
+		for (const FSoftObjectPath& Path : AssetsToLoad)
+		{
+			UAssetManager::GetStreamableManager().LoadSynchronous(Path);
+		}
 	}
-	else
-	{
-		ApplyWeaponDataVisuals_Internal();
-	}
+	
+	ApplyWeaponDataVisuals_Internal();
 }
 
 void AVRWeaponBase::ApplyWeaponDataVisuals_Internal()
 {
 	if (!WeaponData) return;
+
+	// Determine creation method: if we haven't started playing, we are likely in construction
+	EComponentCreationMethod CreationMethod = HasActorBegunPlay() ? EComponentCreationMethod::Instance : EComponentCreationMethod::UserConstructionScript;
 
 	FAttachmentTransformRules StaticAttachRules(EAttachmentRule::KeepRelative, true);
 
@@ -176,11 +219,18 @@ void AVRWeaponBase::ApplyWeaponDataVisuals_Internal()
 	{
 		if (Part.PartName.IsNone() || Part.Mesh.IsNull()) continue;
 		
+		UStaticMesh* LoadedMesh = Part.Mesh.Get();
+		if (!LoadedMesh) continue;
+
 		UStaticMeshComponent* NewComponent = NewObject<UStaticMeshComponent>(this, Part.PartName);
 		if (NewComponent)
 		{
-			NewComponent->CreationMethod = EComponentCreationMethod::UserConstructionScript;
-			NewComponent->SetStaticMesh(Part.Mesh.Get());
+			NewComponent->CreationMethod = CreationMethod;
+			if (CreationMethod == EComponentCreationMethod::Instance)
+			{
+				AddInstanceComponent(NewComponent);
+			}
+			NewComponent->SetStaticMesh(LoadedMesh);
 			
 			USceneComponent* AttachTarget = WeaponRoot;
 			if (!Part.ParentSocket.IsNone())
@@ -200,7 +250,7 @@ void AVRWeaponBase::ApplyWeaponDataVisuals_Internal()
 			NewComponent->SetRelativeTransform(Part.PartOffset);
 			NewComponent->AttachToComponent(AttachTarget, StaticAttachRules, Part.ParentSocket);
 			NewComponent->RegisterComponent();
-			
+
 			NewComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 			NewComponent->SetCollisionProfileName(TEXT("PhysicsBody"));
 		}
@@ -213,15 +263,28 @@ void AVRWeaponBase::ApplyWeaponDataVisuals_Internal()
 		UActorComponent* NewObj = NewObject<UActorComponent>(this, CompGen.ComponentClass, CompGen.ComponentName);
 		if (NewObj)
 		{
-			NewObj->CreationMethod = EComponentCreationMethod::UserConstructionScript;
+			NewObj->CreationMethod = CreationMethod;
+			if (CreationMethod == EComponentCreationMethod::Instance)
+			{
+				AddInstanceComponent(NewObj);
+			}
 			DynamicComponentsMap.Add(CompGen.ComponentName, NewObj);
 			
 			if (NewObj->Implements<UVRWeaponComponentInterface>())
 			{
 				if (CompGen.Settings)
+				{
+					// Register input tags for automatic routing
+					for (const FGameplayTag& Tag : CompGen.Settings->BindToInputTags)
+					{
+						TagToComponentMap.Add(Tag, NewObj);
+					}
 					IVRWeaponComponentInterface::Execute_InitializeComponentWithSettings(NewObj, WeaponData, CompGen.Settings);
+				}
 				else
+				{
 					IVRWeaponComponentInterface::Execute_InitializeComponent(NewObj, WeaponData);
+				}
 			}
 			
 			if (USceneComponent* SceneComp = Cast<USceneComponent>(NewObj))
@@ -284,7 +347,7 @@ void AVRWeaponBase::ApplyWeaponDataVisuals_Internal()
 				}
 				else if (UVRMechanicalComponent* MechComp = Cast<UVRMechanicalComponent>(NewObj))
 				{
-					if (!CompGen.OptionalMesh.IsNull()) MechComp->ConstructVisuals(CompGen.OptionalMesh.Get(), CompGen.bWeldCollision);
+					if (!CompGen.OptionalMesh.IsNull()) MechComp->ConstructVisuals(CompGen.OptionalMesh.Get(), CompGen.bWeldCollision, CreationMethod);
 				}
 			}
 			else
@@ -293,6 +356,35 @@ void AVRWeaponBase::ApplyWeaponDataVisuals_Internal()
 			}
 		}
 	}
+}
+
+void AVRWeaponBase::ClearDynamicComponents()
+{
+	// 1. Destroy components tracked in the map
+	for (auto& Elem : DynamicComponentsMap)
+	{
+		if (UActorComponent* Comp = Elem.Value)
+		{
+			Comp->DestroyComponent();
+		}
+	}
+	DynamicComponentsMap.Empty();
+
+	// 2. Identify and destroy any static mesh components created by the part system
+	TArray<UStaticMeshComponent*> AllSMComps;
+	GetComponents(AllSMComps);
+
+	for (UStaticMeshComponent* SM : AllSMComps)
+	{
+		if (SM == PartRoot || SM->IsDefaultSubobject()) continue;
+		
+		if (SM->CreationMethod == EComponentCreationMethod::UserConstructionScript || SM->CreationMethod == EComponentCreationMethod::Instance)
+		{
+			SM->DestroyComponent();
+		}
+	}
+	
+	TagToComponentMap.Empty();
 }
 
 UActorComponent* AVRWeaponBase::GetDynamicComponentByName(FName ComponentName) const
@@ -340,7 +432,7 @@ void AVRWeaponBase::OnReleased()
 
 void AVRWeaponBase::StartAction_Implementation(UObject* Interactor, float ActionValue, FGameplayTag ActionTag)
 {
-	// 1. Flexible Tag Routing
+	// 1. Flexible Tag Routing (Manual Override in WeaponData)
 	if (WeaponData && WeaponData->InputTagToComponentName.Contains(ActionTag))
 	{
 		const FName TargetName = WeaponData->InputTagToComponentName[ActionTag];
@@ -350,6 +442,14 @@ void AVRWeaponBase::StartAction_Implementation(UObject* Interactor, float Action
 			{
 				MechComp->SetNormalizedValue(ActionValue);
 			}
+		}
+	}
+	// 1b. Automatic Tag Routing (from Component Settings)
+	else if (UActorComponent** TargetCompPtr = TagToComponentMap.Find(ActionTag))
+	{
+		if (UVRMechanicalComponent* MechComp = Cast<UVRMechanicalComponent>(*TargetCompPtr))
+		{
+			MechComp->SetNormalizedValue(ActionValue);
 		}
 	}
 
@@ -371,13 +471,23 @@ void AVRWeaponBase::StartAction_Implementation(UObject* Interactor, float Action
 
 void AVRWeaponBase::StopAction_Implementation(UObject* Interactor, FGameplayTag ActionTag)
 {
+	UVRMechanicalComponent* TargetMech = nullptr;
+
+	// 1. Check Manual Override
 	if (WeaponData && WeaponData->InputTagToComponentName.Contains(ActionTag))
 	{
 		const FName TargetName = WeaponData->InputTagToComponentName[ActionTag];
-		if (UVRMechanicalComponent* MechComp = Cast<UVRMechanicalComponent>(GetDynamicComponentByName(TargetName)))
-		{
-			if (!MechComp->bHasReturnSpring) MechComp->SetNormalizedValue(0.0f);
-		}
+		TargetMech = Cast<UVRMechanicalComponent>(GetDynamicComponentByName(TargetName));
+	}
+	// 2. Check Automatic Mapping
+	else if (UActorComponent** TargetCompPtr = TagToComponentMap.Find(ActionTag))
+	{
+		TargetMech = Cast<UVRMechanicalComponent>(*TargetCompPtr);
+	}
+
+	if (TargetMech)
+	{
+		if (!TargetMech->bHasReturnSpring) TargetMech->SetNormalizedValue(0.0f);
 	}
 
 	if (ActionTag.MatchesTag(VRNativeTags::Trigger) || ActionTag.MatchesTag(VRNativeTags::TriggerReleased))

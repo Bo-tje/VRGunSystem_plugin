@@ -139,6 +139,7 @@ public:
 	UFUNCTION(BlueprintPure, Category = "VR Weapon | Interaction")
 	UActorComponent* GetDynamicComponentByName(FName ComponentName) const;
 
+
 	UFUNCTION(BlueprintPure, Category = "VR Weapon | Interaction")
 	class UVRInteractor* GetHoldingInteractor() const;
 
@@ -156,5 +157,12 @@ public:
 	UFUNCTION()
 	virtual void OnReleased();
 
+	UFUNCTION(BlueprintCallable, Category = "VR Weapon")
+	void ClearDynamicComponents();
+
 private:
+	/** Cache for routing gameplay tag actions to components. Populated during initialization. */
+	UPROPERTY(Transient)
+	TMap<FGameplayTag, UActorComponent*> TagToComponentMap;
 };
+
