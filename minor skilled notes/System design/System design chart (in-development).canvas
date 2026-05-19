@@ -1,281 +1,36 @@
 {
-    "nodes": [
-        {
-            "id": "g_Components",
-            "type": "group",
-            "label": "Components",
-            "x": -1500,
-            "y": -1000,
-            "width": 1200,
-            "height": 1000,
-            "color": "2"
-        },
-        {
-            "id": "n_UProjectileData",
-            "type": "text",
-            "text": "### UProjectileData\n**Delegates:**\nFOnRoundFired, FOnChamberStateChanged, FOnRoundLoaded, FOnRoundEjected\n\n**Properties:**\n- UStaticMeshComponent* RoundVisualMesh\\n- FOnRoundEjected OnRoundEjected\\n- UProjectileData* LoadedProjectile\\n- TObjectPtr<UVRWeaponData> WeaponData\\n- FGameplayTag CurrentChamberState\\n- FOnRoundLoaded OnRoundLoaded\\n- FOnRoundFired OnRoundFired\\n- FOnChamberStateChanged OnChamberStateChanged\n\n**Functions:**\n- GetChamberState()\\n- TryEject()\\n- IsRoundReady()\\n- GetLoadedRound()\\n- IsEmpty()\\n- TryGiveBullet()\\n- UpdateVisuals()\\n- TryLoad()",
-            "x": -1450,
-            "y": -920,
-            "width": 320,
-            "height": 380
-        },
-        {
-            "id": "n_UVRCustomActionComponent",
-            "type": "text",
-            "text": "### UVRCustomActionComponent\n**Properties:**\n- FOnInputActionValue OnActionStart\\n- UVRGrabComponent* CachedGrabComp\\n- FOnInputAction OnActionStop\n\n**Functions:**\n- HandleStopAction()\\n- HandleStartAction()",
-            "x": -1090,
-            "y": -920,
-            "width": 320,
-            "height": 380
-        },
-        {
-            "id": "n_UVRWeaponComponentSettings",
-            "type": "text",
-            "text": "### UVRWeaponComponentSettings\n**Delegates:**\nFOnWeaponDryFired, FOnWeaponFired\n\n**Properties:**\n- float DryFireHapticScale\\n- FName MuzzleSocketName\\n- TObjectPtr<UAudioComponent> DryFireAudioComponent\\n- TObjectPtr<UVRWeaponData> WeaponData\\n- float FireHapticScale\\n- TObjectPtr<UAudioComponent> FireAudioComponent\\n- FOnWeaponFired OnFired\\n- FOnWeaponDryFired OnDryFired\n\n**Functions:**\n- GetMuzzleTransform()\\n- PlayHaptics()\\n- HandleFiring()\\n- HandleDryFire()",
-            "x": -730,
-            "y": -920,
-            "width": 320,
-            "height": 380
-        },
-        {
-            "id": "n_UVRGrabComponent",
-            "type": "text",
-            "text": "### UVRGrabComponent\n**Delegates:**\nFOnMechanicalReachedTarget, FOnMechanicalValueChanged\n\n**Properties:**\n- TObjectPtr<UStaticMeshComponent> VisualMesh\\n- TObjectPtr<UVRGrabComponent> DrivingGrabComponent\\n- bool bIsLocked\\n- bool bHasReturnSpring\\n- TObjectPtr<UHapticFeedbackEffect_Base> MovementHapticEffect\\n- bool bUseSimulatedInertia\\n- float ReturnSpeed\\n- float CurrentNormalisedValue\\n- bool bInvertDirection\\n- FGameplayTag OnReachedMinTag...\n\n**Functions:**\n- SetIsLocked()\\n- UpdateFromHandLocation()\\n- OnReleased()\\n- SetNormalizedValue()\\n- AddMomentum()\\n- OnGrabbed()\\n- SetRestingValue()",
-            "x": -1450,
-            "y": -500,
-            "width": 320,
-            "height": 380
-        },
-        {
-            "id": "n_AVRWeaponBase",
-            "type": "text",
-            "text": "### AVRWeaponBase\n**Properties:**\n- TObjectPtr<AVRWeaponBase> WeaponOwner\n\n**Functions:**\n- PlayFiringFeedback()",
-            "x": -1090,
-            "y": -500,
-            "width": 320,
-            "height": 380
-        },
-        {
-            "id": "n_UVRWeaponStateTreeComponent",
-            "type": "text",
-            "text": "### UVRWeaponStateTreeComponent",
-            "x": -730,
-            "y": -500,
-            "width": 320,
-            "height": 380
-        },
-        {
-            "id": "g_Core",
-            "type": "group",
-            "label": "Core",
-            "x": -1500,
-            "y": 200,
-            "width": 1200,
-            "height": 550,
-            "color": "1"
-        },
-        {
-            "id": "n_FVRModularWeaponSystemModule",
-            "type": "text",
-            "text": "### FVRModularWeaponSystemModule",
-            "x": -1450,
-            "y": 280,
-            "width": 320,
-            "height": 380
-        },
-        {
-            "id": "n_UStaticMeshComponent",
-            "type": "text",
-            "text": "### UStaticMeshComponent\n**Properties:**\n- TArray<UActorComponent*> CachedRoundProviders\\n- UVRWeaponStateTreeComponent> StateTreeComponent\\n- TArray<UActorComponent*> CachedWeaponComponents\\n- TArray<UActorComponent*> CachedInputComponents\\n- USceneComponent* PartRoot\\n- UBoxComponent* WeaponRoot\\n- UVRWeaponFeedbackComponent> FeedbackComponent\\n- FVRWeaponStats CalculatedStats\\n- bool bIsTriggerPulled\\n- TObjectPtr<UVRWeaponData> WeaponData...\n\n**Functions:**\n- OnReleased()\\n- InitializeWeapon()\\n- GetDynamicComponentByName()\\n- UpdateCalculatedStats()\\n- GetCalculatedStats()\\n- OnGrabbed()\\n- ApplyWeaponDataVisuals()",
-            "x": -1090,
-            "y": 280,
-            "width": 320,
-            "height": 380
-        },
-        {
-            "id": "g_Data",
-            "type": "group",
-            "label": "Data",
-            "x": -1500,
-            "y": 950,
-            "width": 1200,
-            "height": 1000,
-            "color": "4"
-        },
-        {
-            "id": "n_UMagazineData",
-            "type": "text",
-            "text": "### UMagazineData\n**Properties:**\n- FGameplayTag MagazineType\\n- int32 MaxAmmo\\n- TSubclassOf<UStaticMesh> MagazineMesh",
-            "x": -1450,
-            "y": 1030,
-            "width": 320,
-            "height": 380
-        },
-        {
-            "id": "n_UProjectileData",
-            "type": "text",
-            "text": "### UProjectileData\n**Properties:**\n- FGameplayTagContainer AmmoTags\\n- TObjectPtr<UStaticMesh> LiveRoundMesh\\n- TObjectPtr<UParticleSystem> MuzzleFlashOverride\\n- float GravityScale\\n- FText DisplayName\\n- float HitscanRange\\n- TObjectPtr<USoundBase> ImpactSound\\n- TObjectPtr<USoundBase> FireSoundOverride\\n- TObjectPtr<UParticleSystem> ImpactEffect\\n- TSubclassOf<AActor> ProjectileClass...",
-            "x": -1090,
-            "y": 1030,
-            "width": 320,
-            "height": 380
-        },
-        {
-            "id": "n_UVRWeaponComponentSettings",
-            "type": "text",
-            "text": "### UVRWeaponComponentSettings\n**Properties:**\n- float ThrowMultiplier\\n- bool bIsLocked\\n- float SphereRadius\\n- FGameplayTag AnimationGrabPoseTag\\n- bool bIsMainGrip\\n- FName ParentSocket\\n- FVRWeaponStats BaseStats\\n- float BreakDistance\\n- float HapticScale\\n- TSubclassOf<UActorComponent> ComponentClass...",
-            "x": -730,
-            "y": 1030,
-            "width": 320,
-            "height": 380
-        },
-        {
-            "id": "n_FVRWeaponStats",
-            "type": "text",
-            "text": "### FVRWeaponStats\n**Properties:**\n- float FireRateOffset\\n- TObjectPtr<UParticleSystem> MuzzleFlashOverride\\n- float DamageMultiplier\\n- TObjectPtr<USoundBase> FireSoundOverride\\n- float FireRate\\n- float BulletVelocityMultiplier\\n- float RecoilMultiplier\\n- float ReloadSpeedMultiplier",
-            "x": -1450,
-            "y": 1450,
-            "width": 320,
-            "height": 380
-        },
-        {
-            "id": "g_Interaction",
-            "type": "group",
-            "label": "Interaction",
-            "x": -1500,
-            "y": 2150,
-            "width": 1200,
-            "height": 550,
-            "color": "3"
-        },
-        {
-            "id": "n_UVRInteractor",
-            "type": "text",
-            "text": "### UVRInteractor\n**Delegates:**\nFOnInputActionValue, FOnHoverEnd, FOnGrabbed, FStartAction, FOnHoverStart, FOnGrabReleased, FStopAction, FOnInputAction\n\n**Properties:**\n- float ThrowMultiplier\\n- FOnHoverEnd OnHoverEnd\\n- FOnGrabReleased OnGrabReleased\\n- bool bIsMainGrip\\n- FStartAction StartAction\\n- float BreakDistance\\n- float HapticScale\\n- FOnHoverStart OnHoverStart\\n- UHapticFeedbackEffect_Base* GrabHapticEffect\\n- TWeakObjectPtr<UVRInteractor> CurrentInteractor...\n\n**Functions:**\n- TryGrab()\\n- GetHoldingHand()\\n- GetCurrentInteractor()\\n- TryRelease()\\n- IsHeld()",
-            "x": -1450,
-            "y": 2230,
-            "width": 320,
-            "height": 380
-        },
-        {
-            "id": "n_UHapticFeedbackEffect_Base",
-            "type": "text",
-            "text": "### UHapticFeedbackEffect_Base\n**Properties:**\n- USphereComponent* DetectionSphereComponent\\n- UHapticFeedbackEffect_Base* HoverHapticEffect\\n- UVRGrabComponent* ActiveGrabComponent\\n- EControllerHand HandSide\\n- TWeakObjectPtr<UVRGrabComponent> HoverTarget\\n- TArray<TWeakObjectPtr<UVRGrabComponent>> OverlappingGrabs\n\n**Functions:**\n- IntendRelease()\\n- IntendGrab()\\n- IntendActionStop()\\n- OnSphereOverlapBegin()\\n- OnSphereOverlapEnd()\\n- IntendActionStart()\\n- PlayHapticFeedback()",
-            "x": -1090,
-            "y": 2230,
-            "width": 320,
-            "height": 380
-        },
-        {
-            "id": "g_Interfaces",
-            "type": "group",
-            "label": "Interfaces",
-            "x": -1500,
-            "y": 2900,
-            "width": 1200,
-            "height": 1000,
-            "color": "6"
-        },
-        {
-            "id": "n_UVRInteractableInterface",
-            "type": "text",
-            "text": "### UVRInteractableInterface\n**Functions:**\n- OnHoverStart()\\n- StartAction()\\n- StopAction()\\n- OnHoverEnd()",
-            "x": -1450,
-            "y": 2980,
-            "width": 320,
-            "height": 380
-        },
-        {
-            "id": "n_UVRInteractorInterface",
-            "type": "text",
-            "text": "### UVRInteractorInterface",
-            "x": -1090,
-            "y": 2980,
-            "width": 320,
-            "height": 380
-        },
-        {
-            "id": "n_UProjectileData",
-            "type": "text",
-            "text": "### UProjectileData\n**Functions:**\n- GetRound()",
-            "x": -730,
-            "y": 2980,
-            "width": 320,
-            "height": 380
-        },
-        {
-            "id": "n_UVRWeaponData",
-            "type": "text",
-            "text": "### UVRWeaponData\n**Functions:**\n- InitializeComponent()\\n- InitializeComponentWithSettings()\\n- GetStatModifier()",
-            "x": -1450,
-            "y": 3400,
-            "width": 320,
-            "height": 380
-        },
-        {
-            "id": "n_UVRWeaponInterface",
-            "type": "text",
-            "text": "### UVRWeaponInterface\n**Functions:**\n- PullTrigger()\\n- SecondaryAction()\\n- PrimaryAction()\\n- ReleaseSecondaryAction()\\n- ReleaseTrigger()\\n- ReleasePrimaryAction()\\n- IsTriggerPulled()",
-            "x": -1090,
-            "y": 3400,
-            "width": 320,
-            "height": 380
-        },
-        {
-            "id": "g_StateTree",
-            "type": "group",
-            "label": "StateTree",
-            "x": -1500,
-            "y": 4100,
-            "width": 1200,
-            "height": 1000,
-            "color": "5"
-        },
-        {
-            "id": "n_FSTTask_ChamberRoundInstanceData",
-            "type": "text",
-            "text": "### FSTTask_ChamberRoundInstanceData\n**Properties:**\n- bool bInfiniteAmmo\\n- TObjectPtr<AActor> WeaponActor",
-            "x": -1450,
-            "y": 4180,
-            "width": 320,
-            "height": 380
-        },
-        {
-            "id": "n_FSTTask_EjectRoundInstanceData",
-            "type": "text",
-            "text": "### FSTTask_EjectRoundInstanceData\n**Properties:**\n- TObjectPtr<AActor> WeaponActor",
-            "x": -1090,
-            "y": 4180,
-            "width": 320,
-            "height": 380
-        },
-        {
-            "id": "n_FSTTask_FireWeaponInstanceData",
-            "type": "text",
-            "text": "### FSTTask_FireWeaponInstanceData\n**Properties:**\n- TObjectPtr<AActor> WeaponActor\\n- bool bOnlyFireFromChamber",
-            "x": -730,
-            "y": 4180,
-            "width": 320,
-            "height": 380
-        },
-        {
-            "id": "n_FSTEval_WeaponInstanceData",
-            "type": "text",
-            "text": "### FSTEval_WeaponInstanceData\n**Properties:**\n- bool bIsTriggerPulled\\n- bool bHasRoundReady\\n- TObjectPtr<AActor> WeaponActor\\n- FGameplayTag ChamberStateTag\\n- float TimeBetweenShots",
-            "x": -1450,
-            "y": 4600,
-            "width": 320,
-            "height": 380
-        },
-        {
-            "id": "n_UVRWeaponStateTreeSchema",
-            "type": "text",
-            "text": "### UVRWeaponStateTreeSchema\n**Properties:**\n- FStateTreeExternalDataDesc WeaponDataDescription",
-            "x": -1090,
-            "y": 4600,
-            "width": 320,
-            "height": 380
-        }
-    ],
-    "edges": []
+	"nodes":[
+		{"id":"g_StateTree","type":"group","x":-160,"y":-275,"width":1200,"height":1490,"color":"5","label":"StateTree"},
+		{"id":"g_Components","type":"group","x":-1500,"y":-1000,"width":1200,"height":1450,"color":"2","label":"Components"},
+		{"id":"g_Data","type":"group","x":-3040,"y":-1000,"width":1200,"height":1000,"color":"4","label":"Data"},
+		{"id":"g_Interfaces","type":"group","x":-3040,"y":300,"width":1200,"height":1000,"color":"6","label":"Interfaces"},
+		{"id":"g_Core","type":"group","x":-1500,"y":-1920,"width":1200,"height":550,"color":"1","label":"Core"},
+		{"id":"g_Interaction","type":"group","x":-160,"y":-1000,"width":1200,"height":550,"color":"3","label":"Interaction"},
+		{"id":"n_UVRCustomActionComponent","type":"text","text":"### UVRCustomActionComponent\n**Properties:**\n- FOnInputAction OnActionStop\\n- UVRGrabComponent* CachedGrabComp\\n- FOnInputActionValue OnActionStart\n\n**Functions:**\n- HandleStartAction()\\n- HandleStopAction()","x":-730,"y":-920,"width":320,"height":380},
+		{"id":"n_UVRGrabComponent","type":"text","text":"### UVRGrabComponent\n**Delegates:**\nFOnMechanicalReachedTarget, FOnMechanicalValueChanged\n\n**Properties:**\n- TObjectPtr<USoundBase> LimitReachedSound\\n- bool bHasReturnSpring\\n- TObjectPtr<UHapticFeedbackEffect_Base> LimitReachedHapticEffect\\n- FOnMechanicalReachedTarget OnReachedMin\\n- TObjectPtr<UHapticFeedbackEffect_Base> MovementHapticEffect\\n- FOnMechanicalReachedTarget OnReachedMax\\n- bool bUseSimulatedInertia\\n- FOnMechanicalValueChanged OnValueChanged\\n- FVector LocalAxis\\n- TObjectPtr<UVRGrabComponent> DrivingGrabComponent...\n\n**Functions:**\n- ConstructVisuals()\\n- OnReleased()\\n- SetRestingValue()\\n- OnGrabbed()\\n- SetIsLocked()\\n- SetNormalizedValue()\\n- AddMomentum()\\n- UpdateFromHandLocation()","x":-1090,"y":-500,"width":320,"height":380},
+		{"id":"n_AVRWeaponBase","type":"text","text":"### AVRWeaponBase\n**Properties:**\n- TObjectPtr<AVRWeaponBase> WeaponOwner\n\n**Functions:**\n- PlayFiringFeedback()","x":-730,"y":-500,"width":320,"height":380},
+		{"id":"n_UVRWeaponStateTreeComponent","type":"text","text":"### UVRWeaponStateTreeComponent","x":-1450,"y":-80,"width":320,"height":380},
+		{"id":"n_AVRAttachmentActor","type":"text","text":"### AVRAttachmentActor\n**Properties:**\n- FName AttachmentSocketName\\n- UStaticMeshComponent* MeshComponent\\n- UVRWeaponStatModifier* StatModifier\\n- bool bIsHeld","x":-1450,"y":-1840,"width":320,"height":380},
+		{"id":"n_FVRModularWeaponSystemModule","type":"text","text":"### FVRModularWeaponSystemModule","x":-1090,"y":-1840,"width":320,"height":380},
+		{"id":"n_UStaticMeshComponent","type":"text","text":"### UStaticMeshComponent\n**Properties:**\n- int32 CurrentFireModeIndex\\n- TArray<UActorComponent*> CachedRoundProviders\\n- TArray<UActorComponent*> CachedWeaponComponents\\n- TArray<UActorComponent*> CachedInputComponents\\n- UVRWeaponFeedbackComponent> FeedbackComponent\\n- TObjectPtr<UVRWeaponData> WeaponData\\n- int32 ActiveGrabCount\\n- UBoxComponent* WeaponRoot\\n- FRotator CurrentRecoilOffset\\n- FRotator RecoilVelocity...\n\n**Functions:**\n- GetCalculatedStats()\\n- GetCurrentFireMode()\\n- OnReleased()\\n- ApplyWeaponDataVisuals_Internal()\\n- ApplyWeaponDataVisuals()\\n- GetDynamicComponentByName()\\n- ClearDynamicComponents()\\n- UpdateCalculatedStats()\\n- InitializeWeapon()\\n- OnGrabbed()","x":-730,"y":-1840,"width":320,"height":380},
+		{"id":"n_UMagazineData","type":"text","text":"### UMagazineData\n**Properties:**\n- TObjectPtr<UStaticMesh> MagazineMesh\\n- int32 MaxAmmo\\n- FGameplayTag MagazineType","x":-2990,"y":-920,"width":320,"height":380},
+		{"id":"n_UVRWeaponComponentSettings","type":"text","text":"### UVRWeaponComponentSettings\n**Properties:**\n- FName PartName\\n- float BreakDistance\\n- TObjectPtr<USoundBase> LimitReachedSound\\n- bool bAttachOwnerOnGrab\\n- bool bHasReturnSpring\\n- float ThrowMultiplier\\n- TObjectPtr<UHapticFeedbackEffect_Base> LimitReachedHapticEffect\\n- bool bUseSocketSnap\\n- float FireHapticScale\\n- float RoundsPerMinute...","x":-2270,"y":-920,"width":320,"height":380},
+		{"id":"n_FVRWeaponStats","type":"text","text":"### FVRWeaponStats\n**Properties:**\n- float ReloadSpeedMultiplier\\n- float RecoilSpringDamping\\n- float RecoilYaw\\n- TObjectPtr<USoundBase> FireSoundOverride\\n- TObjectPtr<UParticleSystem> MuzzleFlashOverride\\n- float FireRate\\n- float RecoilMultiplier\\n- float FireRateOffset\\n- float DamageMultiplier\\n- float BulletVelocityMultiplier...","x":-2990,"y":-500,"width":320,"height":380},
+		{"id":"n_UVRInteractor","type":"text","text":"### UVRInteractor\n**Delegates:**\nFOnHoverStart, FStartAction, FOnGrabReleased, FOnInputActionValue, FOnHoverEnd, FOnGrabbed, FStopAction, FOnInputAction\n\n**Properties:**\n- float BreakDistance\\n- FOnHoverEnd OnHoverEnd\\n- bool bAttachOwnerOnGrab\\n- float ThrowMultiplier\\n- FOnInputActionValue OnSecondaryActionStart\\n- FOnInputAction OnTriggerStop\\n- FOnInputAction OnPrimaryActionStop\\n- bool bSnapToInteractor\\n- FGameplayTag GrabPoseTag\\n- FGameplayTag HoverPoseTag...\n\n**Functions:**\n- TryRelease()\\n- IsHeld()\\n- GetHoldingHand()\\n- GetCurrentInteractor()\\n- TryGrab()","x":-110,"y":-920,"width":320,"height":380},
+		{"id":"n_UHapticFeedbackEffect_Base","type":"text","text":"### UHapticFeedbackEffect_Base\n**Properties:**\n- TArray<TWeakObjectPtr<UVRGrabComponent>> OverlappingGrabs\\n- EControllerHand HandSide\\n- UVRGrabComponent* ActiveGrabComponent\\n- UHapticFeedbackEffect_Base* HoverHapticEffect\\n- USphereComponent* DetectionSphereComponent\\n- TWeakObjectPtr<UVRGrabComponent> HoverTarget\n\n**Functions:**\n- OnSphereOverlapBegin()\\n- IntendGrab()\\n- OnSphereOverlapEnd()\\n- IntendActionStop()\\n- IntendActionStart()\\n- IntendRelease()\\n- PlayHapticFeedback()","x":250,"y":-920,"width":320,"height":380},
+		{"id":"n_UVRInteractableInterface","type":"text","text":"### UVRInteractableInterface\n**Functions:**\n- StartAction()\\n- OnHoverEnd()\\n- StopAction()\\n- OnHoverStart()","x":-2990,"y":380,"width":320,"height":380},
+		{"id":"n_UVRWeaponData","type":"text","text":"### UVRWeaponData\n**Functions:**\n- InitializeComponentWithSettings()\\n- GetStatModifier()\\n- InitializeComponent()","x":-2990,"y":800,"width":320,"height":380},
+		{"id":"n_UVRInteractorInterface","type":"text","text":"### UVRInteractorInterface","x":-2630,"y":380,"width":320,"height":380},
+		{"id":"n_UVRWeaponInterface","type":"text","text":"### UVRWeaponInterface\n**Functions:**\n- SecondaryAction()\\n- PrimaryAction()\\n- IsTriggerPulled()\\n- ReleaseSecondaryAction()\\n- ReleasePrimaryAction()\\n- PullTrigger()\\n- ReleaseTrigger()","x":-2630,"y":800,"width":320,"height":380},
+		{"id":"n_UProjectileData","type":"text","text":"### UProjectileData\n**Functions:**\n- GetRound()","x":-2270,"y":380,"width":320,"height":380},
+		{"id":"n_FSTTask_ChamberRoundInstanceData","type":"text","text":"### FSTTask_ChamberRoundInstanceData\n**Properties:**\n- bool bInfiniteAmmo\\n- TObjectPtr<AActor> WeaponActor","x":250,"y":-155,"width":320,"height":380},
+		{"id":"n_FSTTask_FireWeaponInstanceData","type":"text","text":"### FSTTask_FireWeaponInstanceData\n**Properties:**\n- bool bOnlyFireFromChamber\\n- TObjectPtr<AActor> WeaponActor","x":250,"y":265,"width":320,"height":380},
+		{"id":"n_UVRWeaponStateTreeSchema","type":"text","text":"### UVRWeaponStateTreeSchema\n**Properties:**\n- FStateTreeExternalDataDesc WeaponDataDescription","x":250,"y":685,"width":320,"height":380},
+		{"id":"n_FSTTask_EjectRoundInstanceData","type":"text","text":"### FSTTask_EjectRoundInstanceData\n**Properties:**\n- TObjectPtr<AActor> WeaponActor","x":610,"y":-155,"width":320,"height":380},
+		{"id":"n_FSTTask_PlayWeaponFeedbackInstanceData","type":"text","text":"### FSTTask_PlayWeaponFeedbackInstanceData\n**Properties:**\n- float HapticScaleOverride\\n- TObjectPtr<AActor> WeaponActor\\n- TObjectPtr<USoundBase> SoundOverride\\n- bool bIsDryFire\\n- TObjectPtr<UHapticFeedbackEffect_Base> HapticOverride","x":610,"y":265,"width":320,"height":380},
+		{"id":"n_FSTTask_AnimateMechanicalInstanceData","type":"text","text":"### FSTTask_AnimateMechanicalInstanceData\n**Properties:**\n- bool bApplyMomentum\\n- float MomentumToAdd\\n- TObjectPtr<AActor> WeaponActor\\n- bool bSetDirectValue\\n- bool bUnlockComponent\\n- FName ComponentName\\n- bool bLockComponent","x":-110,"y":-155,"width":320,"height":380},
+		{"id":"n_FSTCondition_FireModeInstanceData","type":"text","text":"### FSTCondition_FireModeInstanceData\n**Properties:**\n- bool bCheckModeName\\n- bool bIsAutomaticValue\\n- bool bCheckIsAutomatic\\n- TObjectPtr<AActor> WeaponActor","x":-110,"y":265,"width":320,"height":380},
+		{"id":"n_FSTEval_WeaponInstanceData","type":"text","text":"### FSTEval_WeaponInstanceData\n**Properties:**\n- FGameplayTag ChamberStateTag\\n- TObjectPtr<AActor> WeaponActor\\n- bool bHasRoundReady\\n- bool bIsTriggerPulled\\n- float TimeBetweenShots","x":-110,"y":685,"width":320,"height":380}
+	],
+	"edges":[]
 }

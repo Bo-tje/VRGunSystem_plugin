@@ -22,11 +22,14 @@ The base actor for all weapons in the system. It serves as a container that hold
   - `PartRoot`: `USceneComponent*` - The root for attaching modular weapon parts.
   - `StateTreeComponent`: `UVRWeaponStateTreeComponent*` - Handles the weapon's logic.
   - `CalculatedStats`: `FVRWeaponStats` - Dynamic struct storing all currently applied stat modifiers.
+  - `CurrentFireModeIndex`: `int32` - Tracks the currently selected fire mode.
+  - `CurrentRecoilOffset` / `TargetRecoilOffset` / `RecoilVelocity`: `FRotator` - Real-time physics simulation variables for advanced procedural recoil.
 - **Key Functions:**
   - `InitializeWeapon()`: Distributes `WeaponData` to all child components implementing `IVRWeaponComponentInterface`.
   - `ApplyWeaponDataVisuals()`: Dynamically spawns `UStaticMeshComponent`s and logical components based on `WeaponData`, snapping them via sockets and automatically enabling collision welding.
   - `UpdateCalculatedStats()`: Recalculates stats based on attachments and modifiers.
   - `GetDynamicComponentByName()`: Retrieves dynamically injected custom components.
+  - `GetCurrentFireMode()`: Returns the currently active `FVRFireMode`.
 - **Implementation:** Implements `IVRWeaponInterface` to handle primary/secondary inputs and weapon state, as well as `IVRInteractableInterface` for VR interaction routing.
 
 ### `UVRChamberComponent` (Scene Component)
@@ -121,6 +124,19 @@ Handles moving mechanical parts on the weapon, such as slides, triggers, or brea
   - `OnValueChanged`
 - **Implementation:** Implements `IVRWeaponComponentInterface`. It correctly calculates initial offsets via `CalculateRawHandValue` for both `Linear` (distance-based) and `Rotational` (angle-based with wrap-around safety) movement types.
 
+### `UVRAttachmentPointComponent` (Scene Component)
+Handles physical modular attachments by securely snapping and registering physical `AVRAttachmentActor` objects to the weapon.
+- **Key Properties:**
+  - `SocketName`: `FName` - The socket this point is bound to.
+  - `CurrentAttachment`: `AVRAttachmentActor*` - The attachment currently slotted in.
+- **Functions:**
+  - `TryAttach()` / `Detach()`: Physically mounts or removes an attachment from the weapon.
+
+### `AVRAttachmentActor` (Actor)
+A physical, grabbable object representing an attachment (e.g. scopes, grips).
+- **Key Properties:**
+  - `StatModifier`: `UVRWeaponStatModifier*` - Modifiers injected into the weapon's `CalculatedStats` when attached.
+
 ### `UVRInteractor` (Scene Component)
 The component on the VR pawn/hand that initiates interactions with `UVRGrabComponent`.
 
@@ -168,7 +184,7 @@ Defines the base configuration for a weapon. See the [[System design/System desi
 ### Component Settings Architecture
 Settings for dynamically injected components are managed via subclasses of `UVRWeaponComponentSettings`, which are instantiated directly within `UVRWeaponData` (inside the `AdditionalComponents` array):
 - **`UVRGrabSettings`**: Configures grab haptics, throw multipliers, snap spheres, break distances, and the `GrabPoseTag` for animation routing.
-- **`UVRFireSettings`**: Defines muzzle socket names and specific fire/dry-fire haptic scaling.
+- **`UVRFireSettings`**: Defines muzzle socket names, specific fire/dry-fire haptic scaling, `FireModes` (array of `FVRFireMode`), `RoundsPerMinute`, `BurstCount`, and `bIsAutomatic`.
 - **`UVRMechanicalSettings`**: Fully configures a mechanical part. Includes `MechanicalMovementType` (Linear/Rotational), `LocalAxis`, `MaxRange`, `bHasReturnSpring`, `RestingValue`, `HapticTickThreshold`, and physics inertia settings (`bUseSimulatedInertia`, `InertiaMultiplier`).
 
 ### `UProjectileData`
@@ -191,6 +207,7 @@ Defines the base properties of a magazine.
 ### `FVRWeaponStats`
 A structural grouping for defining and dynamically modifying weapon characteristics (RPG-like stat system).
 - **Properties:** `FireRate`, `FireRateOffset`, `RecoilMultiplier`, `DamageMultiplier`, `ReloadSpeedMultiplier`, `BulletVelocityMultiplier`.
+- **Advanced Recoil Simulation:** `RecoilYaw`, `RecoilPitch`, `RecoilSpringStiffness`, `RecoilSpringDamping`.
 - **Overrides:** `MuzzleFlashOverride`, `FireSoundOverride`.
 
 ---
@@ -234,6 +251,9 @@ The weapon logic is driven by a State Tree using the `VR Weapon State Tree Schem
     - `bHasRoundReady`: From `UVRChamberComponent`.
     - `ChamberStateTag`: Current gameplay tag of the chamber.
 
+### Conditions
+- **`FSTCondition_FireModeInstanceData`**: Evaluates whether the current active Fire Mode matches specific rules (e.g., `bCheckIsAutomatic`, `bCheckModeName`).
+
 ### Tasks
 - **`FSTTask_FireWeapon`**:
   - Attempts to fire a round.
@@ -243,6 +263,10 @@ The weapon logic is driven by a State Tree using the `VR Weapon State Tree Schem
 - **`FSTTask_ChamberRound`**:
   - Searches for an `IVRRoundProvider` (like a Magazine) and attempts to move a round into the `UVRChamberComponent`.
   - Parameter: `bInfiniteAmmo` - Option to chamber indefinitely.
+- **`FSTTask_PlayWeaponFeedback`**:
+  - Executes dynamic haptics and audio decoupled from firing logic. Supports overrides (`HapticOverride`, `SoundOverride`).
+- **`FSTTask_AnimateMechanical`**:
+  - Procedurally applies momentum or sets resting states for a specified `UVRMechanicalComponent` (e.g., locking the slide back on empty).
 
 ---
 

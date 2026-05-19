@@ -51,7 +51,7 @@ void AVRWeaponBase::OnConstruction(const FTransform& Transform)
 {
 	Super::OnConstruction(Transform);
 	
-	// Ensure we don't duplicate components when construction script re-runs
+
 	ClearDynamicComponents();
 	
 	if (WeaponData)

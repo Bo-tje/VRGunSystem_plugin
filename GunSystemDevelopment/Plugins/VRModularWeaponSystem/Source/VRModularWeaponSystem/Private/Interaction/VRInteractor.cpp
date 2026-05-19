@@ -2,6 +2,7 @@
 #include "Interaction/VRGrabComponent.h"
 #include "Interfaces/VRInteractableInterface.h"
 #include "Components/SphereComponent.h"
+#include "Components/BoxComponent.h"
 #include "GameFramework/PlayerController.h"
 
 UVRInteractor::UVRInteractor()
@@ -76,6 +77,8 @@ UVRGrabComponent* UVRInteractor::GetBestGrabTarget() const
 {
 	UVRGrabComponent* BestCandidate = nullptr;
 	float ClosestDistanceSq = TNumericLimits<float>::Max();
+	int32 HighestPriority = TNumericLimits<int32>::Min();
+	
 	FVector InteractorLocation = GetComponentLocation();
 
 	for (const TWeakObjectPtr<UVRGrabComponent>& GrabPtr : OverlappingGrabs)
@@ -83,13 +86,50 @@ UVRGrabComponent* UVRInteractor::GetBestGrabTarget() const
 		if (GrabPtr.IsValid())
 		{
 			UVRGrabComponent* CurrentGrab = GrabPtr.Get();
-			float CurrentDistSq = FVector::DistSquared(InteractorLocation, CurrentGrab->GetComponentLocation());
+			
+			float CurrentDistSq = TNumericLimits<float>::Max();
+			FVector ClosestPoint;
+			bool bSuccess = false;
 
-			if (CurrentDistSq < ClosestDistanceSq)
+			if (CurrentGrab->bUseBoxCollision && CurrentGrab->BoxCollider)
 			{
+				bSuccess = CurrentGrab->BoxCollider->GetSquaredDistanceToCollision(InteractorLocation, CurrentDistSq, ClosestPoint);
+			}
+			else
+			{
+				bSuccess = CurrentGrab->GetSquaredDistanceToCollision(InteractorLocation, CurrentDistSq, ClosestPoint);
+			}
+
+			// Fallback to center distance if collision queries fail
+			if (!bSuccess)
+			{
+				CurrentDistSq = FVector::DistSquared(InteractorLocation, CurrentGrab->GetComponentLocation());
+			}
+
+			// OVERRIDE FIX: Only consider this grab component if we are actually within its grab radius!
+			// (GetSquaredDistanceToCollision returns distance to the *surface* of the shape).
+			float MaxGrabDistance = CurrentGrab->GetScaledSphereRadius();
+			if (CurrentDistSq > (MaxGrabDistance * MaxGrabDistance))
+			{
+				continue; // Too far away, skip this one completely!
+			}
+
+			// Priority check
+			if (CurrentGrab->GrabPriority > HighestPriority)
+			{
+				HighestPriority = CurrentGrab->GrabPriority;
 				ClosestDistanceSq = CurrentDistSq;
 				BestCandidate = CurrentGrab;
 			}
+			else if (CurrentGrab->GrabPriority == HighestPriority)
+			{
+				if (CurrentDistSq < ClosestDistanceSq)
+				{
+					ClosestDistanceSq = CurrentDistSq;
+					BestCandidate = CurrentGrab;
+				}
+			}
+
 		}
 	}
 

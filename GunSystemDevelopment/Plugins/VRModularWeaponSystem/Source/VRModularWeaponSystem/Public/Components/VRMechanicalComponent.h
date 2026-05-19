@@ -64,6 +64,15 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "VR Plugin | Mechanical | Events")
 	TObjectPtr<UHapticFeedbackEffect_Base> LimitReachedHapticEffect;
+
+	UPROPERTY(EditAnywhere, Category = "VR Plugin | Mechanical | Events")
+	float SlapVelocityThreshold = 1.5f;
+
+	UPROPERTY(EditAnywhere, Category = "VR Plugin | Mechanical | Events")
+	float SlapReleaseDistanceThreshold = 0.1f;
+
+	UPROPERTY(EditAnywhere, Category = "VR Plugin | Mechanical | Events", meta = (EditCondition = "bUseSimulatedInertia"))
+	float SlapMomentumThreshold = 0.5f;
 	
 	UPROPERTY(BlueprintReadWrite, Category = "VR Plugin | Mechanical")
 	bool bIsBeingHeld = false;
@@ -147,6 +156,12 @@ private:
 	
 	float InitialGrabRawValue = 0.0f;
 	float GrabbedNormalizedValue = 0.0f;
+	
+	float CurrentNormalizedVelocity = 0.0f;
+	float LastFrameNormalisedValue = 0.0f;
+	float ReleaseNormalizedValue = 0.0f;
+
+
 
 	struct FParentMotionData
 	{

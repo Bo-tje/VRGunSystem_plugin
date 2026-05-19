@@ -47,6 +47,22 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Grab Settings")
 	FGameplayTag AnimationGrabPoseTag;
 
+	/** A tag for the Animation Blueprint to trigger a hand pose when hovering. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Grab Settings")
+	FGameplayTag AnimationHoverPoseTag;
+
+	/** Higher priority grabs take precedence when multiple components overlap. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Grab Settings")
+	int32 GrabPriority = 0;
+
+	/** If true, uses Box collision instead of Sphere collision for grabbing. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Grab Settings | Collision")
+	bool bUseBoxCollision = false;
+
+	/** The extents of the box collision if bUseBoxCollision is true. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Grab Settings | Collision", meta = (EditCondition = "bUseBoxCollision"))
+	FVector BoxExtents = FVector(10.0f, 10.0f, 10.0f);
+
 	/** If true, this grip is considered the main handle for haptics scaling. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Grab Settings")
 	bool bIsMainGrip = false;
@@ -113,6 +129,18 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mechanical | Haptics")
 	float HapticTickThreshold = 2.0f;
+
+	/** Minimum hand velocity required to play the limit reached sound/haptics when held. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mechanical | Audio")
+	float SlapVelocityThreshold = 1.5f;
+
+	/** Minimum distance (normalized 0-1) the component must be released from to play limit reached sound/haptics on spring return. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mechanical | Audio")
+	float SlapReleaseDistanceThreshold = 0.1f;
+
+	/** Minimum simulated momentum required to play limit reached sound/haptics. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mechanical | Audio", meta = (EditCondition = "bUseSimulatedInertia"))
+	float SlapMomentumThreshold = 0.5f;
 };
 
 

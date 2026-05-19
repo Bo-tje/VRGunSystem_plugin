@@ -1,4 +1,5 @@
 #include "Interaction/VRGrabComponent.h"
+#include "Components/BoxComponent.h"
 #include "Interaction/VRInteractor.h"
 #include "GameFramework/Actor.h"
 #include "Interfaces/VRInteractorInterface.h"
@@ -22,6 +23,15 @@ UVRGrabComponent::UVRGrabComponent()
 
 	UPrimitiveComponent::SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Overlap);
 	SetGenerateOverlapEvents(true);
+
+	BoxCollider = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxCollider"));
+	BoxCollider->SetupAttachment(this);
+	BoxCollider->SetBoxExtent(FVector(10.0f));
+	BoxCollider->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	BoxCollider->SetCollisionObjectType(ECollisionChannel::ECC_PhysicsBody);
+	BoxCollider->SetCollisionResponseToAllChannels(ECR_Ignore);
+	BoxCollider->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Overlap);
+	BoxCollider->SetGenerateOverlapEvents(true);
 }
 
 void UVRGrabComponent::BeginPlay()
@@ -269,7 +279,28 @@ void UVRGrabComponent::InitializeComponentWithSettings_Implementation(UVRWeaponD
 		SetSphereRadius(GrabSettings->SphereRadius);
 		BreakDistance = GrabSettings->BreakDistance;
 		GrabPoseTag = GrabSettings->AnimationGrabPoseTag;
+		HoverPoseTag = GrabSettings->AnimationHoverPoseTag;
+		GrabPriority = GrabSettings->GrabPriority;
 		bIsMainGrip = GrabSettings->bIsMainGrip;
 		bAttachOwnerOnGrab = GrabSettings->bAttachOwnerOnGrab;
+		
+		bUseBoxCollision = GrabSettings->bUseBoxCollision;
+		if (bUseBoxCollision && BoxCollider)
+		{
+			BoxCollider->SetBoxExtent(GrabSettings->BoxExtents);
+			BoxCollider->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+			SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+			if (!BoxCollider->IsRegistered())
+			{
+				BoxCollider->RegisterComponent();
+			}
+		}
+		else if (BoxCollider)
+		{
+			BoxCollider->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+			SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+		}
+
 	}
 }

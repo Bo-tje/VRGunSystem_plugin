@@ -13,6 +13,10 @@ For architectural decisions, see [[System design/System design research|Research
 - **`UVRWeaponFeedbackComponent` (Actor Component):** Decoupled feedback manager that centrally handles complex haptics, recoil patterns, and audio cues for the weapon.
 
 - **`UVRMechanicalComponent` (Scene Component):** A physics-based sliding component that simulates mechanical movements like a slide, bolt, or charging handle. Handles momentum, constraints, and return springs.
+
+- **`UVRAttachmentPointComponent` (Scene Component):** Handles physical modular attachments. Receives and securely snaps `AVRAttachmentActor` objects.
+
+- **`AVRAttachmentActor` (Actor):** A physical, grabbable object representing an attachment (e.g. scopes, grips, silencers) that injects a `UVRWeaponStatModifier` when attached to a weapon.
     
 - **`UVRGrabComponent` (Scene Component):** Placed on any grabbable actor (like the weapon or magazine). Handles grabbing mechanics, socket snapping, and routing inputs.
 

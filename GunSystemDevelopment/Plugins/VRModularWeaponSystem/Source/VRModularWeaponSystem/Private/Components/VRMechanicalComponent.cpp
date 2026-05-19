@@ -75,6 +75,12 @@ void UVRMechanicalComponent::TickComponent(float DeltaTime, enum ELevelTick Tick
 			SetNormalizedValue(SprungValue);
 		}
 	}
+
+	if (DeltaTime > 0.0f)
+	{
+		CurrentNormalizedVelocity = FMath::Abs(CurrentNormalisedValue - LastFrameNormalisedValue) / DeltaTime;
+		LastFrameNormalisedValue = CurrentNormalisedValue;
+	}
 }
 
 void UVRMechanicalComponent::InitializeComponent_Implementation(UVRWeaponData* InData)
@@ -145,10 +151,14 @@ void UVRMechanicalComponent::CheckThresholdEvents()
 {
 	UVRWeaponStateTreeComponent* StateTree = GetOwner() ? GetOwner()->FindComponentByClass<UVRWeaponStateTreeComponent>() : nullptr;
 
+	bool bIsRealisticSlap = false;
+	if (bIsBeingHeld && CurrentNormalizedVelocity > SlapVelocityThreshold) bIsRealisticSlap = true;
+	else if (!bIsBeingHeld && bHasReturnSpring && FMath::Abs(ReleaseNormalizedValue - CurrentNormalisedValue) > SlapReleaseDistanceThreshold) bIsRealisticSlap = true;
+	else if (bUseSimulatedInertia && FMath::Abs(CurrentMomentum) > SlapMomentumThreshold) bIsRealisticSlap = true;
+
 	// Reached Max
 	if (CurrentNormalisedValue >= 1.0f && !bWasAtMax)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("%s Reached Max Value: %f"), *GetName(), CurrentNormalisedValue)
 		OnReachedMax.Broadcast();
 		
 		if (StateTree && OnReachedMaxTag.IsValid())
@@ -156,10 +166,13 @@ void UVRMechanicalComponent::CheckThresholdEvents()
 			StateTree->SendStateTreeEvent(OnReachedMaxTag);
 		}
 
-		if (LimitReachedSound) UGameplayStatics::PlaySoundAtLocation(this, LimitReachedSound, GetComponentLocation());
-		if (LimitReachedHapticEffect && DrivingGrabComponent && DrivingGrabComponent->GetCurrentInteractor())
+		if (bIsRealisticSlap)
 		{
-			DrivingGrabComponent->GetCurrentInteractor()->PlayHapticFeedback(LimitReachedHapticEffect, 0.5f);
+			if (LimitReachedSound) UGameplayStatics::PlaySoundAtLocation(this, LimitReachedSound, GetComponentLocation());
+			if (LimitReachedHapticEffect && DrivingGrabComponent && DrivingGrabComponent->GetCurrentInteractor())
+			{
+				DrivingGrabComponent->GetCurrentInteractor()->PlayHapticFeedback(LimitReachedHapticEffect, 0.5f);
+			}
 		}
 		
 		bWasAtMax = true;
@@ -179,10 +192,13 @@ void UVRMechanicalComponent::CheckThresholdEvents()
 			StateTree->SendStateTreeEvent(OnReachedMinTag);
 		}
 
-		if (LimitReachedSound) UGameplayStatics::PlaySoundAtLocation(this, LimitReachedSound, GetComponentLocation());
-		if (LimitReachedHapticEffect && DrivingGrabComponent && DrivingGrabComponent->GetCurrentInteractor())
+		if (bIsRealisticSlap)
 		{
-			DrivingGrabComponent->GetCurrentInteractor()->PlayHapticFeedback(LimitReachedHapticEffect, 0.5f);
+			if (LimitReachedSound) UGameplayStatics::PlaySoundAtLocation(this, LimitReachedSound, GetComponentLocation());
+			if (LimitReachedHapticEffect && DrivingGrabComponent && DrivingGrabComponent->GetCurrentInteractor())
+			{
+				DrivingGrabComponent->GetCurrentInteractor()->PlayHapticFeedback(LimitReachedHapticEffect, 0.5f);
+			}
 		}
 
 		bWasAtMin = true;
@@ -413,6 +429,10 @@ void UVRMechanicalComponent::ApplyMechanicalSettings(UVRMechanicalSettings* Sett
 	MovementSound = Settings->MovementSound;
 	LimitReachedSound = Settings->LimitReachedSound;
 	LimitReachedHapticEffect = Settings->LimitReachedHapticEffect;
+	
+	SlapVelocityThreshold = Settings->SlapVelocityThreshold;
+	SlapReleaseDistanceThreshold = Settings->SlapReleaseDistanceThreshold;
+	SlapMomentumThreshold = Settings->SlapMomentumThreshold;
 }
 
 void UVRMechanicalComponent::OnGrabbed(AActor* InteractingActor)
@@ -431,4 +451,5 @@ void UVRMechanicalComponent::OnReleased()
 {
 	bIsBeingHeld = false;
 	InitialGrabRawValue = 0.0f;
+	ReleaseNormalizedValue = CurrentNormalisedValue;
 }

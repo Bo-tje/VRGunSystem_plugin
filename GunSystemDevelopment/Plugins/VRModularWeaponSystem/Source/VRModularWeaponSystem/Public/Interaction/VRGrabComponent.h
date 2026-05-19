@@ -124,6 +124,23 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Plugin | Visuals")
 	FGameplayTag GrabPoseTag;
 
+	/** A tag that can be read by the Interactor's Animation Blueprint to trigger a specific hand pose while hovering. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Plugin | Visuals")
+	FGameplayTag HoverPoseTag;
+
+	/** Higher priority grabs take precedence when multiple components overlap. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Plugin | Interaction")
+	int32 GrabPriority = 0;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VR Plugin | Interaction")
+	bool bUseBoxCollision = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VR Plugin | Interaction", meta = (EditCondition = "bUseBoxCollision"))
+	FVector BoxExtents = FVector(10.0f, 10.0f, 10.0f);
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VR Plugin | Components")
+	class UBoxComponent* BoxCollider;
+
 	/** If true, this grip is considered the main handle for haptics scaling. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Plugin | Setup")
 	bool bIsMainGrip = false;
