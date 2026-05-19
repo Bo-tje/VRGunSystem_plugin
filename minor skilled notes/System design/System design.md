@@ -18,6 +18,12 @@ For architectural decisions, see [[System design/System design research|Research
 
 - **`AVRAttachmentActor` (Actor):** A physical, grabbable object representing an attachment (e.g. scopes, grips, silencers) that injects a `UVRWeaponStatModifier` when attached to a weapon.
     
+- **`UVRMagwellComponent` (Scene Component):** Handles magazine detection, snapping logic, and ejection. Receptacle for `AVRMagazineBase`.
+
+- **`AVRMagazineBase` (Actor):** Physical grabbable magazine object that holds ammo and handles visual bullet meshes. 
+
+- **`AVRProjectileBase` (Actor):** Physical bullet/projectile representation when the weapon is not using hitscan.
+
 - **`UVRGrabComponent` (Scene Component):** Placed on any grabbable actor (like the weapon or magazine). Handles grabbing mechanics, socket snapping, and routing inputs.
 
 - **`UVRInteractor` (Scene Component):** Placed on the VR hands/controllers. Detects grabbables and routes controller inputs directly into grabbed items.

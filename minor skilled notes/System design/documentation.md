@@ -141,6 +141,41 @@ A physical, grabbable object representing an attachment (e.g. scopes, grips).
 - **Key Properties:**
   - `StatModifier`: `UVRWeaponStatModifier*` - Modifiers injected into the weapon's `CalculatedStats` when attached.
 
+### `UVRMagwellComponent` (Scene Component)
+Handles magazine detection, snapping logic, and ejection.
+- **Key Properties:**
+  - `MagazineSocketName`: `FName` - Where the magazine visually attaches.
+  - `InsertRadius`: `float` - Maximum distance a magazine can be detected.
+  - `CompatibleMagazinesTag`: `FGameplayTag` - Filters which magazines can be attached.
+  - `AttachedMagazine`: `AVRMagazineBase*` - The current physical magazine attached.
+  - `bEjectOnRelease`: `bool` - Automatically ejects the mag if the hand lets go before fully snapping.
+  - `InsertSound`, `EjectSound`: `USoundBase*` - Audio cues for mag well interactions.
+- **Functions:**
+  - `OnMagazineGrabbed()`, `OnMagazineReleased()`, `EjectMagazine()`: Lifecycle events for magazine insertion.
+- **Delegates:**
+  - `OnMagazineAttached`, `OnMagazineDetached`
+
+### `AVRMagazineBase` (Actor)
+Physical grabbable magazine object that holds ammo and handles visual bullet meshes.
+- **Key Properties:**
+  - `MagazineData`: `UMagazineData*` - The data asset defining ammo count and types.
+  - `CurrentAmmo`: `int32` - Currently remaining rounds.
+  - `bShowVisualBullets`: `bool` - Toggle for rendering physical rounds at the top of the mag.
+  - `GrabComponent`: `UVRGrabComponent*` - Core grab interaction component.
+- **Functions:**
+  - `RefillMagazine()`: Reloads the magazine to max capacity based on `MagazineData`.
+  - `UpdateVisualBullets()`, `SetupVisualBullets()`: Procedurally renders individual rounds dropping as they are chambered.
+- **Delegates:**
+  - `OnAmmoEmpty`
+
+### `AVRProjectileBase` (Actor)
+Physical bullet/projectile representation spawned into the world when the weapon is not using hitscan.
+- **Key Properties:**
+  - `ProjectileMovement`: `UProjectileMovementComponent*` - Drives the ballistics.
+  - `CollisionComponent`: `USphereComponent*` - Physics boundaries.
+- **Functions:**
+  - `InitializeProjectile()`, `OnProjectileStop()`
+
 ### `UVRInteractor` (Scene Component)
 The component on the VR pawn/hand that initiates interactions with `UVRGrabComponent`.
 
@@ -190,6 +225,7 @@ Settings for dynamically injected components are managed via subclasses of `UVRW
 - **`UVRGrabSettings`**: Configures grab haptics, throw multipliers, snap spheres, `BoxExtents`, `MaxGrabDistance`, `GrabPriority`, and the `GrabPoseTag`/`HoverPoseTag` for animation routing.
 - **`UVRFireSettings`**: Defines muzzle socket names, specific fire/dry-fire haptic scaling, `FireModes` (array of `FVRFireMode`), `RoundsPerMinute`, `BurstCount`, and `bIsAutomatic`.
 - **`UVRMechanicalSettings`**: Fully configures a mechanical part. Includes `MechanicalMovementType` (Linear/Rotational), `LocalAxis`, `MaxRange`, `bHasReturnSpring`, `RestingValue`, `HapticTickThreshold`, physics inertia settings (`bUseSimulatedInertia`, `InertiaMultiplier`), and realistic slap impact thresholds.
+- **`UVRMagwellSettings`**: Defines `MagazineSocketName`, `CompatibleMagazinesTag`, `InsertRadius`, `bEjectOnRelease`, and magwell-specific sounds/haptics (`InsertSound`, `EjectSound`, `InsertHapticEffect`).
 
 ### `UProjectileData`
 Defines the properties of a bullet/round.
@@ -265,6 +301,8 @@ The weapon logic is driven by a State Tree using the `VR Weapon State Tree Schem
   - Parameter: `bOnlyFireFromChamber` - If true, won't pull directly from a magazine.
 - **`FSTTask_EjectRound`**:
   - Calls `TryEject()` on the chamber.
+- **`FSTTask_EjectMag`**:
+  - Automatically triggers the `EjectMagazine()` logic on the weapon's `UVRMagwellComponent`.
 - **`FSTTask_ChamberRound`**:
   - Searches for an `IVRRoundProvider` (like a Magazine) and attempts to move a round into the `UVRChamberComponent`.
   - Parameter: `bInfiniteAmmo` - Option to chamber indefinitely.

@@ -8,9 +8,9 @@
                 "AVRAttachmentActor* CurrentAttachment"
             ],
             "funcs": [
-                "TryAttach()",
+                "OnOverlapBegin()",
                 "Detach()",
-                "OnOverlapBegin()"
+                "TryAttach()"
             ],
             "delegates": []
         },
@@ -18,44 +18,44 @@
             "name": "UVRChamberComponent",
             "file": "VRChamberComponent.h",
             "props": [
-                "UProjectileData* LoadedProjectile",
-                "FOnChamberStateChanged OnChamberStateChanged",
-                "UStaticMeshComponent* RoundVisualMesh",
-                "FOnRoundEjected OnRoundEjected",
-                "TObjectPtr<UVRWeaponData> WeaponData",
                 "float JamChance",
-                "FOnRoundLoaded OnRoundLoaded",
+                "FOnChamberStateChanged OnChamberStateChanged",
                 "FOnRoundFired OnRoundFired",
-                "FGameplayTag CurrentChamberState"
+                "UProjectileData* LoadedProjectile",
+                "TObjectPtr<UVRWeaponData> WeaponData",
+                "UStaticMeshComponent* RoundVisualMesh",
+                "FGameplayTag CurrentChamberState",
+                "FOnRoundEjected OnRoundEjected",
+                "FOnRoundLoaded OnRoundLoaded"
             ],
             "funcs": [
-                "IsEmpty()",
                 "TryEject()",
+                "IsEmpty()",
                 "TryGiveBullet()",
                 "GetLoadedRound()",
-                "UpdateVisuals()",
-                "IsRoundReady()",
                 "TryLoad()",
-                "GetChamberState()"
+                "GetChamberState()",
+                "IsRoundReady()",
+                "UpdateVisuals()"
             ],
             "delegates": [
+                "FOnChamberStateChanged",
                 "FOnRoundEjected",
-                "FOnRoundLoaded",
                 "FOnRoundFired",
-                "FOnChamberStateChanged"
+                "FOnRoundLoaded"
             ]
         },
         {
             "name": "UVRCustomActionComponent",
             "file": "VRCustomActionComponent.h",
             "props": [
-                "UVRGrabComponent* CachedGrabComp",
                 "FOnInputAction OnActionStop",
-                "FOnInputActionValue OnActionStart"
+                "FOnInputActionValue OnActionStart",
+                "UVRGrabComponent* CachedGrabComp"
             ],
             "funcs": [
-                "HandleStartAction()",
-                "HandleStopAction()"
+                "HandleStopAction()",
+                "HandleStartAction()"
             ],
             "delegates": []
         },
@@ -63,61 +63,93 @@
             "name": "UVRFireComponent",
             "file": "VRFireComponent.h",
             "props": [
-                "float FireHapticScale",
-                "FOnWeaponDryFired OnDryFired",
-                "TObjectPtr<UAudioComponent> FireAudioComponent",
-                "float DryFireHapticScale",
                 "FName MuzzleSocketName",
                 "TObjectPtr<UVRWeaponData> WeaponData",
+                "float DryFireHapticScale",
+                "TObjectPtr<UAudioComponent> FireAudioComponent",
                 "TObjectPtr<UAudioComponent> DryFireAudioComponent",
-                "FOnWeaponFired OnFired"
+                "FOnWeaponFired OnFired",
+                "FOnWeaponDryFired OnDryFired",
+                "float FireHapticScale"
             ],
             "funcs": [
-                "GetMuzzleTransform()",
+                "HandleDryFire()",
                 "PlayHaptics()",
                 "HandleFiring()",
-                "HandleDryFire()"
+                "GetMuzzleTransform()"
             ],
             "delegates": [
-                "FOnWeaponDryFired",
-                "FOnWeaponFired"
+                "FOnWeaponFired",
+                "FOnWeaponDryFired"
+            ]
+        },
+        {
+            "name": "UVRMagwellComponent",
+            "file": "VRMagwellComponent.h",
+            "props": [
+                "TObjectPtr<USoundBase> EjectSound",
+                "FName MagazineSocketName",
+                "bool bEjectOnRelease",
+                "TObjectPtr<AVRMagazineBase> OverlappingMagazine",
+                "FOnMagazineAttached OnMagazineAttached",
+                "TObjectPtr<USoundBase> InsertSound",
+                "FOnMagazineDetached OnMagazineDetached",
+                "TObjectPtr<UHapticFeedbackEffect_Base> EjectHapticEffect",
+                "TObjectPtr<UHapticFeedbackEffect_Base> InsertHapticEffect",
+                "FGameplayTag CompatibleMagazinesTag",
+                "float InsertRadius",
+                "TObjectPtr<AVRMagazineBase> AttachedMagazine",
+                "TObjectPtr<UHapticFeedbackEffect_Base> HoverHapticEffect"
+            ],
+            "funcs": [
+                "OnMagazineGrabbed()",
+                "OnOverlapBegin()",
+                "OnMagazineReleased()",
+                "OnOverlapEnd()",
+                "EjectMagazine()"
+            ],
+            "delegates": [
+                "FOnMagazineDetached",
+                "FOnMagazineAttached"
             ]
         },
         {
             "name": "UVRMechanicalComponent",
             "file": "VRMechanicalComponent.h",
             "props": [
-                "TObjectPtr<UVRGrabComponent> DrivingGrabComponent",
-                "TObjectPtr<UHapticFeedbackEffect_Base> LimitReachedHapticEffect",
-                "bool bIsBeingHeld",
-                "TObjectPtr<USoundBase> MovementSound",
-                "bool bInvertDirection",
-                "float MaxRange",
-                "bool bIsLocked",
-                "FOnMechanicalReachedTarget OnReachedMin",
-                "bool bUseSimulatedInertia",
-                "TObjectPtr<UStaticMeshComponent> VisualMesh",
-                "FGameplayTag OnReachedMaxTag",
-                "float RestingValue",
-                "TObjectPtr<USoundBase> LimitReachedSound",
-                "FGameplayTag OnReachedMinTag",
-                "float CurrentNormalisedValue",
-                "FOnMechanicalValueChanged OnValueChanged",
-                "FOnMechanicalReachedTarget OnReachedMax",
-                "TObjectPtr<UHapticFeedbackEffect_Base> MovementHapticEffect",
                 "FVector LocalAxis",
                 "float ReturnSpeed",
+                "float MaxRange",
+                "FGameplayTag OnReachedMinTag",
+                "FOnMechanicalValueChanged OnValueChanged",
+                "bool bUseSimulatedInertia",
+                "TObjectPtr<USoundBase> LimitReachedSound",
+                "float CurrentNormalisedValue",
+                "bool bInvertDirection",
+                "bool bIsLocked",
+                "TObjectPtr<UStaticMeshComponent> VisualMesh",
+                "float SlapVelocityThreshold",
+                "TObjectPtr<UHapticFeedbackEffect_Base> LimitReachedHapticEffect",
+                "FOnMechanicalReachedTarget OnReachedMax",
+                "TObjectPtr<UHapticFeedbackEffect_Base> MovementHapticEffect",
+                "TObjectPtr<UVRGrabComponent> DrivingGrabComponent",
+                "TObjectPtr<USoundBase> MovementSound",
+                "bool bIsBeingHeld",
+                "FGameplayTag OnReachedMaxTag",
+                "float SlapReleaseDistanceThreshold",
+                "FOnMechanicalReachedTarget OnReachedMin",
+                "float RestingValue",
                 "bool bHasReturnSpring"
             ],
             "funcs": [
-                "SetRestingValue()",
-                "SetNormalizedValue()",
-                "SetIsLocked()",
-                "OnReleased()",
                 "ConstructVisuals()",
+                "SetRestingValue()",
+                "OnGrabbed()",
+                "SetNormalizedValue()",
+                "OnReleased()",
+                "SetIsLocked()",
                 "AddMomentum()",
-                "UpdateFromHandLocation()",
-                "OnGrabbed()"
+                "UpdateFromHandLocation()"
             ],
             "delegates": [
                 "FOnMechanicalReachedTarget",
@@ -149,12 +181,35 @@
             "file": "VRAttachmentActor.h",
             "props": [
                 "UVRWeaponStatModifier* StatModifier",
-                "FName AttachmentSocketName",
                 "bool bIsHeld",
+                "FName AttachmentSocketName",
                 "UStaticMeshComponent* MeshComponent"
             ],
             "funcs": [],
             "delegates": []
+        },
+        {
+            "name": "AVRMagazineBase",
+            "file": "VRMagazineBase.h",
+            "props": [
+                "TObjectPtr<UStaticMeshComponent> MagazineMesh",
+                "FVector BulletVisualOffset",
+                "FVector FirstBulletOffset",
+                "TObjectPtr<UVRGrabComponent> GrabComponent",
+                "TObjectPtr<UMagazineData> MagazineData",
+                "int32 CurrentAmmo",
+                "TArray<UStaticMeshComponent*> VisualBulletMeshes",
+                "FOnAmmoEmpty OnAmmoEmpty",
+                "bool bShowVisualBullets"
+            ],
+            "funcs": [
+                "SetupVisualBullets()",
+                "RefillMagazine()",
+                "UpdateVisualBullets()"
+            ],
+            "delegates": [
+                "FOnAmmoEmpty"
+            ]
         },
         {
             "name": "FVRModularWeaponSystemModule",
@@ -164,38 +219,52 @@
             "delegates": []
         },
         {
+            "name": "AVRProjectileBase",
+            "file": "VRProjectileBase.h",
+            "props": [
+                "TObjectPtr<UProjectileMovementComponent> ProjectileMovement",
+                "TObjectPtr<USphereComponent> CollisionComponent",
+                "TObjectPtr<UStaticMeshComponent> ProjectileMesh"
+            ],
+            "funcs": [
+                "OnProjectileStop()",
+                "InitializeProjectile()"
+            ],
+            "delegates": []
+        },
+        {
             "name": "AVRWeaponBase",
             "file": "VRWeaponBase.h",
             "props": [
                 "int32 CurrentFireModeIndex",
-                "TArray<UActorComponent*> CachedInputComponents",
-                "FVRWeaponStats CalculatedStats",
-                "FRotator CurrentRecoilOffset",
-                "bool bIsTriggerPulled",
-                "TObjectPtr<UVRWeaponData> WeaponData",
-                "int32 ActiveGrabCount",
-                "FRotator TargetRecoilOffset",
-                "USceneComponent* PartRoot",
-                "FRotator RecoilVelocity",
-                "TArray<UActorComponent*> CachedWeaponComponents",
-                "TArray<UVRGrabComponent*> CachedGrabComponents",
-                "FVector HandWorldDistanceOffset",
                 "UBoxComponent* WeaponRoot",
-                "TArray<UActorComponent*> CachedRoundProviders",
                 "UVRWeaponFeedbackComponent> FeedbackComponent",
-                "UVRWeaponStateTreeComponent> StateTreeComponent"
+                "TObjectPtr<UVRWeaponData> WeaponData",
+                "USceneComponent* PartRoot",
+                "UVRWeaponStateTreeComponent> StateTreeComponent",
+                "TArray<UActorComponent*> CachedWeaponComponents",
+                "FRotator TargetRecoilOffset",
+                "FRotator RecoilVelocity",
+                "bool bIsTriggerPulled",
+                "TArray<UVRGrabComponent*> CachedGrabComponents",
+                "int32 ActiveGrabCount",
+                "FRotator CurrentRecoilOffset",
+                "TArray<UActorComponent*> CachedInputComponents",
+                "TArray<UActorComponent*> CachedRoundProviders",
+                "FVector HandWorldDistanceOffset",
+                "FVRWeaponStats CalculatedStats"
             ],
             "funcs": [
-                "GetCalculatedStats()",
-                "ClearDynamicComponents()",
                 "GetCurrentFireMode()",
-                "OnGrabbed()",
-                "InitializeWeapon()",
-                "GetDynamicComponentByName()",
-                "OnReleased()",
-                "ApplyWeaponDataVisuals_Internal()",
+                "UpdateCalculatedStats()",
                 "ApplyWeaponDataVisuals()",
-                "UpdateCalculatedStats()"
+                "ApplyWeaponDataVisuals_Internal()",
+                "GetCalculatedStats()",
+                "InitializeWeapon()",
+                "OnGrabbed()",
+                "OnReleased()",
+                "ClearDynamicComponents()",
+                "GetDynamicComponentByName()"
             ],
             "delegates": []
         }
@@ -205,9 +274,10 @@
             "name": "UMagazineData",
             "file": "MagazineData.h",
             "props": [
-                "int32 MaxAmmo",
                 "TObjectPtr<UStaticMesh> MagazineMesh",
-                "FGameplayTag MagazineType"
+                "FGameplayTag MagazineType",
+                "int32 MaxAmmo",
+                "UProjectileData> ProjectileData"
             ],
             "funcs": [],
             "delegates": []
@@ -216,19 +286,19 @@
             "name": "UProjectileData",
             "file": "ProjectileData.h",
             "props": [
+                "FText DisplayName",
+                "float HitscanRange",
+                "TObjectPtr<UStaticMesh> LiveRoundMesh",
+                "float GravityScale",
+                "FGameplayTagContainer AmmoTags",
                 "TSubclassOf<AActor> ProjectileClass",
                 "float HitscanDamage",
                 "TObjectPtr<UParticleSystem> MuzzleFlashOverride",
-                "FGameplayTagContainer AmmoTags",
-                "float HitscanRange",
                 "TObjectPtr<UParticleSystem> ImpactEffect",
-                "TObjectPtr<USoundBase> ImpactSound",
-                "FText DisplayName",
-                "TObjectPtr<UStaticMesh> SpentCasingMesh",
-                "TObjectPtr<UStaticMesh> LiveRoundMesh",
-                "float GravityScale",
                 "float Damage",
-                "TObjectPtr<USoundBase> FireSoundOverride"
+                "TObjectPtr<USoundBase> ImpactSound",
+                "TObjectPtr<USoundBase> FireSoundOverride",
+                "TObjectPtr<UStaticMesh> SpentCasingMesh"
             ],
             "funcs": [],
             "delegates": []
@@ -237,70 +307,79 @@
             "name": "UVRWeaponComponentSettings",
             "file": "VRWeaponData.h",
             "props": [
-                "float FireHapticScale",
-                "FString WeaponName",
-                "TSoftObjectPtr<UStaticMesh> OptionalMesh",
-                "FName PartName",
-                "TObjectPtr<UHapticFeedbackEffect_Base> LimitReachedHapticEffect",
-                "bool bEjectOnRelease",
-                "float HapticScale",
-                "FGameplayTagContainer BindToInputTags",
-                "float BreakDistance",
-                "TObjectPtr<UStateTree> StateTree",
-                "float HapticTickThreshold",
+                "FVector LocalAxis",
+                "float MaxRange",
+                "bool bAttachOwnerOnGrab",
+                "FGameplayTag OnReachedMinTag",
+                "TSoftObjectPtr<UStaticMesh> Mesh",
+                "TObjectPtr<UVRWeaponStatModifier> StatModifiers",
+                "int32 BurstCount",
                 "FTransform RelativeOffset",
+                "float RoundsPerMinute",
+                "TObjectPtr<UVRWeaponComponentSettings> Settings",
+                "FName ComponentName",
+                "bool bUseSimulatedInertia",
+                "TObjectPtr<USoundBase> LimitReachedSound",
+                "bool bWeldCollision",
+                "FName CollisionProfile",
+                "FName PartName",
+                "TArray<FVRWeaponDynamicComponent> AdditionalComponents",
+                "bool bInvertDirection",
+                "TObjectPtr<USoundBase> EjectSound",
+                "TObjectPtr<UHapticFeedbackEffect_Base> HoverHapticEffect",
+                "float MaxGrabDistance",
+                "bool bIsLocked",
+                "float BreakDistance",
+                "UHapticFeedbackEffect_Base* GrabHapticEffect",
+                "bool bIsMainGrip",
+                "float SlapVelocityThreshold",
+                "TObjectPtr<USoundBase> InsertSound",
+                "TObjectPtr<UProjectileData> DefaultProjectile",
+                "TObjectPtr<UHapticFeedbackEffect_Base> InsertHapticEffect",
+                "TObjectPtr<UHapticFeedbackEffect_Base> LimitReachedHapticEffect",
+                "FGameplayTag CompatibleMagazinesTag",
+                "FName ParentSocket",
+                "FGameplayTagContainer BindToInputTags",
+                "float FireHapticScale",
+                "TObjectPtr<UHapticFeedbackEffect_Base> MovementHapticEffect",
+                "float GrabRadius",
+                "float HapticTickThreshold",
+                "bool bUseHitscan",
                 "TObjectPtr<USoundBase> ReloadSound",
                 "TObjectPtr<USoundBase> MovementSound",
                 "TObjectPtr<UHapticFeedbackEffect_Base> FireHapticEffect",
-                "bool bInvertDirection",
-                "float MaxRange",
-                "bool bIsLocked",
                 "bool bUseSocketSnap",
-                "TArray<FVRWeaponPart> WeaponParts",
-                "TSubclassOf<UActorComponent> ComponentClass",
-                "bool bUseHitscan",
-                "float ThrowMultiplier",
-                "bool bUseSimulatedInertia",
-                "TObjectPtr<UProjectileData> DefaultProjectile",
-                "TArray<FVRWeaponDynamicComponent> AdditionalComponents",
-                "bool bIsAutomatic",
-                "TObjectPtr<UVRWeaponStatModifier> StatModifiers",
-                "FName ModeName",
-                "FVRWeaponStats BaseStats",
-                "FGameplayTag OnReachedMaxTag",
-                "float RestingValue",
-                "FTransform PartOffset",
-                "TObjectPtr<USoundBase> LimitReachedSound",
-                "float SphereRadius",
-                "float DryFireHapticScale",
-                "FGameplayTag OnReachedMinTag",
-                "FName ParentSocket",
-                "FName ComponentName",
-                "UHapticFeedbackEffect_Base* GrabHapticEffect",
-                "bool bWeldCollision",
-                "TObjectPtr<USoundBase> DryFireSound",
-                "int32 GrabPriority",
-                "float RoundsPerMinute",
-                "FGameplayTag AnimationGrabPoseTag",
-                "float GrabRadius",
-                "TSoftObjectPtr<UStaticMesh> Mesh",
-                "FName CollisionProfile",
-                "bool bAttachOwnerOnGrab",
                 "FGameplayTag AnimationHoverPoseTag",
-                "bool bIsMainGrip",
-                "FName MagazineSocketName",
-                "TArray<FVRFireMode> FireModes",
-                "TObjectPtr<USoundBase> FireSound",
                 "bool bAutoPlayWeaponFeedback",
-                "bool bUseBoxCollision",
-                "int32 BurstCount",
-                "FName MuzzleSocketName",
-                "TObjectPtr<UHapticFeedbackEffect_Base> MovementHapticEffect",
-                "FGameplayTag CompatibleMagazinesTag",
-                "TObjectPtr<UVRWeaponComponentSettings> Settings",
+                "TSubclassOf<UActorComponent> ComponentClass",
+                "FVRWeaponStats BaseStats",
+                "TObjectPtr<USoundBase> DryFireSound",
+                "FName DropZoneSocketName",
+                "FGameplayTag OnReachedMaxTag",
+                "float InsertRadius",
                 "TObjectPtr<UParticleSystem> MuzzleFlash",
-                "FVector LocalAxis",
-                "bool bHasReturnSpring"
+                "float ThrowMultiplier",
+                "float SlapReleaseDistanceThreshold",
+                "float RestingValue",
+                "FName MuzzleSocketName",
+                "FName MagazineSocketName",
+                "bool bEjectOnRelease",
+                "TArray<FVRWeaponPart> WeaponParts",
+                "FVector BoxExtents",
+                "float HapticScale",
+                "FGameplayTag AnimationGrabPoseTag",
+                "int32 GrabPriority",
+                "float DryFireHapticScale",
+                "FName ModeName",
+                "FTransform PartOffset",
+                "TObjectPtr<USoundBase> FireSound",
+                "TObjectPtr<UHapticFeedbackEffect_Base> EjectHapticEffect",
+                "TObjectPtr<UStateTree> StateTree",
+                "bool bHasReturnSpring",
+                "bool bIsAutomatic",
+                "TSoftObjectPtr<UStaticMesh> OptionalMesh",
+                "FString WeaponName",
+                "TArray<FVRFireMode> FireModes"
             ],
             "funcs": [],
             "delegates": []
@@ -309,18 +388,18 @@
             "name": "FVRWeaponStats",
             "file": "VRWeaponStats.h",
             "props": [
-                "TObjectPtr<UParticleSystem> MuzzleFlashOverride",
-                "float RecoilSpringDamping",
-                "float DamageMultiplier",
-                "float RecoilSpringStiffness",
-                "float ReloadSpeedMultiplier",
-                "float BulletVelocityMultiplier",
-                "float RecoilYaw",
-                "TObjectPtr<USoundBase> FireSoundOverride",
+                "float FireRateOffset",
                 "float RecoilPitch",
-                "float RecoilMultiplier",
+                "float BulletVelocityMultiplier",
                 "float FireRate",
-                "float FireRateOffset"
+                "float ReloadSpeedMultiplier",
+                "float DamageMultiplier",
+                "float RecoilYaw",
+                "TObjectPtr<UParticleSystem> MuzzleFlashOverride",
+                "float RecoilSpringStiffness",
+                "float RecoilSpringDamping",
+                "float RecoilMultiplier",
+                "TObjectPtr<USoundBase> FireSoundOverride"
             ],
             "funcs": [],
             "delegates": []
@@ -331,50 +410,49 @@
             "name": "UVRGrabComponent",
             "file": "VRGrabComponent.h",
             "props": [
-                "bool bSnapToInteractor",
-                "FOnInputAction OnPrimaryActionStop",
-                "FGameplayTag HoverPoseTag",
-                "FGameplayTag GrabPoseTag",
-                "float HapticScale",
-                "float BreakDistance",
-                "FOnInputAction OnSecondaryActionStop",
                 "bool bLoopHaptics",
-                "TWeakObjectPtr<UVRInteractor> CurrentInteractor",
-                "FStopAction StopAction",
-                "float ThrowMultiplier",
-                "bool bIsHeld",
-                "FOnInputAction OnTriggerStop",
-                "FOnHoverEnd OnHoverEnd",
-                "UBoxComponent* BoxCollider",
-                "FOnHoverStart OnHoverStart",
-                "UHapticFeedbackEffect_Base* GrabHapticEffect",
-                "FOnGrabbed OnGrabbed",
-                "int32 GrabPriority",
                 "bool bAttachOwnerOnGrab",
-                "FStartAction StartAction",
-                "bool bIsMainGrip",
-                "FOnInputActionValue OnSecondaryActionStart",
+                "TWeakObjectPtr<UVRInteractor> CurrentInteractor",
+                "FOnHoverStart OnHoverStart",
+                "FOnInputActionValue OnTriggerStart",
+                "FOnInputAction OnSecondaryActionStop",
+                "FGameplayTag GrabPoseTag",
                 "FOnInputActionValue OnPrimaryActionStart",
+                "float MaxGrabDistance",
+                "FStopAction StopAction",
+                "float BreakDistance",
+                "UHapticFeedbackEffect_Base* GrabHapticEffect",
+                "FStartAction StartAction",
+                "FOnInputAction OnPrimaryActionStop",
+                "bool bIsMainGrip",
+                "FGameplayTag HoverPoseTag",
+                "bool bIsHeld",
                 "FOnGrabReleased OnGrabReleased",
-                "bool bUseBoxCollision",
-                "FOnInputActionValue OnTriggerStart"
+                "FOnInputActionValue OnSecondaryActionStart",
+                "FOnGrabbed OnGrabbed",
+                "float ThrowMultiplier",
+                "FOnInputAction OnTriggerStop",
+                "float HapticScale",
+                "int32 GrabPriority",
+                "FOnHoverEnd OnHoverEnd",
+                "bool bSnapToInteractor"
             ],
             "funcs": [
+                "IsHeld()",
+                "GetCurrentInteractor()",
                 "GetHoldingHand()",
                 "TryGrab()",
-                "GetCurrentInteractor()",
-                "IsHeld()",
                 "TryRelease()"
             ],
             "delegates": [
-                "FOnHoverEnd",
+                "FOnHoverStart",
+                "FOnInputActionValue",
+                "FStopAction",
+                "FOnGrabReleased",
+                "FStartAction",
                 "FOnInputAction",
                 "FOnGrabbed",
-                "FOnGrabReleased",
-                "FStopAction",
-                "FOnHoverStart",
-                "FStartAction",
-                "FOnInputActionValue"
+                "FOnHoverEnd"
             ]
         },
         {
@@ -382,20 +460,20 @@
             "file": "VRInteractor.h",
             "props": [
                 "TWeakObjectPtr<UVRGrabComponent> HoverTarget",
-                "EControllerHand HandSide",
-                "UVRGrabComponent* ActiveGrabComponent",
-                "TArray<TWeakObjectPtr<UVRGrabComponent>> OverlappingGrabs",
                 "USphereComponent* DetectionSphereComponent",
-                "UHapticFeedbackEffect_Base* HoverHapticEffect"
+                "TArray<TWeakObjectPtr<UVRGrabComponent>> OverlappingGrabs",
+                "EControllerHand HandSide",
+                "UHapticFeedbackEffect_Base* HoverHapticEffect",
+                "UVRGrabComponent* ActiveGrabComponent"
             ],
             "funcs": [
-                "PlayHapticFeedback()",
-                "IntendGrab()",
-                "IntendActionStart()",
-                "OnSphereOverlapEnd()",
-                "IntendRelease()",
                 "OnSphereOverlapBegin()",
-                "IntendActionStop()"
+                "IntendActionStart()",
+                "IntendRelease()",
+                "IntendActionStop()",
+                "IntendGrab()",
+                "OnSphereOverlapEnd()",
+                "PlayHapticFeedback()"
             ],
             "delegates": []
         }
@@ -406,9 +484,9 @@
             "file": "VRInteractableInterface.h",
             "props": [],
             "funcs": [
-                "StartAction()",
-                "StopAction()",
                 "OnHoverStart()",
+                "StopAction()",
+                "StartAction()",
                 "OnHoverEnd()"
             ],
             "delegates": []
@@ -434,9 +512,9 @@
             "file": "VRWeaponComponentInterface.h",
             "props": [],
             "funcs": [
+                "GetStatModifier()",
                 "InitializeComponentWithSettings()",
-                "InitializeComponent()",
-                "GetStatModifier()"
+                "InitializeComponent()"
             ],
             "delegates": []
         },
@@ -445,12 +523,12 @@
             "file": "VRWeaponInterface.h",
             "props": [],
             "funcs": [
+                "ReleaseSecondaryAction()",
+                "PullTrigger()",
                 "ReleasePrimaryAction()",
                 "SecondaryAction()",
-                "IsTriggerPulled()",
                 "PrimaryAction()",
-                "PullTrigger()",
-                "ReleaseSecondaryAction()",
+                "IsTriggerPulled()",
                 "ReleaseTrigger()"
             ],
             "delegates": []
@@ -461,13 +539,13 @@
             "name": "FSTTask_AnimateMechanical",
             "file": "StateTreeAnimateMechanicalTask.h",
             "props": [
-                "TObjectPtr<AActor> WeaponActor",
                 "bool bApplyMomentum",
                 "FName ComponentName",
-                "bool bUnlockComponent",
+                "bool bSetDirectValue",
+                "TObjectPtr<AActor> WeaponActor",
                 "bool bLockComponent",
                 "float MomentumToAdd",
-                "bool bSetDirectValue"
+                "bool bUnlockComponent"
             ],
             "funcs": [],
             "delegates": []
@@ -476,8 +554,17 @@
             "name": "FSTTask_ChamberRound",
             "file": "StateTreeChamberRoundTask.h",
             "props": [
-                "TObjectPtr<AActor> WeaponActor",
-                "bool bInfiniteAmmo"
+                "bool bInfiniteAmmo",
+                "TObjectPtr<AActor> WeaponActor"
+            ],
+            "funcs": [],
+            "delegates": []
+        },
+        {
+            "name": "FSTTask_EjectMag",
+            "file": "StateTreeEjectMagTask.h",
+            "props": [
+                "TObjectPtr<AActor> WeaponActor"
             ],
             "funcs": [],
             "delegates": []
@@ -495,10 +582,10 @@
             "name": "FSTCondition_FireModeInstanceData",
             "file": "StateTreeFireModeCondition.h",
             "props": [
-                "bool bCheckModeName",
                 "bool bIsAutomaticValue",
-                "TObjectPtr<AActor> WeaponActor",
-                "bool bCheckIsAutomatic"
+                "bool bCheckModeName",
+                "bool bCheckIsAutomatic",
+                "TObjectPtr<AActor> WeaponActor"
             ],
             "funcs": [],
             "delegates": []
@@ -514,14 +601,28 @@
             "delegates": []
         },
         {
+            "name": "FSTCondition_MechanicalInstanceData",
+            "file": "StateTreeMechanicalCondition.h",
+            "props": [
+                "bool bCheckIsHeld",
+                "bool bCheckIsLocked",
+                "bool bIsLockedValue",
+                "FName ComponentName",
+                "bool bIsHeldValue",
+                "TObjectPtr<AActor> WeaponActor"
+            ],
+            "funcs": [],
+            "delegates": []
+        },
+        {
             "name": "FSTTask_PlayWeaponFeedback",
             "file": "StateTreePlayWeaponFeedbackTask.h",
             "props": [
-                "TObjectPtr<UHapticFeedbackEffect_Base> HapticOverride",
-                "TObjectPtr<AActor> WeaponActor",
                 "float HapticScaleOverride",
-                "bool bIsDryFire",
-                "TObjectPtr<USoundBase> SoundOverride"
+                "TObjectPtr<UHapticFeedbackEffect_Base> HapticOverride",
+                "TObjectPtr<USoundBase> SoundOverride",
+                "TObjectPtr<AActor> WeaponActor",
+                "bool bIsDryFire"
             ],
             "funcs": [],
             "delegates": []
@@ -530,11 +631,11 @@
             "name": "FSTEval_WeaponInstanceData",
             "file": "StateTreeWeaponEvaluator.h",
             "props": [
-                "float TimeBetweenShots",
+                "FGameplayTag ChamberStateTag",
+                "bool bIsTriggerPulled",
                 "TObjectPtr<AActor> WeaponActor",
                 "bool bHasRoundReady",
-                "bool bIsTriggerPulled",
-                "FGameplayTag ChamberStateTag"
+                "float TimeBetweenShots"
             ],
             "funcs": [],
             "delegates": []
