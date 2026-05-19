@@ -218,12 +218,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "QA's/QA 3.md",
+                "file": "Weekly/weekly reflection.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "QA 3"
+              "title": "weekly reflection"
             }
           }
         ],
@@ -405,13 +405,14 @@
   },
   "active": "13e03542f62e51e0",
   "lastOpenFiles": [
+    "System design/System design research.md",
+    "System design/documentation.md",
+    "QA's/QA 3.md",
     "QA's/QA 2.md",
     "QA's/QA 1.md",
-    "QA's/QA 3.md",
     "System design/System design chart (in-development).png",
     "System design/System design chart.png",
     "System design/System design chart (in-development).canvas",
-    "System design/documentation.md",
     "System design/System design.md",
     "Documentation.md",
     "System design/System design chart (pre-development).canvas",
@@ -421,7 +422,6 @@
     "C++ notes.md",
     "Weekly/weekly reflection.md",
     "Docs/State tree.md",
-    "System design/System design research.md",
     "QA's",
     "QA 1.md",
     "17 apr om 14-36.m4a",

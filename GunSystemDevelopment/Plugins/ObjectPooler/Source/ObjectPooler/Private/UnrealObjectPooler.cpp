@@ -131,7 +131,9 @@ AActor* UUnrealObjectPooler::GetOrCreatePoolRoot(EPoolType PoolType)
 	if (!IsValid(MainPoolRoot))
 	{
 		MainPoolRoot = World->SpawnActor<AActor>(AActor::StaticClass());
+#if WITH_EDITOR
 		MainPoolRoot->SetActorLabel(TEXT("ObjectPools_Root"));
+#endif
 	}
 
 	AActor** RootPtr = PoolRoots.Find(PoolType);
@@ -145,7 +147,9 @@ AActor* UUnrealObjectPooler::GetOrCreatePoolRoot(EPoolType PoolType)
 	AActor* NewRoot = World->SpawnActor<AActor>(AActor::StaticClass(), SpawnParams);
 	
 	FString EnumName = StaticEnum<EPoolType>()->GetNameStringByValue((int64)PoolType);
+#if WITH_EDITOR
 	NewRoot->SetActorLabel(FString::Printf(TEXT("PoolRoot_%s"), *EnumName));
+#endif
 	NewRoot->AttachToActor(MainPoolRoot, FAttachmentTransformRules::KeepRelativeTransform);
 
 	PoolRoots.Add(PoolType, NewRoot);
