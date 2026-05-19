@@ -8,6 +8,7 @@
 #include "Interaction/VRInteractor.h"
 #include "Components/AudioComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Core/VRProjectileBase.h"
 
 UVRFireComponent::UVRFireComponent()
 {
@@ -25,6 +26,16 @@ UVRFireComponent::UVRFireComponent()
 void UVRFireComponent::InitializeComponent_Implementation(UVRWeaponData* InData)
 {
 	WeaponData = InData;
+	
+	if (FireAudioComponent && !FireAudioComponent->IsRegistered())
+	{
+		FireAudioComponent->RegisterComponent();
+	}
+
+	if (DryFireAudioComponent && !DryFireAudioComponent->IsRegistered())
+	{
+		DryFireAudioComponent->RegisterComponent();
+	}
 	
 	if (WeaponData)
 	{
@@ -94,12 +105,13 @@ void UVRFireComponent::HandleFiring(UProjectileData* ProjectileData)
 	}
 	else if (FinalProjectile->ProjectileClass)
 	{
-		FActorSpawnParameters SpawnParams;
-		SpawnParams.Owner = GetOwner();
-		SpawnParams.Instigator = GetOwner()->GetInstigator();
-		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
-		GetWorld()->SpawnActor<AActor>(FinalProjectile->ProjectileClass, MuzzleTransform, SpawnParams);
+		AVRProjectileBase::SpawnProjectileFromData(
+			this, 
+			FinalProjectile, 
+			MuzzleTransform, 
+			GetOwner(), 
+			GetOwner() ? GetOwner()->GetInstigator() : nullptr
+		);
 	}
 
 	if (WeaponData->bAutoPlayWeaponFeedback)

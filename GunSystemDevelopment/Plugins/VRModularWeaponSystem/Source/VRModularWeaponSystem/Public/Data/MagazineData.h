@@ -27,4 +27,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Magazine Data")
 	TObjectPtr<UStaticMesh> MagazineMesh;
 
+	/** The projectile data to provide to the chamber when asked. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Magazine Data")
+	TObjectPtr<class UProjectileData> ProjectileData;
+
 };

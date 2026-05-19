@@ -2,7 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Interfaces/VRInteractableInterface.h"
-#include "Components/SphereComponent.h"
+#include "Components/BoxComponent.h"
 #include "Interfaces/VRWeaponComponentInterface.h"
 #include "VRGrabComponent.generated.h"
 
@@ -20,7 +20,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGrabbed, AActor*, InteractingHand
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnGrabReleased);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class VRMODULARWEAPONSYSTEM_API UVRGrabComponent : public USphereComponent, public IVRInteractableInterface, public IVRWeaponComponentInterface
+class VRMODULARWEAPONSYSTEM_API UVRGrabComponent : public UBoxComponent, public IVRInteractableInterface, public IVRWeaponComponentInterface
 {
 	GENERATED_BODY()
 
@@ -132,14 +132,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Plugin | Interaction")
 	int32 GrabPriority = 0;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VR Plugin | Interaction")
-	bool bUseBoxCollision = false;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VR Plugin | Interaction", meta = (EditCondition = "bUseBoxCollision"))
-	FVector BoxExtents = FVector(10.0f, 10.0f, 10.0f);
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VR Plugin | Components")
-	class UBoxComponent* BoxCollider;
+	/** Maximum allowed distance from the surface of this box to successfully grab it. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Plugin | Interaction")
+	float MaxGrabDistance = 12.0f;
 
 	/** If true, this grip is considered the main handle for haptics scaling. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Plugin | Setup")

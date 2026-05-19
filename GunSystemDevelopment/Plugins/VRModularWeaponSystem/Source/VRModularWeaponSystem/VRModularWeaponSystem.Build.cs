@@ -33,7 +33,8 @@ public class VRModularWeaponSystem : ModuleRules
 				"GameplayStateTreeModule",
 				"HeadMountedDisplay",
 				"InputCore",
-				"AIModule"
+				"AIModule",
+				"ObjectPooler"
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);

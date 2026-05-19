@@ -74,15 +74,18 @@ Decoupled feedback manager that centrally handles complex haptics, recoil patter
 - **Functions:**
   - `PlayFiringFeedback()`: Triggers the dynamic recoil and haptic sequences defined by weapon stats.
 
-### `UVRGrabComponent` (Scene Component)
-Manages the interaction between the weapon and the VR hands (Interactors).
+### `UVRGrabComponent` (Box Component)
+Manages the interaction between the weapon and the VR hands (Interactors). It inherits natively from `UBoxComponent`, allowing precise physical boundaries for grip areas.
 
 - **Key Properties:**
   - `bIsHeld`: `bool` - Whether the component is currently being held.
+  - `BoxExtents`: `FVector` - The precise dimensions of the grabbable area.
+  - `MaxGrabDistance`: `float` - The maximum allowed distance from the *surface* of the box to successfully grab it (acts as a grab aura).
+  - `GrabPriority`: `int32` - Defines which component is prioritized when multiple grabs overlap within their ranges.
   - `bUseSocketSnap`: `bool` - Snaps to `GrabSocketName` if true.
   - `GrabSocketName`: `FName` - The socket name used for snapping to the hand.
   - `ThrowMultiplier`: `float` - Multiplier for velocity when throwing.
-  - `GrabPoseTag`: `FGameplayTag` - A tag used to tell the Animation Blueprint which hand pose to use when grabbed.
+  - `GrabPoseTag` / `HoverPoseTag`: `FGameplayTag` - Tags used to tell the Animation Blueprint which hand pose to use when hovering or grabbed.
   - `GrabHapticEffect`: `UHapticFeedbackEffect_Base*` - Haptic played on grab.
   - `HapticScale` / `bLoopHaptics`: `float` / `bool` - Determines how grabbing haptics are played.
 - **Functions:**
@@ -108,6 +111,7 @@ Handles moving mechanical parts on the weapon, such as slides, triggers, or brea
   - `bIsLocked`: `bool` - Bypasses the return spring, allowing the component to be locked in place (e.g., slide lock on empty).
   - `RestingValue`: `float` - The target value for the return spring.
   - `MovementHapticEffect`: `UHapticFeedbackEffect_Base*` - Haptic effect triggered during movement limits.
+  - `SlapVelocityThreshold`, `SlapReleaseDistanceThreshold`, `SlapMomentumThreshold`: `float` - Evaluates if a limit impact was a "Realistic Slap", preventing harsh clicking noises on slow manual movements.
   - `LocalAxis`: `FVector` - The local direction vector defining the mechanical path.
   - `bHasReturnSpring`: `bool` - Determines whether the mechanism naturally returns to RestingValue.
   - `bUseSimulatedInertia`: `bool` - Applies inertia properties allowing flicking or momentum transfer.
@@ -183,9 +187,9 @@ Defines the base configuration for a weapon. See the [[System design/System desi
 
 ### Component Settings Architecture
 Settings for dynamically injected components are managed via subclasses of `UVRWeaponComponentSettings`, which are instantiated directly within `UVRWeaponData` (inside the `AdditionalComponents` array):
-- **`UVRGrabSettings`**: Configures grab haptics, throw multipliers, snap spheres, break distances, and the `GrabPoseTag` for animation routing.
+- **`UVRGrabSettings`**: Configures grab haptics, throw multipliers, snap spheres, `BoxExtents`, `MaxGrabDistance`, `GrabPriority`, and the `GrabPoseTag`/`HoverPoseTag` for animation routing.
 - **`UVRFireSettings`**: Defines muzzle socket names, specific fire/dry-fire haptic scaling, `FireModes` (array of `FVRFireMode`), `RoundsPerMinute`, `BurstCount`, and `bIsAutomatic`.
-- **`UVRMechanicalSettings`**: Fully configures a mechanical part. Includes `MechanicalMovementType` (Linear/Rotational), `LocalAxis`, `MaxRange`, `bHasReturnSpring`, `RestingValue`, `HapticTickThreshold`, and physics inertia settings (`bUseSimulatedInertia`, `InertiaMultiplier`).
+- **`UVRMechanicalSettings`**: Fully configures a mechanical part. Includes `MechanicalMovementType` (Linear/Rotational), `LocalAxis`, `MaxRange`, `bHasReturnSpring`, `RestingValue`, `HapticTickThreshold`, physics inertia settings (`bUseSimulatedInertia`, `InertiaMultiplier`), and realistic slap impact thresholds.
 
 ### `UProjectileData`
 Defines the properties of a bullet/round.
@@ -252,7 +256,8 @@ The weapon logic is driven by a State Tree using the `VR Weapon State Tree Schem
     - `ChamberStateTag`: Current gameplay tag of the chamber.
 
 ### Conditions
-- **`FSTCondition_FireModeInstanceData`**: Evaluates whether the current active Fire Mode matches specific rules (e.g., `bCheckIsAutomatic`, `bCheckModeName`).
+- **`FSTCondition_FireMode`**: Evaluates whether the current active Fire Mode matches specific rules (e.g., `bCheckIsAutomatic`, `bCheckModeName`).
+- **`FSTCondition_MechanicalState`**: Evaluates the boolean state (`bIsHeld`, `bIsLocked`) of a mechanical component, routing to the primary mechanical part if no specific component name is provided.
 
 ### Tasks
 - **`FSTTask_FireWeapon`**:

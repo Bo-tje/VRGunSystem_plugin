@@ -89,16 +89,7 @@ UVRGrabComponent* UVRInteractor::GetBestGrabTarget() const
 			
 			float CurrentDistSq = TNumericLimits<float>::Max();
 			FVector ClosestPoint;
-			bool bSuccess = false;
-
-			if (CurrentGrab->bUseBoxCollision && CurrentGrab->BoxCollider)
-			{
-				bSuccess = CurrentGrab->BoxCollider->GetSquaredDistanceToCollision(InteractorLocation, CurrentDistSq, ClosestPoint);
-			}
-			else
-			{
-				bSuccess = CurrentGrab->GetSquaredDistanceToCollision(InteractorLocation, CurrentDistSq, ClosestPoint);
-			}
+			bool bSuccess = CurrentGrab->GetSquaredDistanceToCollision(InteractorLocation, CurrentDistSq, ClosestPoint);
 
 			// Fallback to center distance if collision queries fail
 			if (!bSuccess)
@@ -108,8 +99,7 @@ UVRGrabComponent* UVRInteractor::GetBestGrabTarget() const
 
 			// OVERRIDE FIX: Only consider this grab component if we are actually within its grab radius!
 			// (GetSquaredDistanceToCollision returns distance to the *surface* of the shape).
-			float MaxGrabDistance = CurrentGrab->GetScaledSphereRadius();
-			if (CurrentDistSq > (MaxGrabDistance * MaxGrabDistance))
+			if (CurrentDistSq > (CurrentGrab->MaxGrabDistance * CurrentGrab->MaxGrabDistance))
 			{
 				continue; // Too far away, skip this one completely!
 			}

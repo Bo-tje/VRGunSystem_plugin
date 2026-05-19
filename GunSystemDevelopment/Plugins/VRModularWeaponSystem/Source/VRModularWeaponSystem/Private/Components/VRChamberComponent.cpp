@@ -22,6 +22,11 @@ UVRChamberComponent::UVRChamberComponent()
 void UVRChamberComponent::InitializeComponent_Implementation(UVRWeaponData* InData)
 {
 	WeaponData = InData;
+
+	if (RoundVisualMesh && !RoundVisualMesh->IsRegistered())
+	{
+		RoundVisualMesh->RegisterComponent();
+	}
 }
 
 bool UVRChamberComponent::GetRound_Implementation(UProjectileData*& OutRound)

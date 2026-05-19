@@ -37,8 +37,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Grab Settings")
 	bool bUseSocketSnap = false;
 
+	/** Maximum allowed distance from the surface of this box to successfully grab it. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Grab Settings")
-	float SphereRadius = 12.0f;
+	float MaxGrabDistance = 12.0f;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Grab Settings")
 	float BreakDistance = 25.0f;
@@ -55,13 +56,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Grab Settings")
 	int32 GrabPriority = 0;
 
-	/** If true, uses Box collision instead of Sphere collision for grabbing. */
+	/** The exact dimensions of the grabbable area. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Grab Settings | Collision")
-	bool bUseBoxCollision = false;
-
-	/** The extents of the box collision if bUseBoxCollision is true. */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Grab Settings | Collision", meta = (EditCondition = "bUseBoxCollision"))
-	FVector BoxExtents = FVector(10.0f, 10.0f, 10.0f);
+	FVector BoxExtents = FVector(5.0f, 5.0f, 5.0f);
 
 	/** If true, this grip is considered the main handle for haptics scaling. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Grab Settings")
@@ -172,13 +169,34 @@ public:
 	FName MagazineSocketName = TEXT("Magwell");
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Magwell Settings")
+	FName DropZoneSocketName = NAME_None;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Magwell Settings")
 	bool bEjectOnRelease = true;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Magwell Settings")
 	float GrabRadius = 10.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Magwell Settings")
+	float InsertRadius = 15.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Magwell Settings")
 	FGameplayTag CompatibleMagazinesTag;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Magwell Settings | Feedback")
+	TObjectPtr<USoundBase> InsertSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Magwell Settings | Feedback")
+	TObjectPtr<USoundBase> EjectSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Magwell Settings | Feedback")
+	TObjectPtr<UHapticFeedbackEffect_Base> HoverHapticEffect;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Magwell Settings | Feedback")
+	TObjectPtr<UHapticFeedbackEffect_Base> InsertHapticEffect;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Magwell Settings | Feedback")
+	TObjectPtr<UHapticFeedbackEffect_Base> EjectHapticEffect;
 };
 
 class UStateTree;

@@ -14,24 +14,15 @@ UVRGrabComponent::UVRGrabComponent()
 	bIsHeld = false;
 	bWasSimulating = false;
 
-	InitSphereRadius(12.0f);
+	InitBoxExtent(FVector(5.0f));
+	MaxGrabDistance = 12.0f;
 	
-
 	UPrimitiveComponent::SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	UPrimitiveComponent::SetCollisionObjectType(ECollisionChannel::ECC_PhysicsBody);
 	UPrimitiveComponent::SetCollisionResponseToAllChannels(ECR_Ignore);
 
 	UPrimitiveComponent::SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Overlap);
 	SetGenerateOverlapEvents(true);
-
-	BoxCollider = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxCollider"));
-	BoxCollider->SetupAttachment(this);
-	BoxCollider->SetBoxExtent(FVector(10.0f));
-	BoxCollider->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	BoxCollider->SetCollisionObjectType(ECollisionChannel::ECC_PhysicsBody);
-	BoxCollider->SetCollisionResponseToAllChannels(ECR_Ignore);
-	BoxCollider->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Overlap);
-	BoxCollider->SetGenerateOverlapEvents(true);
 }
 
 void UVRGrabComponent::BeginPlay()
@@ -276,7 +267,7 @@ void UVRGrabComponent::InitializeComponentWithSettings_Implementation(UVRWeaponD
 		HapticScale = GrabSettings->HapticScale;
 		ThrowMultiplier = GrabSettings->ThrowMultiplier;
 		bSnapToInteractor = GrabSettings->bUseSocketSnap;
-		SetSphereRadius(GrabSettings->SphereRadius);
+		MaxGrabDistance = GrabSettings->MaxGrabDistance;
 		BreakDistance = GrabSettings->BreakDistance;
 		GrabPoseTag = GrabSettings->AnimationGrabPoseTag;
 		HoverPoseTag = GrabSettings->AnimationHoverPoseTag;
@@ -284,23 +275,6 @@ void UVRGrabComponent::InitializeComponentWithSettings_Implementation(UVRWeaponD
 		bIsMainGrip = GrabSettings->bIsMainGrip;
 		bAttachOwnerOnGrab = GrabSettings->bAttachOwnerOnGrab;
 		
-		bUseBoxCollision = GrabSettings->bUseBoxCollision;
-		if (bUseBoxCollision && BoxCollider)
-		{
-			BoxCollider->SetBoxExtent(GrabSettings->BoxExtents);
-			BoxCollider->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-			SetCollisionEnabled(ECollisionEnabled::NoCollision);
-
-			if (!BoxCollider->IsRegistered())
-			{
-				BoxCollider->RegisterComponent();
-			}
-		}
-		else if (BoxCollider)
-		{
-			BoxCollider->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-			SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-		}
-
+		SetBoxExtent(GrabSettings->BoxExtents);
 	}
 }
