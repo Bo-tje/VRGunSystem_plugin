@@ -360,31 +360,23 @@ void AVRWeaponBase::ApplyWeaponDataVisuals_Internal()
 
 void AVRWeaponBase::ClearDynamicComponents()
 {
-	// 1. Destroy components tracked in the map
-	for (auto& Elem : DynamicComponentsMap)
+	// 1. Clear maps
+	DynamicComponentsMap.Empty();
+	TagToComponentMap.Empty();
+
+	// 2. Identify and destroy all dynamically created components (both parts and additional components)
+	TArray<UActorComponent*> AllComps;
+	GetComponents(AllComps);
+
+	for (UActorComponent* Comp : AllComps)
 	{
-		if (UActorComponent* Comp = Elem.Value)
+		if (!Comp || Comp->IsDefaultSubobject() || Comp == PartRoot) continue;
+
+		if (Comp->CreationMethod == EComponentCreationMethod::UserConstructionScript || Comp->CreationMethod == EComponentCreationMethod::Instance)
 		{
 			Comp->DestroyComponent();
 		}
 	}
-	DynamicComponentsMap.Empty();
-
-	// 2. Identify and destroy any static mesh components created by the part system
-	TArray<UStaticMeshComponent*> AllSMComps;
-	GetComponents(AllSMComps);
-
-	for (UStaticMeshComponent* SM : AllSMComps)
-	{
-		if (SM == PartRoot || SM->IsDefaultSubobject()) continue;
-		
-		if (SM->CreationMethod == EComponentCreationMethod::UserConstructionScript || SM->CreationMethod == EComponentCreationMethod::Instance)
-		{
-			SM->DestroyComponent();
-		}
-	}
-	
-	TagToComponentMap.Empty();
 }
 
 UActorComponent* AVRWeaponBase::GetDynamicComponentByName(FName ComponentName) const
