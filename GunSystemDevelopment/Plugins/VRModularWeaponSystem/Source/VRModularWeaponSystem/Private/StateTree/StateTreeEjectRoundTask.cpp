@@ -1,5 +1,7 @@
 #include "StateTree/StateTreeEjectRoundTask.h"
 #include "StateTreeExecutionContext.h"
+#include "Core/VRWeaponBase.h"
+#include "Components/VRChamberComponent.h"
 
 
 EStateTreeRunStatus FSTTask_EjectRound::EnterState(FStateTreeExecutionContext& Context, const FStateTreeTransitionResult& Transition) const
@@ -8,7 +10,10 @@ EStateTreeRunStatus FSTTask_EjectRound::EnterState(FStateTreeExecutionContext& C
 
 	if (InstanceData.WeaponActor)
 	{
-		if (UVRChamberComponent* Chamber = InstanceData.WeaponActor->FindComponentByClass<UVRChamberComponent>())
+		AVRWeaponBase* Weapon = Cast<AVRWeaponBase>(InstanceData.WeaponActor);
+		UVRChamberComponent* Chamber = Weapon ? Weapon->CachedChamberComponent.Get() : nullptr;
+		if (!Chamber) Chamber = InstanceData.WeaponActor->FindComponentByClass<UVRChamberComponent>();
+		if (Chamber)
 		{
 			Chamber->TryEject();
 			

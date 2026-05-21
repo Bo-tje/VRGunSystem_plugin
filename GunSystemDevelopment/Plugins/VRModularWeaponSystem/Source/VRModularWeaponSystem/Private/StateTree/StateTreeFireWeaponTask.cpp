@@ -12,12 +12,16 @@ EStateTreeRunStatus FSTTask_FireWeapon::EnterState(FStateTreeExecutionContext& C
 	
 	if (!InstanceData.WeaponActor) return EStateTreeRunStatus::Failed;
 	
-	UVRFireComponent* FireComponent = InstanceData.WeaponActor->FindComponentByClass<UVRFireComponent>();
+	AVRWeaponBase* Weapon = Cast<AVRWeaponBase>(InstanceData.WeaponActor);
+	UVRFireComponent* FireComponent = Weapon ? Weapon->CachedFireComponent.Get() : nullptr;
+	if (!FireComponent) FireComponent = InstanceData.WeaponActor->FindComponentByClass<UVRFireComponent>();
 	if (!FireComponent) return EStateTreeRunStatus::Failed;
 	
 	UProjectileData* RoundToFire = nullptr;
 	
-	if (UVRChamberComponent* ChamberComponent = InstanceData.WeaponActor->FindComponentByClass<UVRChamberComponent>())
+	UVRChamberComponent* ChamberComponent = Weapon ? Weapon->CachedChamberComponent.Get() : nullptr;
+	if (!ChamberComponent) ChamberComponent = InstanceData.WeaponActor->FindComponentByClass<UVRChamberComponent>();
+	if (ChamberComponent)
 	{
 		if (IVRRoundProvider::Execute_GetRound(ChamberComponent, RoundToFire))
 		{
@@ -28,12 +32,11 @@ EStateTreeRunStatus FSTTask_FireWeapon::EnterState(FStateTreeExecutionContext& C
 		if (bOnlyFireFromChamber)
 		{
 			FireComponent->HandleDryFire();
-
 			return EStateTreeRunStatus::Failed;
 		}
 	}
 	
-if (AVRWeaponBase* Weapon = Cast<AVRWeaponBase>(InstanceData.WeaponActor))
+	if (Weapon)
 	{
 		for (UActorComponent* Component : Weapon->CachedRoundProviders)
 		{
@@ -46,7 +49,6 @@ if (AVRWeaponBase* Weapon = Cast<AVRWeaponBase>(InstanceData.WeaponActor))
 				}
 
 				FireComponent->HandleDryFire();
-
 				return EStateTreeRunStatus::Failed;
 			}
 		}

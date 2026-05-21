@@ -10,3 +10,20 @@ EDataValidationResult UVRWeaponData::IsDataValid(FDataValidationContext& Context
 	return Result;
 }
 #endif
+
+TArray<FName> UVRWeaponData::GetAvailableComponentNames() const
+{
+	TArray<FName> ComponentNames;
+	ComponentNames.Add(NAME_None);
+
+	for (const FVRWeaponDynamicComponent& Comp : AdditionalComponents)
+	{
+		if (!Comp.ComponentName.IsNone())
+		{
+			ComponentNames.AddUnique(Comp.ComponentName);
+		}
+	}
+
+	return ComponentNames;
+}
+

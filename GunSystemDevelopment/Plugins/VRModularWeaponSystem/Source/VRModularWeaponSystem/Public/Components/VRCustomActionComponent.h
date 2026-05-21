@@ -35,5 +35,5 @@ private:
 	void HandleStopAction(UObject* Interactor, FGameplayTag ActionTag);
 
 	UPROPERTY()
-	UVRGrabComponent* CachedGrabComp;
+	TObjectPtr<UVRGrabComponent> CachedGrabComp;
 };

@@ -3,6 +3,14 @@
 #include "Data/ProjectileData.h"
 #include "Data/VRWeaponData.h"
 #include "Components/StaticMeshComponent.h"
+#include "Components/SphereComponent.h"
+#include "Core/VREjectedCasing.h"
+#include "Core/VRRoundActor.h"
+#include "Core/VRWeaponBase.h"
+#include "Interaction/VRGrabComponent.h"
+#include "Interaction/VRInteractor.h"
+#include "Kismet/GameplayStatics.h"
+#include "UnrealObjectPooler.h"
 
 UVRChamberComponent::UVRChamberComponent()
 {
@@ -17,6 +25,14 @@ UVRChamberComponent::UVRChamberComponent()
 	RoundVisualMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	RoundVisualMesh->SetCollisionProfileName(TEXT("NoCollision"));
 	RoundVisualMesh->SetGenerateOverlapEvents(false);
+
+	LoadDetectionSphere = CreateDefaultSubobject<USphereComponent>(TEXT("LoadDetectionSphere"));
+	LoadDetectionSphere->SetupAttachment(this);
+	LoadDetectionSphere->SetCollisionProfileName(TEXT("Trigger"));
+	LoadDetectionSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	LoadDetectionSphere->SetCollisionResponseToAllChannels(ECR_Ignore);
+	LoadDetectionSphere->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Overlap);
+	LoadDetectionSphere->SetGenerateOverlapEvents(true);
 }
 
 void UVRChamberComponent::InitializeComponent_Implementation(UVRWeaponData* InData)
@@ -39,6 +55,12 @@ void UVRChamberComponent::BeginPlay()
 {
 	Super::BeginPlay();
 	UpdateVisuals();
+
+	if (LoadDetectionSphere)
+	{
+		LoadDetectionSphere->SetSphereRadius(ManualLoadRadius);
+		LoadDetectionSphere->OnComponentBeginOverlap.AddDynamic(this, &UVRChamberComponent::OnOverlapBegin);
+	}
 }
 
 bool UVRChamberComponent::TryGiveBullet()
@@ -79,10 +101,65 @@ UProjectileData* UVRChamberComponent::TryEject()
 	if (IsEmpty() && !LoadedProjectile) return nullptr;
 
 	UProjectileData* EjectedRound = LoadedProjectile;
+	FGameplayTag PreviousChamberState = CurrentChamberState;
 	
 	if (EjectedRound)
 	{
 		OnRoundEjected.Broadcast(EjectedRound);
+
+		UStaticMesh* CasingMesh = (PreviousChamberState == VRNativeTags::Chamber_SpentCasing) ? EjectedRound->SpentCasingMesh : EjectedRound->LiveRoundMesh;
+
+		if (CasingMesh)
+		{
+			if (UWorld* World = GetWorld())
+			{
+				FTransform SpawnTransform = GetComponentTransform();
+				TSubclassOf<AVREjectedCasing> SpawnClass = EjectedCasingClass ? EjectedCasingClass : TSubclassOf<AVREjectedCasing>(AVREjectedCasing::StaticClass());
+				
+				AVREjectedCasing* SpawnedCasing = nullptr;
+
+				if (UUnrealObjectPooler* Pooler = World->GetSubsystem<UUnrealObjectPooler>())
+				{
+					SpawnedCasing = Pooler->SpawnObject<AVREjectedCasing>(SpawnClass, SpawnTransform.GetLocation(), SpawnTransform.GetRotation().Rotator());
+					if (SpawnedCasing)
+					{
+						SpawnedCasing->SetOwner(GetOwner());
+						SpawnedCasing->SetInstigator(GetOwner() ? GetOwner()->GetInstigator() : nullptr);
+					}
+				}
+				else
+				{
+					FActorSpawnParameters SpawnParams;
+					SpawnParams.Owner = GetOwner();
+					SpawnParams.Instigator = GetOwner() ? GetOwner()->GetInstigator() : nullptr;
+					SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+					SpawnedCasing = World->SpawnActor<AVREjectedCasing>(SpawnClass, SpawnTransform, SpawnParams);
+				}
+
+				if (SpawnedCasing)
+				{
+					if (BounceSoundsOverride.Num() > 0)
+					{
+						SpawnedCasing->BounceSounds = BounceSoundsOverride;
+					}
+					else if (EjectedRound->ImpactSound)
+					{
+						SpawnedCasing->BounceSounds.Empty();
+						SpawnedCasing->BounceSounds.Add(EjectedRound->ImpactSound);
+					}
+
+					FVector WorldEjectDir = GetComponentTransform().TransformVectorNoScale(EjectVelocityDirection);
+					FVector EjectImpulse = WorldEjectDir * EjectVelocityStrength;
+
+					if (AActor* WeaponOwner = GetOwner())
+					{
+						EjectImpulse += WeaponOwner->GetVelocity();
+					}
+
+					SpawnedCasing->InitializeCasing(CasingMesh, EjectImpulse);
+				}
+			}
+		}
 	}
 	
 	LoadedProjectile = nullptr;
@@ -133,5 +210,62 @@ void UVRChamberComponent::UpdateVisuals()
 				RoundVisualMesh->SetStaticMesh(LoadedProjectile->LiveRoundMesh);
 			}
 		}
+	}
+}
+
+void UVRChamberComponent::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (!bAllowManualLoading || !IsEmpty())
+	{
+		return;
+	}
+
+	AVRRoundActor* RoundActor = Cast<AVRRoundActor>(OtherActor);
+	if (!RoundActor || !RoundActor->ProjectileData)
+	{
+		return;
+	}
+
+	// 1. Verify compatible ammo tags
+	if (CompatibleAmmoTag.IsValid() && !RoundActor->ProjectileData->AmmoTags.HasTag(CompatibleAmmoTag))
+	{
+		return;
+	}
+
+	// 2. Verify required weapon state tags
+	if (RequiredWeaponStateTags.Num() > 0)
+	{
+		AVRWeaponBase* WeaponBase = Cast<AVRWeaponBase>(GetOwner());
+		if (!WeaponBase || !WeaponBase->HasAllStateTags(RequiredWeaponStateTags))
+		{
+			return;
+		}
+	}
+
+	// 3. Try to chamber the round
+	if (TryLoad(RoundActor->ProjectileData))
+	{
+		UVRGrabComponent* RoundGrab = RoundActor->GrabComponent;
+		UVRInteractor* HoldingInteractor = nullptr;
+		if (RoundGrab)
+		{
+			HoldingInteractor = RoundGrab->GetCurrentInteractor();
+			RoundGrab->TryRelease();
+		}
+
+		// Play sound
+		if (ManualLoadSound)
+		{
+			UGameplayStatics::PlaySoundAtLocation(this, ManualLoadSound, GetComponentLocation());
+		}
+
+		// Play haptics
+		if (HoldingInteractor && ManualLoadHaptic)
+		{
+			HoldingInteractor->PlayHapticFeedback(ManualLoadHaptic, 1.0f, false);
+		}
+
+		// Destroy the physical round actor
+		RoundActor->Destroy();
 	}
 }

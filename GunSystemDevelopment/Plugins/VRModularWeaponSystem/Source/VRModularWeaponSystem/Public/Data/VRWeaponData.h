@@ -6,6 +6,14 @@
 #include "Data/VRWeaponStats.h"
 #include "VRWeaponData.generated.h"
 
+UENUM(BlueprintType)
+enum class EMechanicalMovementType : uint8
+{
+	Linear,
+	Rotational
+};
+
+
 /** Base class for custom component settings overridden in the Data Asset. */
 UCLASS(BlueprintType, EditInlineNew, DefaultToInstanced, Abstract)
 class VRMODULARWEAPONSYSTEM_API UVRWeaponComponentSettings : public UObject
@@ -26,7 +34,7 @@ class VRMODULARWEAPONSYSTEM_API UVRGrabSettings : public UVRWeaponComponentSetti
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Grab Settings")
-	UHapticFeedbackEffect_Base* GrabHapticEffect;
+	TObjectPtr<UHapticFeedbackEffect_Base> GrabHapticEffect;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Grab Settings")
 	float HapticScale = 1.0f;
@@ -76,8 +84,8 @@ class VRMODULARWEAPONSYSTEM_API UVRMechanicalSettings : public UVRWeaponComponen
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mechanical", meta = (Categories = "VRModularWeaponSystem.MechanicalMovement"))
-	FGameplayTag MechanicalMovementType;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mechanical")
+	EMechanicalMovementType MechanicalMovementType = EMechanicalMovementType::Linear;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mechanical")
 	FVector LocalAxis;
@@ -105,6 +113,10 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mechanical")
 	float RestingValue = 0.0f;
+
+	/** Optional name of another mechanical component on this weapon to drive when this component moves. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mechanical")
+	FName LinkedComponent;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mechanical | Haptics")
 	TObjectPtr<UHapticFeedbackEffect_Base> LimitReachedHapticEffect;
@@ -336,8 +348,11 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Visuals")
 	TObjectPtr<UHapticFeedbackEffect_Base> FireHapticEffect;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta=(GetOptions="GetAvailableComponentNames"))
 	TMap<FGameplayTag, FName> InputTagToComponentName;
+
+	UFUNCTION(CallInEditor)
+	TArray<FName> GetAvailableComponentNames() const;
 
 #if WITH_EDITOR
 	virtual EDataValidationResult IsDataValid(FDataValidationContext& Context) const override;

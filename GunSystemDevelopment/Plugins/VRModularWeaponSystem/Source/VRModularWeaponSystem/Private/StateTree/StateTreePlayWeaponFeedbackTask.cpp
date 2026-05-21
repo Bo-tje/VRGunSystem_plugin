@@ -4,6 +4,7 @@
 #include "Components/VRWeaponFeedbackComponent.h"
 #include "Data/VRWeaponData.h"
 #include "Kismet/GameplayStatics.h"
+#include "Core/VRWeaponBase.h"
 
 EStateTreeRunStatus FSTTask_PlayWeaponFeedback::EnterState(FStateTreeExecutionContext& Context, const FStateTreeTransitionResult& Transition) const
 {
@@ -14,7 +15,7 @@ EStateTreeRunStatus FSTTask_PlayWeaponFeedback::EnterState(FStateTreeExecutionCo
 	AVRWeaponBase* Weapon = Cast<AVRWeaponBase>(InstanceData.WeaponActor);
 	if (!Weapon || !Weapon->WeaponData) return EStateTreeRunStatus::Failed;
 
-	UVRFireComponent* FireComponent = Weapon->FindComponentByClass<UVRFireComponent>();
+	UVRFireComponent* FireComponent = Weapon->CachedFireComponent;
 	FTransform MuzzleTransform = FireComponent ? FireComponent->GetMuzzleTransform() : Weapon->GetActorTransform();
 	
 	FVRWeaponStats Stats = Weapon->GetCalculatedStats();

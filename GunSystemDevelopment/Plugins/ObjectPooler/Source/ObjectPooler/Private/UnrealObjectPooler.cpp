@@ -63,7 +63,7 @@ void UUnrealObjectPooler::ReturnObjectToPool(AActor* Actor)
 {
 	if (!IsValid(Actor)) return;
 
-	UClass** ClassPtr = ActorToClassMap.Find(Actor);
+	const TObjectPtr<UClass>* ClassPtr = ActorToClassMap.Find(Actor);
 	if (ClassPtr && *ClassPtr)
 	{
 		SetActorActive(Actor, false);
@@ -101,7 +101,7 @@ void UUnrealObjectPooler::Deinitialize()
 	// Cleanup pools
 	for (auto& Pair : ObjectPools)
 	{
-		for (AActor* Actor : Pair.Value.InactiveActors)
+		for (const TObjectPtr<AActor>& Actor : Pair.Value.InactiveActors)
 		{
 			if (IsValid(Actor))
 			{
@@ -136,7 +136,7 @@ AActor* UUnrealObjectPooler::GetOrCreatePoolRoot(EPoolType PoolType)
 #endif
 	}
 
-	AActor** RootPtr = PoolRoots.Find(PoolType);
+	const TObjectPtr<AActor>* RootPtr = PoolRoots.Find(PoolType);
 	if (RootPtr && IsValid(*RootPtr))
 	{
 		return *RootPtr;

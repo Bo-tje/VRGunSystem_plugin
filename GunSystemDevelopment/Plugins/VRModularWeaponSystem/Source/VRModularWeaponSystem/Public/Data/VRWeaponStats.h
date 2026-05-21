@@ -27,6 +27,12 @@ struct FVRWeaponStats
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
 	float ReloadSpeedMultiplier = 1.0f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats|Spread")
+	float SpreadMultiplier = 1.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats|Spread")
+	int32 PelletCountOffset = 0;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats|Recoil")
 	float RecoilPitch = -1.5f;
 
@@ -73,6 +79,12 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Modifiers")
 	float ReloadSpeedMultiplier = 1.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Modifiers|Spread")
+	float SpreadMultiplier = 1.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Modifiers|Spread")
+	int32 PelletCountOffset = 0;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats|Recoil")
 	float RecoilPitch = -1.5f;

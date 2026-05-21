@@ -40,7 +40,7 @@ public:
 	EControllerHand HandSide;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Plugin | Haptics")
-	UHapticFeedbackEffect_Base* HoverHapticEffect;
+	TObjectPtr<UHapticFeedbackEffect_Base> HoverHapticEffect;
 
 	virtual APlayerController* GetProvidingPlayerController() const override;
 	
@@ -52,10 +52,10 @@ protected:
 	float LastHapticTime = 0.0f;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Plugin | Components") 
-	class USphereComponent* DetectionSphereComponent;
+	TObjectPtr<class USphereComponent> DetectionSphereComponent;
 	
 	UPROPERTY()
-	class UVRGrabComponent* ActiveGrabComponent;
+	TObjectPtr<class UVRGrabComponent> ActiveGrabComponent;
 	
 	UPROPERTY()
 	TWeakObjectPtr<UVRGrabComponent> HoverTarget;

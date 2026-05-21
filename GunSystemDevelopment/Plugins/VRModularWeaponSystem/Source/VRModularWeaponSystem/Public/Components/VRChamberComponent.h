@@ -74,14 +74,52 @@ public:
 	UProjectileData* GetLoadedRound() const { return LoadedProjectile; }
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Weapon | Chamber | Visuals")
-	UStaticMeshComponent* RoundVisualMesh;
+	TObjectPtr<UStaticMeshComponent> RoundVisualMesh;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Weapon | Chamber | Config")
 	float JamChance = 0.05f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Weapon | Chamber | Ejection")
+	TSubclassOf<class AVREjectedCasing> EjectedCasingClass;
+
+	/** The direction vector in local chamber space to eject the casing/round. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Weapon | Chamber | Ejection")
+	FVector EjectVelocityDirection = FVector(150.0f, 50.0f, 50.0f);
+
+	/** The strength or speed multiplier of the ejection impulse. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Weapon | Chamber | Ejection")
+	float EjectVelocityStrength = 1.0f;
+
+	/** Optional bounce sounds override for physical casings ejected from this chamber. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Weapon | Chamber | Ejection")
+	TArray<TObjectPtr<USoundBase>> BounceSoundsOverride;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Weapon | Chamber | Manual Loading")
+	bool bAllowManualLoading = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Weapon | Chamber | Manual Loading")
+	FGameplayTag CompatibleAmmoTag;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Weapon | Chamber | Manual Loading")
+	FGameplayTagContainer RequiredWeaponStateTags;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Weapon | Chamber | Manual Loading")
+	float ManualLoadRadius = 4.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Weapon | Chamber | Manual Loading")
+	TObjectPtr<USoundBase> ManualLoadSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Weapon | Chamber | Manual Loading")
+	TObjectPtr<class UHapticFeedbackEffect_Base> ManualLoadHaptic;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	TObjectPtr<class USphereComponent> LoadDetectionSphere;
 	
 	void SetChamberState(FGameplayTag NewState);
 
 protected:
+	UFUNCTION()
+	void OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 	
 	
 	UFUNCTION(BlueprintCallable, Category = "VR Weapon | Chamber | Visuals")
@@ -91,7 +129,7 @@ protected:
 	FGameplayTag CurrentChamberState;
 
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "VR Weapon | Chamber")
-	UProjectileData* LoadedProjectile;
+	TObjectPtr<UProjectileData> LoadedProjectile;
 
 	UPROPERTY(BlueprintReadOnly, Category = "VR Weapon | Chamber")
 	TObjectPtr<UVRWeaponData> WeaponData;

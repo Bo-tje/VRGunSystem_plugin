@@ -22,7 +22,7 @@ The base actor for all weapons in the system. It serves as a container that hold
   - `PartRoot`: `USceneComponent*` - The root for attaching modular weapon parts.
   - `StateTreeComponent`: `UVRWeaponStateTreeComponent*` - Handles the weapon's logic.
   - `CalculatedStats`: `FVRWeaponStats` - Dynamic struct storing all currently applied stat modifiers.
-  - `CurrentFireModeIndex`: `int32` - Tracks the currently selected fire mode.
+  - `CurrentFireModeIndex`: `int32` - Tracks the currently selected fire mode index.
   - `CurrentRecoilOffset` / `TargetRecoilOffset` / `RecoilVelocity`: `FRotator` - Real-time physics simulation variables for advanced procedural recoil.
 - **Key Functions:**
   - `InitializeWeapon()`: Distributes `WeaponData` to all child components implementing `IVRWeaponComponentInterface`.
@@ -30,6 +30,8 @@ The base actor for all weapons in the system. It serves as a container that hold
   - `UpdateCalculatedStats()`: Recalculates stats based on attachments and modifiers.
   - `GetDynamicComponentByName()`: Retrieves dynamically injected custom components.
   - `GetCurrentFireMode()`: Returns the currently active `FVRFireMode`.
+  - `CycleFireMode(bool bBackward)`: Cycles through the available fire modes.
+  - `SetFireModeIndex(int32 NewIndex)`: Directly sets the active fire mode index.
 - **Implementation:** Implements `IVRWeaponInterface` to handle primary/secondary inputs and weapon state, as well as `IVRInteractableInterface` for VR interaction routing.
 
 ### `UVRChamberComponent` (Scene Component)
@@ -38,9 +40,12 @@ Manages the round currently in the firing position.
 - **Key Properties:**
   - `CurrentChamberState`: `FGameplayTag` - The current state (Empty, RoundReady, SpentCasing, Jammed).
   - `LoadedProjectile`: `UProjectileData*` - The actual round in the chamber.
+  - `EjectedCasingClass`: `TSubclassOf<AVREjectedCasing>` - The physics casing actor to spawn when ejecting.
+  - `EjectVelocityDirection` / `EjectVelocityStrength`: `FVector` / `float` - Local physics parameters driving casing ejection direction/impulse.
+  - `BounceSoundsOverride`: `TArray<USoundBase*>` - Sound effect overrides for casing bounce hits.
 - **Functions:**
   - `TryLoad(UProjectileData* NewRound)`: Attempts to load a round into the chamber.
-  - `TryEject()`: Ejects whatever is currently in the chamber (returns the ejected projectile).
+  - `TryEject()`: Ejects whatever is currently in the chamber, spawning a physical casing actor in the process.
   - `TryGiveBullet()`: Used by the FireComponent to consume a round for firing.
   - `IsRoundReady()`: Returns true if there is a live round ready to fire.
   - `IsEmpty()`: Returns true if there is no round or casing in the chamber.
@@ -115,6 +120,7 @@ Handles moving mechanical parts on the weapon, such as slides, triggers, or brea
   - `LocalAxis`: `FVector` - The local direction vector defining the mechanical path.
   - `bHasReturnSpring`: `bool` - Determines whether the mechanism naturally returns to RestingValue.
   - `bUseSimulatedInertia`: `bool` - Applies inertia properties allowing flicking or momentum transfer.
+  - `LinkedComponent`: `FName` - Optional name of another mechanical component to drive synchronously.
   - `OnReachedMaxTag` / `OnReachedMinTag`: `FGameplayTag` - Event tags broadcasted at limits.
 - **Functions:**
   - `SetNormalizedValue(float NewValue)`: Immediately updates the position and state of the component.
@@ -176,6 +182,14 @@ Physical bullet/projectile representation spawned into the world when the weapon
 - **Functions:**
   - `InitializeProjectile()`, `OnProjectileStop()`
 
+### `AVREjectedCasing` (Actor)
+Physics-driven shell casing spawned upon ejection.
+- **Key Properties:**
+  - `BounceSounds`: `TArray<USoundBase*>` - Random audio cues played on physics impact.
+  - `LifeTime`: `float` - Duration in seconds before automatic fading and destruction.
+- **Functions:**
+  - `InitializeCasing(UStaticMesh* Mesh, FVector Impulse)`: Assigns the casing mesh and applies velocity force.
+
 ### `UVRInteractor` (Scene Component)
 The component on the VR pawn/hand that initiates interactions with `UVRGrabComponent`.
 
@@ -224,7 +238,7 @@ Defines the base configuration for a weapon. See the [[System design/System desi
 Settings for dynamically injected components are managed via subclasses of `UVRWeaponComponentSettings`, which are instantiated directly within `UVRWeaponData` (inside the `AdditionalComponents` array):
 - **`UVRGrabSettings`**: Configures grab haptics, throw multipliers, snap spheres, `BoxExtents`, `MaxGrabDistance`, `GrabPriority`, and the `GrabPoseTag`/`HoverPoseTag` for animation routing.
 - **`UVRFireSettings`**: Defines muzzle socket names, specific fire/dry-fire haptic scaling, `FireModes` (array of `FVRFireMode`), `RoundsPerMinute`, `BurstCount`, and `bIsAutomatic`.
-- **`UVRMechanicalSettings`**: Fully configures a mechanical part. Includes `MechanicalMovementType` (Linear/Rotational), `LocalAxis`, `MaxRange`, `bHasReturnSpring`, `RestingValue`, `HapticTickThreshold`, physics inertia settings (`bUseSimulatedInertia`, `InertiaMultiplier`), and realistic slap impact thresholds.
+- **`UVRMechanicalSettings`**: Fully configures a mechanical part. Includes `MechanicalMovementType` (Linear/Rotational), `LocalAxis`, `MaxRange`, `bHasReturnSpring`, `RestingValue`, `HapticTickThreshold`, physics inertia settings (`bUseSimulatedInertia`, `InertiaMultiplier`), realistic slap impact thresholds, and `LinkedComponent`.
 - **`UVRMagwellSettings`**: Defines `MagazineSocketName`, `CompatibleMagazinesTag`, `InsertRadius`, `bEjectOnRelease`, and magwell-specific sounds/haptics (`InsertSound`, `EjectSound`, `InsertHapticEffect`).
 
 ### `UProjectileData`
@@ -237,6 +251,8 @@ Defines the properties of a bullet/round.
 - `LiveRoundMesh` / `SpentCasingMesh`: Visual representations.
 - `ImpactEffect` / `ImpactSound`: Visual/Audio played on hit.
 - `MuzzleFlashOverride` / `FireSoundOverride`: Potential overrides when fired.
+- `PelletCount`: Number of pellets fired per shot (defaults to 1).
+- `SpreadAngle`: Cone spread angle in degrees (defaults to 0.0).
 
 ### `UMagazineData`
 Defines the base properties of a magazine.
@@ -246,7 +262,7 @@ Defines the base properties of a magazine.
 
 ### `FVRWeaponStats`
 A structural grouping for defining and dynamically modifying weapon characteristics (RPG-like stat system).
-- **Properties:** `FireRate`, `FireRateOffset`, `RecoilMultiplier`, `DamageMultiplier`, `ReloadSpeedMultiplier`, `BulletVelocityMultiplier`.
+- **Properties:** `FireRate`, `FireRateOffset`, `RecoilMultiplier`, `DamageMultiplier`, `ReloadSpeedMultiplier`, `BulletVelocityMultiplier`, `SpreadMultiplier`, `PelletCountOffset`.
 - **Advanced Recoil Simulation:** `RecoilYaw`, `RecoilPitch`, `RecoilSpringStiffness`, `RecoilSpringDamping`.
 - **Overrides:** `MuzzleFlashOverride`, `FireSoundOverride`.
 
@@ -310,6 +326,8 @@ The weapon logic is driven by a State Tree using the `VR Weapon State Tree Schem
   - Executes dynamic haptics and audio decoupled from firing logic. Supports overrides (`HapticOverride`, `SoundOverride`).
 - **`FSTTask_AnimateMechanical`**:
   - Procedurally applies momentum or sets resting states for a specified `UVRMechanicalComponent` (e.g., locking the slide back on empty).
+- **`FSTTask_CycleFireMode`**:
+  - Cycles or sets the specific fire mode index on the weapon actor.
 
 ---
 

@@ -98,7 +98,7 @@ public:
 #pragma endregion
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = " VR Plugin | VR Interaction")
-	UHapticFeedbackEffect_Base* GrabHapticEffect;
+	TObjectPtr<UHapticFeedbackEffect_Base> GrabHapticEffect;
 	
 	UPROPERTY(EditAnywhere, Category = "VR Plugin | VR Interaction")
 	float HapticScale = 1.0f;

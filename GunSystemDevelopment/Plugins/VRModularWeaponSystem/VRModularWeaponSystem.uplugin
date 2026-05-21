@@ -19,6 +19,11 @@
 			"Name": "VRModularWeaponSystem",
 			"Type": "Runtime",
 			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "VRModularWeaponSystemEditor",
+			"Type": "Editor",
+			"LoadingPhase": "PostEngineInit"
 		}
 	],
 	"Plugins": [

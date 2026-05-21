@@ -9,6 +9,9 @@
 #include "Components/StaticMeshComponent.h"
 #include "Components/BoxComponent.h"
 #include "Components/VRMechanicalComponent.h"
+#include "Components/VRChamberComponent.h"
+#include "Components/VRFireComponent.h"
+#include "Components/VRMagwellComponent.h"
 #include "Data/VRWeaponStats.h"
 #include "Interaction/VRInteractor.h"
 
@@ -111,11 +114,30 @@ void AVRWeaponBase::InitializeWeapon()
 	CachedInputComponents.Empty();
 	CachedRoundProviders.Empty();
 
+	CachedChamberComponent = nullptr;
+	CachedFireComponent = nullptr;
+	CachedMagwellComponent = nullptr;
+
 	TArray<UActorComponent*> AllComponents;
 	GetComponents(AllComponents);
 
 	for (UActorComponent* Component : AllComponents)
 	{
+		if (!IsValid(Component)) continue;
+
+		if (UVRChamberComponent* Chamber = Cast<UVRChamberComponent>(Component))
+		{
+			CachedChamberComponent = Chamber;
+		}
+		else if (UVRFireComponent* Fire = Cast<UVRFireComponent>(Component))
+		{
+			CachedFireComponent = Fire;
+		}
+		else if (UVRMagwellComponent* Magwell = Cast<UVRMagwellComponent>(Component))
+		{
+			CachedMagwellComponent = Magwell;
+		}
+
 		if (Component->Implements<UVRWeaponComponentInterface>())
 		{
 			CachedWeaponComponents.Add(Component);
@@ -142,7 +164,7 @@ void AVRWeaponBase::UpdateCalculatedStats()
 
 	CalculatedStats = WeaponData->BaseStats;
 
-	for (UActorComponent* Component : CachedWeaponComponents)
+	for (const TObjectPtr<UActorComponent>& Component : CachedWeaponComponents)
 	{
 		if (UVRWeaponStatModifier* Modifier = IVRWeaponComponentInterface::Execute_GetStatModifier(Component))
 		{
@@ -151,6 +173,8 @@ void AVRWeaponBase::UpdateCalculatedStats()
 			CalculatedStats.DamageMultiplier *= Modifier->DamageMultiplier;
 			CalculatedStats.BulletVelocityMultiplier *= Modifier->BulletVelocityMultiplier;
 			CalculatedStats.ReloadSpeedMultiplier *= Modifier->ReloadSpeedMultiplier;
+			CalculatedStats.SpreadMultiplier *= Modifier->SpreadMultiplier;
+			CalculatedStats.PelletCountOffset += Modifier->PelletCountOffset;
 
 			if (Modifier->MuzzleFlashOverride) CalculatedStats.MuzzleFlashOverride = Modifier->MuzzleFlashOverride;
 			if (Modifier->FireSoundOverride) CalculatedStats.FireSoundOverride = Modifier->FireSoundOverride;
@@ -381,7 +405,7 @@ void AVRWeaponBase::ClearDynamicComponents()
 
 UActorComponent* AVRWeaponBase::GetDynamicComponentByName(FName ComponentName) const
 {
-	if (UActorComponent* const* Component = DynamicComponentsMap.Find(ComponentName))
+	if (const TObjectPtr<UActorComponent>* Component = DynamicComponentsMap.Find(ComponentName))
 	{
 		return *Component;
 	}
@@ -390,6 +414,9 @@ UActorComponent* AVRWeaponBase::GetDynamicComponentByName(FName ComponentName) c
 
 void AVRWeaponBase::OnGrabbed(AActor* InteractingHand)
 {
+	// Reset trigger state on grab to prevent stale inputs
+	bIsTriggerPulled = false;
+
 	if (StateTreeComponent)
 	{
 		StateTreeComponent->SetComponentTickEnabled(true);
@@ -416,10 +443,12 @@ void AVRWeaponBase::OnReleased()
 		StateTreeComponent->StopLogic(TEXT("Released"));
 	}
 	
+	// Force release trigger state when weapon is fully released
 	if (bIsTriggerPulled)
 	{
 		IVRWeaponInterface::Execute_ReleaseTrigger(this);
 	}
+	bIsTriggerPulled = false;
 }
 
 void AVRWeaponBase::StartAction_Implementation(UObject* Interactor, float ActionValue, FGameplayTag ActionTag)
@@ -437,7 +466,7 @@ void AVRWeaponBase::StartAction_Implementation(UObject* Interactor, float Action
 		}
 	}
 	// 1b. Automatic Tag Routing (from Component Settings)
-	else if (UActorComponent** TargetCompPtr = TagToComponentMap.Find(ActionTag))
+	else if (const TObjectPtr<UActorComponent>* TargetCompPtr = TagToComponentMap.Find(ActionTag))
 	{
 		if (UVRMechanicalComponent* MechComp = Cast<UVRMechanicalComponent>(*TargetCompPtr))
 		{
@@ -472,7 +501,7 @@ void AVRWeaponBase::StopAction_Implementation(UObject* Interactor, FGameplayTag 
 		TargetMech = Cast<UVRMechanicalComponent>(GetDynamicComponentByName(TargetName));
 	}
 	// 2. Check Automatic Mapping
-	else if (UActorComponent** TargetCompPtr = TagToComponentMap.Find(ActionTag))
+	else if (const TObjectPtr<UActorComponent>* TargetCompPtr = TagToComponentMap.Find(ActionTag))
 	{
 		TargetMech = Cast<UVRMechanicalComponent>(*TargetCompPtr);
 	}
@@ -613,4 +642,56 @@ FVRFireMode AVRWeaponBase::GetCurrentFireMode() const
 		return WeaponData->FireModes[CurrentFireModeIndex];
 	}
 	return FVRFireMode();
+}
+
+void AVRWeaponBase::CycleFireMode(bool bBackward)
+{
+	if (!WeaponData || WeaponData->FireModes.Num() <= 1) return;
+
+	if (bBackward)
+	{
+		CurrentFireModeIndex = (CurrentFireModeIndex - 1 + WeaponData->FireModes.Num()) % WeaponData->FireModes.Num();
+	}
+	else
+	{
+		CurrentFireModeIndex = (CurrentFireModeIndex + 1) % WeaponData->FireModes.Num();
+	}
+}
+
+void AVRWeaponBase::SetFireModeIndex(int32 NewIndex)
+{
+	if (!WeaponData || !WeaponData->FireModes.IsValidIndex(NewIndex)) return;
+
+	CurrentFireModeIndex = NewIndex;
+}
+
+void AVRWeaponBase::AddStateTag(FGameplayTag Tag)
+{
+	if (Tag.IsValid())
+	{
+		ActiveWeaponStateTags.AddTag(Tag);
+	}
+}
+
+void AVRWeaponBase::RemoveStateTag(FGameplayTag Tag)
+{
+	if (Tag.IsValid())
+	{
+		ActiveWeaponStateTags.RemoveTag(Tag);
+	}
+}
+
+bool AVRWeaponBase::HasStateTag(FGameplayTag Tag) const
+{
+	return ActiveWeaponStateTags.HasTag(Tag);
+}
+
+bool AVRWeaponBase::HasAllStateTags(const FGameplayTagContainer& StateTags) const
+{
+	return ActiveWeaponStateTags.HasAll(StateTags);
+}
+
+bool AVRWeaponBase::HasAnyStateTags(const FGameplayTagContainer& StateTags) const
+{
+	return ActiveWeaponStateTags.HasAny(StateTags);
 }

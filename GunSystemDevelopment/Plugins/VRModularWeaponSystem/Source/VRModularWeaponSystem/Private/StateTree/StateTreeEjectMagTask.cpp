@@ -1,6 +1,7 @@
 #include "StateTree/StateTreeEjectMagTask.h"
 #include "Components/VRMagwellComponent.h"
 #include "StateTreeExecutionContext.h"
+#include "Core/VRWeaponBase.h"
 
 EStateTreeRunStatus FSTTask_EjectMag::EnterState(FStateTreeExecutionContext& Context, const FStateTreeTransitionResult& Transition) const
 {
@@ -8,7 +9,9 @@ EStateTreeRunStatus FSTTask_EjectMag::EnterState(FStateTreeExecutionContext& Con
 	
 	if (!InstanceData.WeaponActor) return EStateTreeRunStatus::Failed;
 	
-	UVRMagwellComponent* MagwellComponent = InstanceData.WeaponActor->FindComponentByClass<UVRMagwellComponent>();
+	AVRWeaponBase* Weapon = Cast<AVRWeaponBase>(InstanceData.WeaponActor);
+	UVRMagwellComponent* MagwellComponent = Weapon ? Weapon->CachedMagwellComponent.Get() : nullptr;
+	if (!MagwellComponent) MagwellComponent = InstanceData.WeaponActor->FindComponentByClass<UVRMagwellComponent>();
 	if (!MagwellComponent) return EStateTreeRunStatus::Failed;
 
 	MagwellComponent->EjectMagazine();

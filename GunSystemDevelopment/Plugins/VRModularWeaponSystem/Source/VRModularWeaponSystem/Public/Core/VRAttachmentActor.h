@@ -15,10 +15,10 @@ public:
 	AVRAttachmentActor();
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VR Attachment")
-	class UStaticMeshComponent* MeshComponent;
+	TObjectPtr<UStaticMeshComponent> MeshComponent;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Attachment")
-	UVRWeaponStatModifier* StatModifier;
+	TObjectPtr<UVRWeaponStatModifier> StatModifier;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Attachment")
 	FName AttachmentSocketName;

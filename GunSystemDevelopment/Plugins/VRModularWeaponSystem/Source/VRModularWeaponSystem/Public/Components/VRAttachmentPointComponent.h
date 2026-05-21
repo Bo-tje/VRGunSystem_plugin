@@ -24,7 +24,7 @@ public:
 	void Detach();
 
 	UPROPERTY(BlueprintReadOnly, Category = "VR Attachment")
-	AVRAttachmentActor* CurrentAttachment = nullptr;
+	TObjectPtr<AVRAttachmentActor> CurrentAttachment = nullptr;
 
 protected:
 	virtual void BeginPlay() override;

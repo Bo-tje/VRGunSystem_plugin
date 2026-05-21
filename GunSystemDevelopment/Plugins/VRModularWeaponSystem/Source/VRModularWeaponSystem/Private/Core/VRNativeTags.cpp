@@ -3,7 +3,6 @@
 
 namespace VRNativeTags
 {
-#pragma region Interaction Tags
 	UE_DEFINE_GAMEPLAY_TAG(Trigger, "VRModularWeaponSystem.Interaction.Trigger");
 	UE_DEFINE_GAMEPLAY_TAG(TriggerReleased, "VRModularWeaponSystem.Interaction.TriggerReleased");
 	UE_DEFINE_GAMEPLAY_TAG(PrimaryInput, "VRModularWeaponSystem.Interaction.PrimaryInput");
@@ -25,8 +24,6 @@ namespace VRNativeTags
 	
 #pragma region Mechanical movement
 	
-	UE_DEFINE_GAMEPLAY_TAG(Linear, "VRModularWeaponSystem.MechanicalMovement.Linear");
-	UE_DEFINE_GAMEPLAY_TAG(Rotational, "VRModularWeaponSystem.MechanicalMovement.Rotational");
 	UE_DEFINE_GAMEPLAY_TAG(Event_Mechanical_Max, "VRModularWeaponSystem.Event.Mechanical.Max");
 	UE_DEFINE_GAMEPLAY_TAG(Event_Mechanical_Min, "VRModularWeaponSystem.Event.Mechanical.Min");
 

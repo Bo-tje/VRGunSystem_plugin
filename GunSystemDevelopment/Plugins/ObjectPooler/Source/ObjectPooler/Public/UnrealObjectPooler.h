@@ -11,10 +11,7 @@
 UENUM(BlueprintType)
 enum class EPoolType : uint8
 {
-	Nodes,
-	NodesSpawner,
-	GameObjects,
-	Billboards
+	GameObjects
 };
 
 /**
@@ -26,10 +23,10 @@ struct FActorPool
 	GENERATED_BODY()
 
 	UPROPERTY()
-	TArray<AActor*> InactiveActors;
+	TArray<TObjectPtr<AActor>> InactiveActors;
 
 	UPROPERTY()
-	AActor* PoolRoot = nullptr;
+	TObjectPtr<AActor> PoolRoot = nullptr;
 };
 
 /**
@@ -79,19 +76,19 @@ protected:
 private:
 	// Map of Actor Classes to their respective pools
 	UPROPERTY()
-	TMap<UClass*, FActorPool> ObjectPools;
+	TMap<TObjectPtr<UClass>, FActorPool> ObjectPools;
 
 	// Map to track which class a spawned actor belongs to
 	UPROPERTY()
-	TMap<AActor*, UClass*> ActorToClassMap;
+	TMap<TObjectPtr<AActor>, TObjectPtr<UClass>> ActorToClassMap;
 
 	// Dictionary to store root actors for each pool type
 	UPROPERTY()
-	TMap<EPoolType, AActor*> PoolRoots;
+	TMap<EPoolType, TObjectPtr<AActor>> PoolRoots;
 
 	// Main root actor for all pools
 	UPROPERTY()
-	AActor* MainPoolRoot = nullptr;
+	TObjectPtr<AActor> MainPoolRoot = nullptr;
 
 	AActor* GetOrCreatePoolRoot(EPoolType PoolType);
 	void SetActorActive(AActor* Actor, bool bActive);

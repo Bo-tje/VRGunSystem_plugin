@@ -4,6 +4,7 @@
 #include "Interfaces/VRRoundProvider.h"
 #include "Data/ProjectileData.h"
 #include "Data/VRWeaponData.h"
+#include "Core/VRWeaponBase.h"
 
 EStateTreeRunStatus FSTTask_ChamberRound::EnterState(FStateTreeExecutionContext& Context, const FStateTreeTransitionResult& Transition) const
 {
@@ -11,20 +12,38 @@ EStateTreeRunStatus FSTTask_ChamberRound::EnterState(FStateTreeExecutionContext&
 
 	if (!InstanceData.WeaponActor) return EStateTreeRunStatus::Failed;
 	
-	UVRChamberComponent* ChamberComponent = InstanceData.WeaponActor->FindComponentByClass<UVRChamberComponent>();
+	AVRWeaponBase* Weapon = Cast<AVRWeaponBase>(InstanceData.WeaponActor);
+	UVRChamberComponent* ChamberComponent = Weapon ? Weapon->CachedChamberComponent.Get() : nullptr;
+	if (!ChamberComponent) ChamberComponent = InstanceData.WeaponActor->FindComponentByClass<UVRChamberComponent>();
 	if (!ChamberComponent) return EStateTreeRunStatus::Failed;
 	
 	UProjectileData* RoundToChamber = nullptr;
-	TArray<UActorComponent*> RoundProviders;
-	InstanceData.WeaponActor->GetComponents(RoundProviders);
-	
-	for (UActorComponent* Component : RoundProviders)
+
+	if (Weapon)
 	{
-		if (Component && Component->Implements<UVRRoundProvider>() && !Component->IsA<UVRChamberComponent>())
+		for (UActorComponent* Component : Weapon->CachedRoundProviders)
 		{
-			if (IVRRoundProvider::Execute_GetRound(Component, RoundToChamber))
+			if (Component && !Component->IsA<UVRChamberComponent>())
 			{
-				break;
+				if (IVRRoundProvider::Execute_GetRound(Component, RoundToChamber))
+				{
+					break;
+				}
+			}
+		}
+	}
+	else
+	{
+		TArray<UActorComponent*> RoundProviders;
+		InstanceData.WeaponActor->GetComponents(RoundProviders);
+		for (UActorComponent* Component : RoundProviders)
+		{
+			if (Component && Component->Implements<UVRRoundProvider>() && !Component->IsA<UVRChamberComponent>())
+			{
+				if (IVRRoundProvider::Execute_GetRound(Component, RoundToChamber))
+				{
+					break;
+				}
 			}
 		}
 	}
@@ -38,7 +57,6 @@ EStateTreeRunStatus FSTTask_ChamberRound::EnterState(FStateTreeExecutionContext&
 	}
 	else if (bInfiniteAmmo)
 	{
-		AVRWeaponBase* Weapon = Cast<AVRWeaponBase>(InstanceData.WeaponActor);
 		if (Weapon && Weapon->WeaponData && Weapon->WeaponData->DefaultProjectile)
 		{
 			RoundToChamber = Weapon->WeaponData->DefaultProjectile;

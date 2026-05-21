@@ -97,7 +97,7 @@ void AVRMagazineBase::SetupVisualBullets()
 	}
 
 	// Clean up existing meshes
-	for (UStaticMeshComponent* MeshComp : VisualBulletMeshes)
+	for (const TObjectPtr<UStaticMeshComponent>& MeshComp : VisualBulletMeshes)
 	{
 		if (MeshComp)
 		{

@@ -98,20 +98,38 @@ void UVRFireComponent::HandleFiring(UProjectileData* ProjectileData)
 	
 	const FTransform MuzzleTransform = GetMuzzleTransform();
 	
-	// 3. Logic - Spawn Projectile / Hitscan
-	if (WeaponData->bUseHitscan)
+	int32 BasePellets = FinalProjectile->PelletCount;
+	int32 TotalPellets = FMath::Max(1, BasePellets + Stats.PelletCountOffset);
+	float BaseSpread = FinalProjectile->SpreadAngle;
+	float CurrentSpreadAngle = BaseSpread * Stats.SpreadMultiplier;
+
+	for (int32 i = 0; i < TotalPellets; ++i)
 	{
-		PerformHitscan(FinalProjectile, MuzzleTransform.GetLocation(), MuzzleTransform.GetRotation().Rotator());
-	}
-	else if (FinalProjectile->ProjectileClass)
-	{
-		AVRProjectileBase::SpawnProjectileFromData(
-			this, 
-			FinalProjectile, 
-			MuzzleTransform, 
-			GetOwner(), 
-			GetOwner() ? GetOwner()->GetInstigator() : nullptr
-		);
+		FRotator FinalRotation = MuzzleTransform.GetRotation().Rotator();
+		if (CurrentSpreadAngle > 0.01f)
+		{
+			float HalfAngleRad = FMath::DegreesToRadians(CurrentSpreadAngle / 2.0f);
+			FVector RandomDir = FMath::VRandCone(MuzzleTransform.GetRotation().GetForwardVector(), HalfAngleRad);
+			FinalRotation = RandomDir.Rotation();
+		}
+
+		FTransform PelletTransform(FinalRotation, MuzzleTransform.GetLocation(), MuzzleTransform.GetScale3D());
+
+		// 3. Logic - Spawn Projectile / Hitscan
+		if (WeaponData->bUseHitscan)
+		{
+			PerformHitscan(FinalProjectile, PelletTransform.GetLocation(), PelletTransform.GetRotation().Rotator());
+		}
+		else if (FinalProjectile->ProjectileClass)
+		{
+			AVRProjectileBase::SpawnProjectileFromData(
+				this, 
+				FinalProjectile, 
+				PelletTransform, 
+				GetOwner(), 
+				GetOwner() ? GetOwner()->GetInstigator() : nullptr
+			);
+		}
 	}
 
 	if (WeaponData->bAutoPlayWeaponFeedback)

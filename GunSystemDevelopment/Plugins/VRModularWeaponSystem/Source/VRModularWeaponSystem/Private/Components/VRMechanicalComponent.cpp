@@ -7,12 +7,13 @@
 #include "Interaction/VRInteractor.h"
 #include "Components/VRChamberComponent.h"
 #include "Components/VRWeaponStateTreeComponent.h"
+#include "Core/VRWeaponBase.h"
 
 
 UVRMechanicalComponent::UVRMechanicalComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
-	MechanicalMovementType = VRNativeTags::Linear;
+	MechanicalMovementType = EMechanicalMovementType::Linear;
 	LocalAxis = FVector::ForwardVector;
 	MaxRange = 10.0f;
 	RestingValue = 0.0f;
@@ -23,6 +24,11 @@ void UVRMechanicalComponent::BeginPlay()
 {
 	Super::BeginPlay();
 	HomeTransform = GetRelativeTransform();
+
+	if (GetOwner())
+	{
+		CachedStateTree = GetOwner()->FindComponentByClass<UVRWeaponStateTreeComponent>();
+	}
 
 	if (USceneComponent* Parent = GetAttachParent())
 	{
@@ -129,18 +135,35 @@ void UVRMechanicalComponent::SetNormalizedValue(float NewValue)
 	HandleHaptics();
 	CheckThresholdEvents();
 	UpdateVisuals();
+
+	if (!LinkedComponent.IsNone())
+	{
+		if (AVRWeaponBase* Weapon = Cast<AVRWeaponBase>(GetOwner()))
+		{
+			if (UActorComponent* FoundComp = Weapon->GetDynamicComponentByName(LinkedComponent))
+			{
+				if (UVRMechanicalComponent* LinkedMech = Cast<UVRMechanicalComponent>(FoundComp))
+				{
+					if (!FMath::IsNearlyEqual(LinkedMech->CurrentNormalisedValue, CurrentNormalisedValue, 0.0001f))
+					{
+						LinkedMech->SetNormalizedValue(CurrentNormalisedValue);
+					}
+				}
+			}
+		}
+	}
 }
 
 void UVRMechanicalComponent::UpdateVisuals()
 {
 	const float CurrentTargetOffset = CurrentNormalisedValue * MaxRange * (bInvertDirection ? -1.0f : 1.0f);
 	
-	if (MechanicalMovementType == VRNativeTags::Linear)
+	if (MechanicalMovementType == EMechanicalMovementType::Linear)
 	{
 		FVector NewLocation = HomeTransform.GetLocation() + LocalAxis * CurrentTargetOffset;
 		SetRelativeLocation(NewLocation);
 	}
-	else if (MechanicalMovementType == VRNativeTags::Rotational)
+	else if (MechanicalMovementType == EMechanicalMovementType::Rotational)
 	{
 		FQuat NewRotation = HomeTransform.GetRotation() * FQuat(LocalAxis, FMath::DegreesToRadians(CurrentTargetOffset));
 		SetRelativeRotation(NewRotation);
@@ -149,7 +172,11 @@ void UVRMechanicalComponent::UpdateVisuals()
 
 void UVRMechanicalComponent::CheckThresholdEvents()
 {
-	UVRWeaponStateTreeComponent* StateTree = GetOwner() ? GetOwner()->FindComponentByClass<UVRWeaponStateTreeComponent>() : nullptr;
+	if (!CachedStateTree && GetOwner())
+	{
+		CachedStateTree = GetOwner()->FindComponentByClass<UVRWeaponStateTreeComponent>();
+	}
+	UVRWeaponStateTreeComponent* StateTree = CachedStateTree;
 
 	bool bIsRealisticSlap = false;
 	if (bIsBeingHeld && CurrentNormalizedVelocity > SlapVelocityThreshold) bIsRealisticSlap = true;
@@ -258,7 +285,7 @@ void UVRMechanicalComponent::CalculateInertia(float DeltaTime)
 	float Force = 0.0f;
 	const FVector WorldAxis = GetComponentTransform().TransformVectorNoScale(LocalAxis.GetSafeNormal());
 
-	if (MechanicalMovementType == VRNativeTags::Linear)
+	if (MechanicalMovementType == EMechanicalMovementType::Linear)
 	{
 		// Derive acceleration from parent motion
 		const FVector CurrentParentLoc = GetAttachParent()->GetComponentLocation();
@@ -268,7 +295,7 @@ void UVRMechanicalComponent::CalculateInertia(float DeltaTime)
 		
 		Force = FVector::DotProduct(Acceleration, WorldAxis) * LinearSensitivity * InertiaMultiplier;
 	}
-	else if (MechanicalMovementType == VRNativeTags::Rotational)
+	else if (MechanicalMovementType == EMechanicalMovementType::Rotational)
 	{
 		// Derive angular acceleration
 		const FQuat CurrentRot = GetAttachParent()->GetComponentQuat();
@@ -330,7 +357,7 @@ void UVRMechanicalComponent::UpdateFromHandLocation(FVector HandWorldLocation)
 	const float CurrentRawValue = CalculateRawHandValue(HandWorldLocation);
 	float DeltaRaw = 0.0f;
 
-	if (MechanicalMovementType == VRNativeTags::Rotational)
+	if (MechanicalMovementType == EMechanicalMovementType::Rotational)
 	{
 		DeltaRaw = FMath::FindDeltaAngleDegrees(InitialGrabRawValue, CurrentRawValue);
 	}
@@ -352,11 +379,11 @@ float UVRMechanicalComponent::CalculateRawHandValue(FVector HandWorldLocation) c
 	const FVector HandLocalSpace = GetAttachParent()->GetComponentTransform().InverseTransformPosition(HandWorldLocation);
 	const FVector HandOffset = HandLocalSpace - HomeTransform.GetLocation();
 	
-	if (MechanicalMovementType == VRNativeTags::Linear)
+	if (MechanicalMovementType == EMechanicalMovementType::Linear)
 	{
 		return FVector::DotProduct(HandOffset, LocalAxis.GetSafeNormal());
 	}
-	else if (MechanicalMovementType == VRNativeTags::Rotational)
+	else if (MechanicalMovementType == EMechanicalMovementType::Rotational)
 	{
 		const FVector SafeAxis = LocalAxis.GetSafeNormal();
 		
@@ -433,6 +460,7 @@ void UVRMechanicalComponent::ApplyMechanicalSettings(UVRMechanicalSettings* Sett
 	SlapVelocityThreshold = Settings->SlapVelocityThreshold;
 	SlapReleaseDistanceThreshold = Settings->SlapReleaseDistanceThreshold;
 	SlapMomentumThreshold = Settings->SlapMomentumThreshold;
+	LinkedComponent = Settings->LinkedComponent;
 }
 
 void UVRMechanicalComponent::OnGrabbed(AActor* InteractingActor)
@@ -445,6 +473,12 @@ void UVRMechanicalComponent::OnGrabbed(AActor* InteractingActor)
 		InitialGrabRawValue = CalculateRawHandValue(HandWorldLocation);
 		GrabbedNormalizedValue = CurrentNormalisedValue;
 	}
+
+	// Propagate grab state to parent mechanical component if it exists
+	if (UVRMechanicalComponent* ParentMech = Cast<UVRMechanicalComponent>(GetAttachParent()))
+	{
+		ParentMech->PropagateGrab(DrivingGrabComponent, InteractingActor);
+	}
 }
 
 void UVRMechanicalComponent::OnReleased()
@@ -452,4 +486,45 @@ void UVRMechanicalComponent::OnReleased()
 	bIsBeingHeld = false;
 	InitialGrabRawValue = 0.0f;
 	ReleaseNormalizedValue = CurrentNormalisedValue;
+
+	// Propagate release state to parent mechanical component if it exists
+	if (UVRMechanicalComponent* ParentMech = Cast<UVRMechanicalComponent>(GetAttachParent()))
+	{
+		ParentMech->PropagateRelease();
+	}
+}
+
+void UVRMechanicalComponent::PropagateGrab(UVRGrabComponent* GrabComp, AActor* InteractingActor)
+{
+	if (!GrabComp) return;
+
+	DrivingGrabComponent = GrabComp;
+	bIsBeingHeld = true;
+
+	if (DrivingGrabComponent->GetCurrentInteractor())
+	{
+		FVector HandWorldLocation = DrivingGrabComponent->GetCurrentInteractor()->GetComponentLocation();
+		InitialGrabRawValue = CalculateRawHandValue(HandWorldLocation);
+		GrabbedNormalizedValue = CurrentNormalisedValue;
+	}
+
+	// Recursively propagate up the hierarchy
+	if (UVRMechanicalComponent* ParentMech = Cast<UVRMechanicalComponent>(GetAttachParent()))
+	{
+		ParentMech->PropagateGrab(GrabComp, InteractingActor);
+	}
+}
+
+void UVRMechanicalComponent::PropagateRelease()
+{
+	bIsBeingHeld = false;
+	InitialGrabRawValue = 0.0f;
+	ReleaseNormalizedValue = CurrentNormalisedValue;
+	DrivingGrabComponent = nullptr;
+
+	// Recursively propagate up the hierarchy
+	if (UVRMechanicalComponent* ParentMech = Cast<UVRMechanicalComponent>(GetAttachParent()))
+	{
+		ParentMech->PropagateRelease();
+	}
 }

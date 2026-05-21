@@ -12,6 +12,9 @@
 
 class UStaticMeshComponent;
 class UVRGrabComponent;
+class UVRChamberComponent;
+class UVRFireComponent;
+class UVRMagwellComponent;
 
 /**
  * AVRWeaponBase is a container actor that holds modular components together.
@@ -31,22 +34,31 @@ public:
 	// --- Components ---
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VR Weapon | Parts")
-	class UBoxComponent* WeaponRoot;
+	TObjectPtr<class UBoxComponent> WeaponRoot;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VR Weapon | Parts")
-	USceneComponent* PartRoot;
+	TObjectPtr<USceneComponent> PartRoot;
+
+	UPROPERTY(Transient, BlueprintReadOnly, Category = "VR Weapon | Components")
+	TObjectPtr<UVRChamberComponent> CachedChamberComponent;
+
+	UPROPERTY(Transient, BlueprintReadOnly, Category = "VR Weapon | Components")
+	TObjectPtr<UVRFireComponent> CachedFireComponent;
+
+	UPROPERTY(Transient, BlueprintReadOnly, Category = "VR Weapon | Components")
+	TObjectPtr<UVRMagwellComponent> CachedMagwellComponent;
 	
 	/** Components that need initialization when WeaponData changes. */
 	UPROPERTY(Transient)
-	TArray<UActorComponent*> CachedWeaponComponents;
+	TArray<TObjectPtr<UActorComponent>> CachedWeaponComponents;
 
 	/** Components that receive input events (PullTrigger, etc). */
 	UPROPERTY(Transient)
-	TArray<UActorComponent*> CachedInputComponents;
+	TArray<TObjectPtr<UActorComponent>> CachedInputComponents;
 
 	/** Map of dynamically spawned components by their name for Blueprint access. */
 	UPROPERTY(Transient, BlueprintReadOnly, Category = "VR Weapon | Parts")
-	TMap<FName, UActorComponent*> DynamicComponentsMap;
+	TMap<FName, TObjectPtr<UActorComponent>> DynamicComponentsMap;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VR Weapon | Logic")
 	TObjectPtr<class UVRWeaponStateTreeComponent> StateTreeComponent;
@@ -95,6 +107,15 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "VR Weapon | Fire Mode")
 	FVRFireMode GetCurrentFireMode() const;
 
+	UFUNCTION(BlueprintCallable, Category = "VR Weapon | Fire Mode")
+	void CycleFireMode(bool bBackward = false);
+
+	UFUNCTION(BlueprintCallable, Category = "VR Weapon | Fire Mode")
+	void SetFireModeIndex(int32 NewIndex);
+
+	UFUNCTION(BlueprintPure, Category = "VR Weapon | Fire Mode")
+	int32 GetCurrentFireModeIndex() const { return CurrentFireModeIndex; }
+
 protected:
 	virtual void Tick(float DeltaTime) override;
 
@@ -129,12 +150,12 @@ virtual void BeginPlay() override;
 	int32 CurrentFireModeIndex = 0;
 
 	UPROPERTY(Transient)
-	TArray<UVRGrabComponent*> CachedGrabComponents;
+	TArray<TObjectPtr<UVRGrabComponent>> CachedGrabComponents;
 
 public:
 
 	UPROPERTY(Transient, BlueprintReadOnly, Category = "VR Weapon | Parts")
-	TArray<UActorComponent*> CachedRoundProviders;
+	TArray<TObjectPtr<UActorComponent>> CachedRoundProviders;
 
 	UFUNCTION(BlueprintPure, Category = "VR Weapon | Interaction")
 	UActorComponent* GetDynamicComponentByName(FName ComponentName) const;
@@ -160,9 +181,27 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "VR Weapon")
 	void ClearDynamicComponents();
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Weapon | State")
+	FGameplayTagContainer ActiveWeaponStateTags;
+
+	UFUNCTION(BlueprintCallable, Category = "VR Weapon | State")
+	void AddStateTag(FGameplayTag Tag);
+
+	UFUNCTION(BlueprintCallable, Category = "VR Weapon | State")
+	void RemoveStateTag(FGameplayTag Tag);
+
+	UFUNCTION(BlueprintPure, Category = "VR Weapon | State")
+	bool HasStateTag(FGameplayTag Tag) const;
+
+	UFUNCTION(BlueprintPure, Category = "VR Weapon | State")
+	bool HasAllStateTags(const FGameplayTagContainer& StateTags) const;
+
+	UFUNCTION(BlueprintPure, Category = "VR Weapon | State")
+	bool HasAnyStateTags(const FGameplayTagContainer& StateTags) const;
+
 private:
 	/** Cache for routing gameplay tag actions to components. Populated during initialization. */
 	UPROPERTY(Transient)
-	TMap<FGameplayTag, UActorComponent*> TagToComponentMap;
+	TMap<FGameplayTag, TObjectPtr<UActorComponent>> TagToComponentMap;
 };
 

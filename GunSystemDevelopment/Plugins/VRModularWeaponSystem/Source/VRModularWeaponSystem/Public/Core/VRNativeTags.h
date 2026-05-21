@@ -26,8 +26,6 @@ namespace  VRNativeTags
 	
 #pragma region Mechanical movement
 	
-	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Linear);
-	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Rotational);
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Mechanical_Max);
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Mechanical_Min);
 	

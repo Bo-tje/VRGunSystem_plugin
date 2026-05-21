@@ -39,6 +39,13 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Ammo | Hitscan")
     float HitscanDamage = 20.0f;
 
+    // --- Multi-Projectile (Shotgun) ---
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Ammo | Multi-Projectile")
+    int32 PelletCount = 1;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Ammo | Multi-Projectile")
+    float SpreadAngle = 0.0f;
+
     // --- Visuals ---
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Ammo | Visuals")
     TObjectPtr<UStaticMesh> LiveRoundMesh;

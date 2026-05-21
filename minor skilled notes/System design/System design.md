@@ -12,20 +12,23 @@ For architectural decisions, see [[System design/System design research|Research
 
 - **`UVRWeaponFeedbackComponent` (Actor Component):** Decoupled feedback manager that centrally handles complex haptics, recoil patterns, and audio cues for the weapon.
 
-- **`UVRMechanicalComponent` (Scene Component):** A physics-based sliding component that simulates mechanical movements like a slide, bolt, or charging handle. Handles momentum, constraints, and return springs.
-
+- **`UVRMechanicalComponent` (Scene Component):** A sliding or rotational component that simulates mechanical movements (e.g. slides, bolt, or charging handle). Handles momentum, constraints, return springs, and value propagation to linked components.
+    
 - **`UVRAttachmentPointComponent` (Scene Component):** Handles physical modular attachments. Receives and securely snaps `AVRAttachmentActor` objects.
-
+ 
 - **`AVRAttachmentActor` (Actor):** A physical, grabbable object representing an attachment (e.g. scopes, grips, silencers) that injects a `UVRWeaponStatModifier` when attached to a weapon.
     
 - **`UVRMagwellComponent` (Scene Component):** Handles magazine detection, snapping logic, and ejection. Receptacle for `AVRMagazineBase`.
-
+ 
 - **`AVRMagazineBase` (Actor):** Physical grabbable magazine object that holds ammo and handles visual bullet meshes. 
-
+ 
 - **`AVRProjectileBase` (Actor):** Physical bullet/projectile representation when the weapon is not using hitscan.
 
+- **`AVREjectedCasing` (Actor):** Physics-driven shell casing actor spawned upon ejection. Handles collision bounce audio and self-cleanup.
+ 
 - **`UVRGrabComponent` (Scene Component):** Placed on any grabbable actor (like the weapon or magazine). Handles grabbing mechanics, socket snapping, and routing inputs.
-
+ 
 - **`UVRInteractor` (Scene Component):** Placed on the VR hands/controllers. Detects grabbables and routes controller inputs directly into grabbed items.
-
+ 
 - **`UVRCustomActionComponent` (Actor Component):** A modular action listener that hooks into interaction events based on Gameplay Tags to trigger arbitrary blueprint logic.
+

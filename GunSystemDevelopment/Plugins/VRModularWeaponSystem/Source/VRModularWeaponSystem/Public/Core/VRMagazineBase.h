@@ -65,5 +65,5 @@ public:
 
 protected:
 	UPROPERTY()
-	TArray<UStaticMeshComponent*> VisualBulletMeshes;
+	TArray<TObjectPtr<UStaticMeshComponent>> VisualBulletMeshes;
 };

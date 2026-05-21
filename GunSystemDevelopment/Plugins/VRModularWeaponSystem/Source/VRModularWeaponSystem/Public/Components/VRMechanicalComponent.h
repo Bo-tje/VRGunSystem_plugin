@@ -30,8 +30,8 @@ public:
 	virtual void InitializeComponent_Implementation(UVRWeaponData* InData) override;
 	virtual void InitializeComponentWithSettings_Implementation(UVRWeaponData* InData, UVRWeaponComponentSettings* InSettings) override;
 	
-	UPROPERTY(EditAnywhere, Category = "VR Plugin | Mechanical", meta = (Categories = "VRModularWeaponSystem.MechanicalMovement"))
-	FGameplayTag MechanicalMovementType;
+	UPROPERTY(EditAnywhere, Category = "VR Plugin | Mechanical")
+	EMechanicalMovementType MechanicalMovementType = EMechanicalMovementType::Linear;
 	
 	FTransform HomeTransform;
 	
@@ -86,6 +86,10 @@ public:
 	UPROPERTY(EditAnywhere, Category = "VR Plugin | Mechanical")
 	bool bInvertDirection;
 
+	/** Optional name of another mechanical component on this weapon to drive when this component moves. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Plugin | Mechanical")
+	FName LinkedComponent;
+
 	UPROPERTY(BlueprintReadWrite, Category = "VR Plugin | Mechanical | State")
 	bool bIsLocked = false;
 
@@ -131,11 +135,20 @@ protected:
 	UPROPERTY(BlueprintReadWrite, Category = "VR Plugin | Mechanical")
 	TObjectPtr<UVRGrabComponent> DrivingGrabComponent;
 
+	UPROPERTY(Transient)
+	TObjectPtr<class UVRWeaponStateTreeComponent> CachedStateTree;
+
 	UFUNCTION()
 	virtual void OnGrabbed(AActor* InteractingActor);
 
 	UFUNCTION()
 	virtual void OnReleased();
+
+	/** Propagates grab state up the component hierarchy for nested mechanical components. */
+	void PropagateGrab(UVRGrabComponent* GrabComp, AActor* InteractingActor);
+
+	/** Propagates release state up the component hierarchy for nested mechanical components. */
+	void PropagateRelease();
 
 	/** Updates the component's transform based on the current normalized value */
 	void UpdateVisuals();
