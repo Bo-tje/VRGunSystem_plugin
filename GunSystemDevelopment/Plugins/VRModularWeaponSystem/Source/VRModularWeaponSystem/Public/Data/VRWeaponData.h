@@ -75,6 +75,40 @@ public:
 	/** If true, the entire weapon will attach to the hand. Must be FALSE for slides, bolts, and pumps. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Grab Settings")
 	bool bAttachOwnerOnGrab = true;
+
+	/** Default/fallback socket on the weapon mesh. Empty = use GrabComponent transform. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Grab Settings | Socket")
+	FName GripSocketName;
+
+	/** Optional: Name of a socket on a parent StaticMesh to use when grabbed by the right hand.
+	  * If empty, the system will fall back to GripSocketName. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Grab Settings | Socket")
+	FName RightHandGripSocketName;
+
+	/** Optional: Name of a socket on a parent StaticMesh to use when grabbed by the left hand.
+	  * If empty, the system will fall back to GripSocketName. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Grab Settings | Socket")
+	FName LeftHandGripSocketName;
+
+	/** Default rotation offset applied after socket snap. Fine-tunes weapon orientation. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Grab Settings | Socket")
+	FRotator GripRotationOffset = FRotator::ZeroRotator;
+
+	/** Right hand rotation offset. Overrides GripRotationOffset for right hand if not zero. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Grab Settings | Socket")
+	FRotator RightHandRotationOffset = FRotator::ZeroRotator;
+
+	/** Left hand rotation offset. Overrides GripRotationOffset for left hand if not zero. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Grab Settings | Socket")
+	FRotator LeftHandRotationOffset = FRotator::ZeroRotator;
+
+	/** Smooth grab: weapon lerps into hand instead of instant snap. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Grab Settings | Feel")
+	bool bUseSmoothGrab = false;
+
+	/** Speed of smooth grab lerp. Higher = faster snap. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Grab Settings | Feel")
+	float GrabLerpSpeed = 15.0f;
 };
 
 /** Specific settings for the Mechanical component */

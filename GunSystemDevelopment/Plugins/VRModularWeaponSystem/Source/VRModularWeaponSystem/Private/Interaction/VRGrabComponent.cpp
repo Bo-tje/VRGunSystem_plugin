@@ -1,5 +1,6 @@
 #include "Interaction/VRGrabComponent.h"
 #include "Components/BoxComponent.h"
+#include "Components/StaticMeshComponent.h"
 #include "Interaction/VRInteractor.h"
 #include "GameFramework/Actor.h"
 #include "Interfaces/VRInteractorInterface.h"
@@ -59,7 +60,20 @@ void UVRGrabComponent::TryGrab(UVRInteractor* Interactor)
     
 	if (bAttachOwnerOnGrab)
 	{
-		Attach(MyOwner, Interactor);
+		if (bUseSmoothGrab && bSnapToInteractor)
+		{
+			bIsLerping = true;
+			LerpAlpha = 0.0f;
+			LerpStartTransform = MyOwner->GetActorTransform().GetRelativeTransform(Interactor->GetComponentTransform());
+			
+			// Attach with KeepWorld first so it follows the hand as we lerp
+			FAttachmentTransformRules AttachRules(EAttachmentRule::KeepWorld, true);
+			MyOwner->AttachToComponent(Interactor, AttachRules);
+		}
+		else
+		{
+			Attach(MyOwner, Interactor);
+		}
 	}
     
 	SetComponentTickEnabled(true);
@@ -90,6 +104,7 @@ void UVRGrabComponent::TryRelease()
 	}
     
 	bIsHeld = false;
+	bIsLerping = false;
 	CurrentInteractor.Reset();
 	OnGrabReleased.Broadcast();
 	
@@ -172,6 +187,33 @@ void UVRGrabComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 	CalculateVelocity(DeltaTime);
 
+	// Smooth grab lerp
+	if (bIsLerping && bAttachOwnerOnGrab && CurrentInteractor.IsValid())
+	{
+		LerpAlpha = FMath::FInterpConstantTo(LerpAlpha, 1.0f, DeltaTime, GrabLerpSpeed);
+		
+		EControllerHand HandSide = CurrentInteractor->HandSide;
+		FTransform GripWorld = GetGripAnchorTransform(HandSide);
+		FTransform ActorTransform = GetOwner()->GetActorTransform();
+		FTransform GripRelative = GripWorld.GetRelativeTransform(ActorTransform);
+		FTransform RelativeTarget = GripRelative.Inverse();
+		
+		FTransform HandTransform = CurrentInteractor->GetComponentTransform();
+		
+		FTransform BlendedRelativeTransform;
+		BlendedRelativeTransform.Blend(LerpStartTransform, RelativeTarget, LerpAlpha);
+		
+		FTransform DesiredWorldTransform = BlendedRelativeTransform * HandTransform;
+		GetOwner()->SetActorTransform(DesiredWorldTransform);
+		
+		if (LerpAlpha >= 0.99f)
+		{
+			bIsLerping = false;
+			// Final precise snap
+			Attach(GetOwner(), CurrentInteractor.Get());
+		}
+	}
+
 	// Break logic for sub-components (slides, handles)
 	if (bIsHeld && !bAttachOwnerOnGrab && CurrentInteractor.IsValid())
 	{
@@ -183,30 +225,100 @@ void UVRGrabComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 	}
 }
 
+FTransform UVRGrabComponent::GetGripAnchorTransform(EControllerHand HandSide) const
+{
+	FName TargetSocketName = NAME_None;
+
+	if (HandSide == EControllerHand::Right)
+	{
+		TargetSocketName = RightHandGripSocketName;
+	}
+	else if (HandSide == EControllerHand::Left)
+	{
+		TargetSocketName = LeftHandGripSocketName;
+	}
+
+	if (TargetSocketName.IsNone())
+	{
+		TargetSocketName = GripSocketName;
+	}
+
+	FTransform OutTransform;
+
+	if (!TargetSocketName.IsNone())
+	{
+		// Walk up the attachment hierarchy to find a StaticMeshComponent with this socket
+		USceneComponent* Parent = GetAttachParent();
+		bool bFoundSocket = false;
+		while (Parent)
+		{
+			if (UStaticMeshComponent* SMC = Cast<UStaticMeshComponent>(Parent))
+			{
+				if (SMC->DoesSocketExist(TargetSocketName))
+				{
+					OutTransform = SMC->GetSocketTransform(TargetSocketName);
+					bFoundSocket = true;
+					break;
+				}
+			}
+			Parent = Parent->GetAttachParent();
+		}
+		if (!bFoundSocket)
+		{
+			OutTransform = GetComponentTransform();
+		}
+	}
+	else
+	{
+		// Fallback: use own transform (current behavior)
+		OutTransform = GetComponentTransform();
+	}
+
+	// Apply rotation offset
+	FRotator FinalOffset = GripRotationOffset;
+	if (HandSide == EControllerHand::Right && !RightHandRotationOffset.IsNearlyZero())
+	{
+		FinalOffset = RightHandRotationOffset;
+	}
+	else if (HandSide == EControllerHand::Left && !LeftHandRotationOffset.IsNearlyZero())
+	{
+		FinalOffset = LeftHandRotationOffset;
+	}
+
+	if (!FinalOffset.IsNearlyZero())
+	{
+		FQuat OffsetQuat = FinalOffset.Quaternion();
+		OutTransform.SetRotation(OutTransform.GetRotation() * OffsetQuat);
+	}
+
+	return OutTransform;
+}
+
 void UVRGrabComponent::Attach(AActor* MyOwner, UVRInteractor* TargetInteractor) const
 {
-	FTransform RootTransform = MyOwner->GetRootComponent()->GetComponentTransform();
-	FTransform GrabTransform = GetComponentTransform();
-	FTransform GrabRelativeToRoot = GrabTransform.GetRelativeTransform(RootTransform);
+	if (!MyOwner || !TargetInteractor) return;
 
-	FVector GrabRelativeLocation = GrabRelativeToRoot.GetLocation();
-	FRotator GrabRelativeRotation = GrabRelativeToRoot.Rotator();
+	EControllerHand HandSide = TargetInteractor->HandSide;
 
-	FAttachmentTransformRules AttachmentRules(EAttachmentRule::KeepWorld, true);
+	// 1. Compute the offsetted grip anchor in world space
+	FTransform GripWorldTransform = GetGripAnchorTransform(HandSide);
 	
+	// 2. Compute the grip anchor relative to the actor root
+	FTransform ActorTransform = MyOwner->GetActorTransform();
+	FTransform GripRelativeToActor = GripWorldTransform.GetRelativeTransform(ActorTransform);
+	
+	// 3. The desired actor transform puts the grip anchor at the hand location
+	FTransform HandTransform = TargetInteractor->GetComponentTransform();
+	FTransform DesiredActorTransform = GripRelativeToActor.Inverse() * HandTransform;
+	
+	// 4. Snap if requested, then attach using KeepWorld
 	if (bSnapToInteractor)
 	{
-		AttachmentRules.LocationRule = EAttachmentRule::SnapToTarget;
-		AttachmentRules.RotationRule = EAttachmentRule::SnapToTarget;
+		MyOwner->SetActorTransform(DesiredActorTransform);
 	}
 	
-	MyOwner->AttachToComponent(TargetInteractor, AttachmentRules);
-
-	if (bSnapToInteractor)
-	{
-		MyOwner->AddActorLocalOffset(-GrabRelativeLocation);
-		MyOwner->AddActorLocalRotation(GrabRelativeRotation.GetInverse());
-	}
+	FAttachmentTransformRules AttachRules(EAttachmentRule::KeepWorld, true);
+	MyOwner->AttachToComponent(TargetInteractor, AttachRules);
 }
 
 void UVRGrabComponent::CalculateVelocity(float DeltaTime)
@@ -275,6 +387,15 @@ void UVRGrabComponent::InitializeComponentWithSettings_Implementation(UVRWeaponD
 		bIsMainGrip = GrabSettings->bIsMainGrip;
 		bAttachOwnerOnGrab = GrabSettings->bAttachOwnerOnGrab;
 		
+		GripSocketName = GrabSettings->GripSocketName;
+		RightHandGripSocketName = GrabSettings->RightHandGripSocketName;
+		LeftHandGripSocketName = GrabSettings->LeftHandGripSocketName;
+		GripRotationOffset = GrabSettings->GripRotationOffset;
+		RightHandRotationOffset = GrabSettings->RightHandRotationOffset;
+		LeftHandRotationOffset = GrabSettings->LeftHandRotationOffset;
+		bUseSmoothGrab = GrabSettings->bUseSmoothGrab;
+		GrabLerpSpeed = GrabSettings->GrabLerpSpeed;
+
 		SetBoxExtent(GrabSettings->BoxExtents);
 	}
 }

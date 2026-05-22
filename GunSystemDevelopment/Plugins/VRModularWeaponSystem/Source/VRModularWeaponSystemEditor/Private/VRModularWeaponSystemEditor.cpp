@@ -1,5 +1,4 @@
 #include "VRModularWeaponSystemEditor.h"
-#include "VRMechanicalComponentVisualizer.h"
 #include "VRWeaponPartCustomization.h"
 #include "Components/VRMechanicalComponent.h"
 #include "UnrealEdGlobals.h"
@@ -10,20 +9,6 @@
 
 void FVRModularWeaponSystemEditorModule::StartupModule()
 {
-	/*
-	// Removing visualizer registration per user request
-	if (GUnrealEd != nullptr)
-	{
-		TSharedPtr<FComponentVisualizer> Visualizer = MakeShareable(new FVRMechanicalComponentVisualizer());
-		
-		if (Visualizer.IsValid())
-		{
-			GUnrealEd->RegisterComponentVisualizer(UVRMechanicalComponent::StaticClass()->GetFName(), Visualizer);
-			Visualizer->OnRegister();
-			RegisteredComponentClassNames.Add(UVRMechanicalComponent::StaticClass()->GetFName());
-		}
-	}
-	*/
 
 	FPropertyEditorModule& PropertyModule = FModuleManager::LoadModuleChecked<FPropertyEditorModule>("PropertyEditor");
 	PropertyModule.RegisterCustomPropertyTypeLayout("VRWeaponPart", FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FVRWeaponPartCustomization::MakeInstance));

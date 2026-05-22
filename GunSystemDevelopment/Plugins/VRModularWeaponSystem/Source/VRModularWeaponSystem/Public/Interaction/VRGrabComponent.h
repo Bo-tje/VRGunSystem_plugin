@@ -140,6 +140,45 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Plugin | Setup")
 	bool bIsMainGrip = false;
 
+	/** Optional default name of a socket on a parent StaticMesh to use as the fallback grip anchor.
+	  * If set, the weapon will snap so this socket aligns with the hand.
+	  * If empty, the GrabComponent's own transform is used (current behavior). */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Plugin | Setup")
+	FName GripSocketName;
+
+	/** Optional: Name of a socket on a parent StaticMesh to use when grabbed by the right hand.
+	  * If empty, the system will fall back to GripSocketName. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Plugin | Setup")
+	FName RightHandGripSocketName;
+
+	/** Optional: Name of a socket on a parent StaticMesh to use when grabbed by the left hand.
+	  * If empty, the system will fall back to GripSocketName. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Plugin | Setup")
+	FName LeftHandGripSocketName;
+
+	/** Optional default rotation offset applied after snapping. 
+	  * Use this to fine-tune the weapon orientation in the hand. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Plugin | Setup")
+	FRotator GripRotationOffset = FRotator::ZeroRotator;
+
+	/** Optional rotation offset specifically for the right hand.
+	  * If not set (remains Zero), the default GripRotationOffset is used. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Plugin | Setup")
+	FRotator RightHandRotationOffset = FRotator::ZeroRotator;
+
+	/** Optional rotation offset specifically for the left hand.
+	  * If not set (remains Zero), the default GripRotationOffset is used. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Plugin | Setup")
+	FRotator LeftHandRotationOffset = FRotator::ZeroRotator;
+
+	/** If true, the weapon lerps into the hand over GrabLerpSpeed seconds instead of instant snap. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Plugin | Setup")
+	bool bUseSmoothGrab = false;
+
+	/** Speed of the smooth grab lerp (only used when bUseSmoothGrab is true). Higher = faster. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Plugin | Setup")
+	float GrabLerpSpeed = 15.0f;
+
 protected:
 	
 	UPROPERTY(BlueprintReadOnly, Category = " VR Plugin | VR Interaction")
@@ -153,6 +192,12 @@ protected:
 private:
 	FVector LastPosition;
 	TArray<FVector> VelocityBuffer;
+
+	bool bIsLerping = false;
+	FTransform LerpStartTransform;
+	float LerpAlpha = 0.0f;
+
+	FTransform GetGripAnchorTransform(EControllerHand HandSide) const;
 	
 	void Attach(AActor* MyOwner, UVRInteractor* TargetInteractor) const;
 	void CalculateVelocity(float DeltaTime);
