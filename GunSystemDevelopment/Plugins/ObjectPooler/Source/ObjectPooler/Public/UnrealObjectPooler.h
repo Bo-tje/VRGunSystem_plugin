@@ -27,6 +27,9 @@ struct FActorPool
 
 	UPROPERTY()
 	TObjectPtr<AActor> PoolRoot = nullptr;
+
+	UPROPERTY()
+	double LastUsedTime = 0.0;
 };
 
 /**
@@ -69,6 +72,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Pooling")
 	void InitializePool(TSubclassOf<AActor> ActorClass, int32 Count, EPoolType PoolType = EPoolType::GameObjects);
 
+public:
+	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
+
 protected:
 	// Subsystem lifecycle
 	virtual void Deinitialize() override;
@@ -92,4 +98,7 @@ private:
 
 	AActor* GetOrCreatePoolRoot(EPoolType PoolType);
 	void SetActorActive(AActor* Actor, bool bActive);
+
+	FTimerHandle CleanupTimerHandle;
+	void CleanUnusedPools();
 };

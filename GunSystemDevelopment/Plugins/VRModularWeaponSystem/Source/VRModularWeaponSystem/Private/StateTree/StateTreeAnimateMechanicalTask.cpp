@@ -45,6 +45,11 @@ EStateTreeRunStatus FSTTask_AnimateMechanical::EnterState(FStateTreeExecutionCon
 			TargetComp->SetNormalizedValue(NewValue);
 		}
 
+		if (bSetCockedState)
+		{
+			TargetComp->SetIsCocked(bNewCockedValue);
+		}
+
 		if (bApplyMomentum)
 		{
 			TargetComp->AddMomentum(MomentumToAdd);

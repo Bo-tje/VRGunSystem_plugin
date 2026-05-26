@@ -4,15 +4,22 @@
 #include "UnrealEdGlobals.h"
 #include "Editor/UnrealEdEngine.h"
 #include "PropertyEditorModule.h"
+#include "AssetToolsModule.h"
+#include "AssetEditor/AssetTypeActions_VRWeaponData.h"
 
 #define LOCTEXT_NAMESPACE "FVRModularWeaponSystemEditorModule"
 
 void FVRModularWeaponSystemEditorModule::StartupModule()
 {
-
 	FPropertyEditorModule& PropertyModule = FModuleManager::LoadModuleChecked<FPropertyEditorModule>("PropertyEditor");
 	PropertyModule.RegisterCustomPropertyTypeLayout("VRWeaponPart", FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FVRWeaponPartCustomization::MakeInstance));
 	PropertyModule.RegisterCustomPropertyTypeLayout("VRWeaponDynamicComponent", FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FVRWeaponPartCustomization::MakeInstance));
+
+	// Register Asset Type Actions for UVRWeaponData
+	IAssetTools& AssetTools = FModuleManager::LoadModuleChecked<FAssetToolsModule>("AssetTools").Get();
+	TSharedRef<FAssetTypeActions_VRWeaponData> Actions = MakeShareable(new FAssetTypeActions_VRWeaponData());
+	VRWeaponDataAssetActions = Actions;
+	AssetTools.RegisterAssetTypeActions(Actions);
 }
 
 void FVRModularWeaponSystemEditorModule::ShutdownModule()
@@ -22,6 +29,15 @@ void FVRModularWeaponSystemEditorModule::ShutdownModule()
 		for (FName ClassName : RegisteredComponentClassNames)
 		{
 			GUnrealEd->UnregisterComponentVisualizer(ClassName);
+		}
+	}
+
+	if (FModuleManager::Get().IsModuleLoaded("AssetTools"))
+	{
+		IAssetTools& AssetTools = FModuleManager::GetModuleChecked<FAssetToolsModule>("AssetTools").Get();
+		if (VRWeaponDataAssetActions.IsValid())
+		{
+			AssetTools.UnregisterAssetTypeActions(VRWeaponDataAssetActions.ToSharedRef());
 		}
 	}
 

@@ -99,6 +99,9 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = " VR Plugin | VR Interaction")
 	TObjectPtr<UHapticFeedbackEffect_Base> GrabHapticEffect;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Plugin | VR Interaction | Audio")
+	TObjectPtr<USoundBase> GrabSound;
 	
 	UPROPERTY(EditAnywhere, Category = "VR Plugin | VR Interaction")
 	float HapticScale = 1.0f;
@@ -121,11 +124,11 @@ public:
 	float BreakDistance = 25.0f;
 	
 	/** A tag that can be read by the Interactor's Animation Blueprint to trigger a specific hand pose. */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Plugin | Visuals")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Plugin | Visuals", meta = (Categories = "VRModularWeaponSystem.AnimPose"))
 	FGameplayTag GrabPoseTag;
 
 	/** A tag that can be read by the Interactor's Animation Blueprint to trigger a specific hand pose while hovering. */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Plugin | Visuals")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Plugin | Visuals", meta = (Categories = "VRModularWeaponSystem.AnimPose"))
 	FGameplayTag HoverPoseTag;
 
 	/** Higher priority grabs take precedence when multiple components overlap. */
@@ -178,6 +181,9 @@ public:
 	/** Speed of the smooth grab lerp (only used when bUseSmoothGrab is true). Higher = faster. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Plugin | Setup")
 	float GrabLerpSpeed = 15.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Plugin | Setup")
+	bool bShowDebugGizmos = false;
 
 protected:
 	

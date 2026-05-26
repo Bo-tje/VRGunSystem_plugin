@@ -7,6 +7,8 @@
 #include "GameFramework/PlayerController.h"
 #include "Core/VRNativeTags.h"
 #include "Data/VRWeaponData.h"
+#include "Kismet/GameplayStatics.h"
+#include "DrawDebugHelpers.h"
 
 UVRGrabComponent::UVRGrabComponent()
 {
@@ -42,6 +44,7 @@ void UVRGrabComponent::TryGrab(UVRInteractor* Interactor)
 	}
 
 	AActor* MyOwner = GetOwner();
+	if (!MyOwner) return;
 	
 	if (bAttachOwnerOnGrab)
 	{
@@ -85,6 +88,11 @@ void UVRGrabComponent::TryGrab(UVRInteractor* Interactor)
 		OnGrabbed.Broadcast(Interactor->GetOwner());
 	}
     
+	if (GrabSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, GrabSound, GetComponentLocation());
+	}
+
 	PlayHaptics();
 }
 
@@ -93,6 +101,8 @@ void UVRGrabComponent::TryRelease()
 	if (!bIsHeld) return;
 
 	AActor* MyOwner = GetOwner();
+	if (!MyOwner) return;
+
 	UPrimitiveComponent* RootPrim = Cast<UPrimitiveComponent>(MyOwner->GetRootComponent());
 
 	if (bAttachOwnerOnGrab)
@@ -223,6 +233,19 @@ void UVRGrabComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 			TryRelease();
 		}
 	}
+
+	// Debug Gizmos
+	if (bShowDebugGizmos)
+	{
+		if (UWorld* World = GetWorld())
+		{
+			FTransform RightHandGrip = GetGripAnchorTransform(EControllerHand::Right);
+			DrawDebugCoordinateSystem(World, RightHandGrip.GetLocation(), RightHandGrip.GetRotation().Rotator(), 15.0f, false, 0.0f, 0, 1.5f);
+
+			FTransform LeftHandGrip = GetGripAnchorTransform(EControllerHand::Left);
+			DrawDebugCoordinateSystem(World, LeftHandGrip.GetLocation(), LeftHandGrip.GetRotation().Rotator(), 15.0f, false, 0.0f, 0, 1.5f);
+		}
+	}
 }
 
 FTransform UVRGrabComponent::GetGripAnchorTransform(EControllerHand HandSide) const
@@ -325,7 +348,10 @@ void UVRGrabComponent::CalculateVelocity(float DeltaTime)
 {
 	if (bIsHeld && DeltaTime > 0.0f)
 	{
-		FVector NewPosition = GetOwner()->GetActorLocation();
+		AActor* MyOwner = GetOwner();
+		if (!MyOwner) return;
+
+		FVector NewPosition = MyOwner->GetActorLocation();
 		FVector CalculatedVelocity = (NewPosition - LastPosition) / DeltaTime;
        
 		if (CalculatedVelocity.Size() < 5000.0f) 
@@ -376,6 +402,7 @@ void UVRGrabComponent::InitializeComponentWithSettings_Implementation(UVRWeaponD
 	if (UVRGrabSettings* GrabSettings = Cast<UVRGrabSettings>(InSettings))
 	{
 		GrabHapticEffect = GrabSettings->GrabHapticEffect;
+		GrabSound = GrabSettings->GrabSound;
 		HapticScale = GrabSettings->HapticScale;
 		ThrowMultiplier = GrabSettings->ThrowMultiplier;
 		bSnapToInteractor = GrabSettings->bUseSocketSnap;

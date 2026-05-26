@@ -32,6 +32,9 @@ public:
 	void ReleaseSecondaryAction();
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "VR Weapon")
+	void Reload();
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "VR Weapon")
 	bool IsTriggerPulled() const;
 
 };

@@ -9,6 +9,8 @@
 #include "Components/AudioComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Core/VRProjectileBase.h"
+#include "NiagaraFunctionLibrary.h"
+#include "NiagaraSystem.h"
 
 UVRFireComponent::UVRFireComponent()
 {
@@ -149,11 +151,11 @@ void UVRFireComponent::HandleFiring(UProjectileData* ProjectileData)
 
 		if (Stats.MuzzleFlashOverride)
 		{
-			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), Stats.MuzzleFlashOverride, MuzzleTransform);
+			UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), Stats.MuzzleFlashOverride, MuzzleTransform.GetLocation(), MuzzleTransform.GetRotation().Rotator());
 		}
 		else if (WeaponData->MuzzleFlash)
 		{
-			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), WeaponData->MuzzleFlash, MuzzleTransform);
+			UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), WeaponData->MuzzleFlash, MuzzleTransform.GetLocation(), MuzzleTransform.GetRotation().Rotator());
 		}
 	}
 	

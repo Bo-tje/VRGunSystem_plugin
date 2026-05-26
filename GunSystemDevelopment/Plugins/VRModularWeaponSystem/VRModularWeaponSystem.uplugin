@@ -38,6 +38,10 @@
 		{
 			"Name": "ObjectPooler",
 			"Enabled": true
+		},
+		{
+			"Name": "Niagara",
+			"Enabled": true
 		}
 	]
 }

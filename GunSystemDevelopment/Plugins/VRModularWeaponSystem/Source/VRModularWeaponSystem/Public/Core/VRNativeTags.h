@@ -12,6 +12,8 @@ namespace  VRNativeTags
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(PrimaryInputReleased);
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(SecondaryInput);
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(SecondaryInputReleased);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Reload);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(ReloadReleased);
 
 #pragma endregion
 	

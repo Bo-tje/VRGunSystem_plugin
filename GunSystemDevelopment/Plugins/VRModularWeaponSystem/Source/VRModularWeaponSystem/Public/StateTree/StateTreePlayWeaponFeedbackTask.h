@@ -28,6 +28,10 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Parameter") 
 	bool bIsDryFire = false;
 
+	/** If true, this will attempt to play the Reload sound. */
+	UPROPERTY(EditAnywhere, Category = "Parameter") 
+	bool bIsReload = false;
+
 	/** If set, overrides the sound from the weapon data. */
 	UPROPERTY(EditAnywhere, Category = "Overrides")
 	TObjectPtr<USoundBase> SoundOverride = nullptr;

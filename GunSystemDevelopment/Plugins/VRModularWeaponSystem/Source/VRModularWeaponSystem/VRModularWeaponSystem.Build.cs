@@ -34,7 +34,8 @@ public class VRModularWeaponSystem : ModuleRules
 				"HeadMountedDisplay",
 				"InputCore",
 				"AIModule",
-				"ObjectPooler"
+				"ObjectPooler",
+				"Niagara"
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);

@@ -73,6 +73,11 @@ bool AVRMagazineBase::GetRound_Implementation(UProjectileData*& OutRound)
 	return false;
 }
 
+bool AVRMagazineBase::HasRound_Implementation() const
+{
+	return CurrentAmmo > 0;
+}
+
 void AVRMagazineBase::RefillMagazine()
 {
 	if (MagazineData)

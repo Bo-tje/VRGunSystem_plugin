@@ -5,6 +5,8 @@
 #include "GameplayTagContainer.h"
 #include "ProjectileData.generated.h"
 
+class UNiagaraSystem;
+
 UCLASS(BlueprintType, Blueprintable)
 class VRMODULARWEAPONSYSTEM_API UProjectileData : public UPrimaryDataAsset
 {
@@ -15,7 +17,7 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Ammo | Identity")
     FText DisplayName;
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Ammo | Identity")
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Ammo | Identity", meta = (Categories = "VRModularWeaponSystem.Ammo"))
     FGameplayTagContainer AmmoTags;
 
     // --- Ballistics (Physical) ---
@@ -54,10 +56,10 @@ public:
     TObjectPtr<UStaticMesh> SpentCasingMesh;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Ammo | Visuals")
-    TObjectPtr<UParticleSystem> MuzzleFlashOverride;
+    TObjectPtr<UNiagaraSystem> MuzzleFlashOverride;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Ammo | Visuals")
-    TObjectPtr<UParticleSystem> ImpactEffect;
+    TObjectPtr<UNiagaraSystem> ImpactEffect;
 
     // --- Audio ---
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Ammo | Audio")

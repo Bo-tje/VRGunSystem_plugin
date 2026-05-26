@@ -90,6 +90,7 @@ public:
 	virtual void ReleasePrimaryAction_Implementation() override;
 	virtual void SecondaryAction_Implementation() override;
 	virtual void ReleaseSecondaryAction_Implementation() override;
+	virtual void Reload_Implementation() override;
 	virtual bool IsTriggerPulled_Implementation() const override;
 
 	// --- IVRInteractableInterface ---

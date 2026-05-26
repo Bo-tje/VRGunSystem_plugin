@@ -14,6 +14,17 @@ class VRMODULARWEAPONSYSTEM_API AVRAttachmentActor : public AActor, public IVRIn
 public:
 	AVRAttachmentActor();
 
+protected:
+	virtual void BeginPlay() override;
+
+private:
+	UFUNCTION()
+	void HandleGrabbed(AActor* InteractingHand);
+
+	UFUNCTION()
+	void HandleReleased();
+
+public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VR Attachment")
 	TObjectPtr<UStaticMeshComponent> MeshComponent;
 

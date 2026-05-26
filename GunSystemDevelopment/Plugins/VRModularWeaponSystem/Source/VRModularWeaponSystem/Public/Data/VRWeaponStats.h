@@ -4,6 +4,8 @@
 #include "Engine/DataAsset.h"
 #include "VRWeaponStats.generated.h"
 
+class UNiagaraSystem;
+
 /**
  * Basic weapon stats structure.
  */
@@ -48,7 +50,7 @@ struct FVRWeaponStats
 
 	// Overrides
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visuals")
-	TObjectPtr<UParticleSystem> MuzzleFlashOverride = nullptr;
+	TObjectPtr<UNiagaraSystem> MuzzleFlashOverride = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visuals")
 	TObjectPtr<USoundBase> FireSoundOverride = nullptr;
@@ -100,7 +102,7 @@ public:
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Visuals")
-	TObjectPtr<UParticleSystem> MuzzleFlashOverride;
+	TObjectPtr<UNiagaraSystem> MuzzleFlashOverride;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Visuals")
 	TObjectPtr<USoundBase> FireSoundOverride;

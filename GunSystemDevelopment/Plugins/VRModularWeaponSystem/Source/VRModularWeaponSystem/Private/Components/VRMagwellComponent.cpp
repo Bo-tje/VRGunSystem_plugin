@@ -81,6 +81,15 @@ bool UVRMagwellComponent::GetRound_Implementation(UProjectileData*& OutRound)
 	return false;
 }
 
+bool UVRMagwellComponent::HasRound_Implementation() const
+{
+	if (AttachedMagazine)
+	{
+		return IVRRoundProvider::Execute_HasRound(AttachedMagazine);
+	}
+	return false;
+}
+
 void UVRMagwellComponent::OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	if (AttachedMagazine || !OtherActor) return;
@@ -159,6 +168,11 @@ void UVRMagwellComponent::OnMagazineReleased()
 		// Disable physics simulation and physical blocking to prevent physics explosions
 		AttachedMagazine->GrabComponent->SetSimulatePhysics(false);
 		AttachedMagazine->GrabComponent->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+
+		if (AActor* Owner = GetOwner())
+		{
+			AttachedMagazine->GrabComponent->IgnoreActorWhenMoving(Owner, true);
+		}
 	}
 
 	// Attach to socket
@@ -169,7 +183,6 @@ void UVRMagwellComponent::OnMagazineReleased()
 		{
 			WeaponRoot->IgnoreActorWhenMoving(AttachedMagazine, true);
 		}
-		AttachedMagazine->GrabComponent->IgnoreActorWhenMoving(Owner, true);
 
 		USceneComponent* OwnerRoot = Owner->GetRootComponent();
 		if (OwnerRoot && OwnerRoot->DoesSocketExist(MagazineSocketName))
@@ -214,6 +227,11 @@ void UVRMagwellComponent::EjectMagazine()
 				AttachedMagazine->GrabComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 				AttachedMagazine->GrabComponent->SetSimulatePhysics(true);
 			}
+
+			if (AActor* Owner = GetOwner())
+			{
+				AttachedMagazine->GrabComponent->IgnoreActorWhenMoving(Owner, false);
+			}
 		}
 
 		AttachedMagazine->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
@@ -225,7 +243,6 @@ void UVRMagwellComponent::EjectMagazine()
 			{
 				WeaponRoot->IgnoreActorWhenMoving(AttachedMagazine, false);
 			}
-			AttachedMagazine->GrabComponent->IgnoreActorWhenMoving(Owner, false);
 		}
 
 		// Play Eject Sound

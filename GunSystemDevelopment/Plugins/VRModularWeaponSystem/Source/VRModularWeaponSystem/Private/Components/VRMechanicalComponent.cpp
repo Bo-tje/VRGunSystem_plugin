@@ -193,9 +193,14 @@ void UVRMechanicalComponent::CheckThresholdEvents()
 			StateTree->SendStateTreeEvent(OnReachedMaxTag);
 		}
 
+		if (!bIsCocked)
+		{
+			if (CockedSound) UGameplayStatics::PlaySoundAtLocation(this, CockedSound, GetComponentLocation());
+			bIsCocked = true;
+		}
+
 		if (bIsRealisticSlap)
 		{
-			if (LimitReachedSound) UGameplayStatics::PlaySoundAtLocation(this, LimitReachedSound, GetComponentLocation());
 			if (LimitReachedHapticEffect && DrivingGrabComponent && DrivingGrabComponent->GetCurrentInteractor())
 			{
 				DrivingGrabComponent->GetCurrentInteractor()->PlayHapticFeedback(LimitReachedHapticEffect, 0.5f);
@@ -221,7 +226,7 @@ void UVRMechanicalComponent::CheckThresholdEvents()
 
 		if (bIsRealisticSlap)
 		{
-			if (LimitReachedSound) UGameplayStatics::PlaySoundAtLocation(this, LimitReachedSound, GetComponentLocation());
+			if (SlapSound) UGameplayStatics::PlaySoundAtLocation(this, SlapSound, GetComponentLocation());
 			if (LimitReachedHapticEffect && DrivingGrabComponent && DrivingGrabComponent->GetCurrentInteractor())
 			{
 				DrivingGrabComponent->GetCurrentInteractor()->PlayHapticFeedback(LimitReachedHapticEffect, 0.5f);
@@ -340,6 +345,11 @@ void UVRMechanicalComponent::SetIsLocked(bool bNewLocked)
 	}
 }
 
+void UVRMechanicalComponent::SetIsCocked(bool bNewCocked)
+{
+	bIsCocked = bNewCocked;
+}
+
 void UVRMechanicalComponent::SetRestingValue(float NewRestingValue)
 {
 	RestingValue = FMath::Clamp(NewRestingValue, 0.0f, 1.0f);
@@ -352,8 +362,6 @@ void UVRMechanicalComponent::AddMomentum(float MomentumAmount)
 
 void UVRMechanicalComponent::UpdateFromHandLocation(FVector HandWorldLocation)
 {
-	if (bIsLocked) return;
-
 	const float CurrentRawValue = CalculateRawHandValue(HandWorldLocation);
 	float DeltaRaw = 0.0f;
 
@@ -367,9 +375,27 @@ void UVRMechanicalComponent::UpdateFromHandLocation(FVector HandWorldLocation)
 	}
 
 	const float DirectionModifier = bInvertDirection ? -1.0f : 1.0f;
-	const float NormalizedValue = GrabbedNormalizedValue + ((DeltaRaw / MaxRange) * DirectionModifier);
-	
-	SetNormalizedValue(NormalizedValue);
+	float ProposedValue = GrabbedNormalizedValue + ((DeltaRaw / MaxRange) * DirectionModifier);
+
+	if (bIsLocked)
+	{
+		// If locked, we can only pull it further back.
+		// We clamp the proposed value so it cannot move forward past the locked position.
+		if (ProposedValue < GrabbedNormalizedValue)
+		{
+			ProposedValue = GrabbedNormalizedValue;
+		}
+
+		// Unlock condition: if pulled further back by a small threshold.
+		// This handles slides locked at < 1.0, as well as overtravel past 1.0 when locked at 1.0.
+		const float UnlockDelta = 0.03f;
+		if (ProposedValue > GrabbedNormalizedValue + UnlockDelta)
+		{
+			SetIsLocked(false);
+		}
+	}
+
+	SetNormalizedValue(ProposedValue);
 }
 
 float UVRMechanicalComponent::CalculateRawHandValue(FVector HandWorldLocation) const
@@ -454,7 +480,8 @@ void UVRMechanicalComponent::ApplyMechanicalSettings(UVRMechanicalSettings* Sett
 	OnReachedMaxTag = Settings->OnReachedMaxTag;
 	OnReachedMinTag = Settings->OnReachedMinTag;
 	MovementSound = Settings->MovementSound;
-	LimitReachedSound = Settings->LimitReachedSound;
+	CockedSound = Settings->CockedSound;
+	SlapSound = Settings->SlapSound;
 	LimitReachedHapticEffect = Settings->LimitReachedHapticEffect;
 	
 	SlapVelocityThreshold = Settings->SlapVelocityThreshold;

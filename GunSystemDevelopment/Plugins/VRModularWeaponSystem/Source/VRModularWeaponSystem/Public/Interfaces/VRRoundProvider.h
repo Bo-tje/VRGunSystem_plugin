@@ -24,4 +24,10 @@ public:
 	 */
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "VR Weapon")
 	bool GetRound(UProjectileData*& OutRound);
+
+	/** 
+	 * Checks if this provider has any rounds remaining without consuming one.
+	 */
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "VR Weapon")
+	bool HasRound() const;
 };

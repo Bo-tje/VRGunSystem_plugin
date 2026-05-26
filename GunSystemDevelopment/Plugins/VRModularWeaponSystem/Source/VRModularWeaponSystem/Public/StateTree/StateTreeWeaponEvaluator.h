@@ -25,6 +25,15 @@ struct VRMODULARWEAPONSYSTEM_API FSTEval_WeaponInstanceData
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Output")
 	float TimeBetweenShots = 0.1f; 
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Output")
+	bool bHasAmmoRemaining = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Output")
+	bool bHasMagazineInserted = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Output")
+	int32 MagazineAmmoCount = 0;
 };
 
 USTRUCT(meta = (DisplayName = "Weapon Evaluator", Category = "Weapon"))

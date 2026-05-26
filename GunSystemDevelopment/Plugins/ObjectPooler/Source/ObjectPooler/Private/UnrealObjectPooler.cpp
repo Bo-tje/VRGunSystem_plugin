@@ -19,6 +19,7 @@ AActor* UUnrealObjectPooler::SpawnObject(TSubclassOf<AActor> ActorClass, FVector
 	if (!World) return nullptr;
 
 	FActorPool& Pool = ObjectPools.FindOrAdd(ActorClass);
+	Pool.LastUsedTime = World->GetTimeSeconds();
 	AActor* SpawnedActor = nullptr;
 
 	// Use existing actor if available
@@ -69,6 +70,7 @@ void UUnrealObjectPooler::ReturnObjectToPool(AActor* Actor)
 		SetActorActive(Actor, false);
 		
 		FActorPool& Pool = ObjectPools.FindOrAdd(*ClassPtr);
+		Pool.LastUsedTime = GetWorld() ? GetWorld()->GetTimeSeconds() : 0.0;
 		Pool.InactiveActors.AddUnique(Actor);
 
 		// Optionally re-attach to pool root if it was moved
@@ -93,6 +95,17 @@ void UUnrealObjectPooler::InitializePool(TSubclassOf<AActor> ActorClass, int32 C
 		{
 			ReturnObjectToPool(NewActor);
 		}
+	}
+}
+
+void UUnrealObjectPooler::Initialize(FSubsystemCollectionBase& Collection)
+{
+	Super::Initialize(Collection);
+
+	UWorld* World = GetWorld();
+	if (World)
+	{
+		World->GetTimerManager().SetTimer(CleanupTimerHandle, this, &UUnrealObjectPooler::CleanUnusedPools, 30.0f, true);
 	}
 }
 
@@ -178,6 +191,32 @@ void UUnrealObjectPooler::SetActorActive(AActor* Actor, bool bActive)
 		else
 		{
 			Comp->Deactivate();
+		}
+	}
+}
+
+void UUnrealObjectPooler::CleanUnusedPools()
+{
+	UWorld* World = GetWorld();
+	if (!World) return;
+
+	double CurrentTime = World->GetTimeSeconds();
+	double IdleThreshold = 60.0; // 60 seconds of inactivity
+
+	for (auto& Pair : ObjectPools)
+	{
+		FActorPool& Pool = Pair.Value;
+		if (CurrentTime - Pool.LastUsedTime > IdleThreshold)
+		{
+			for (AActor* Actor : Pool.InactiveActors)
+			{
+				if (IsValid(Actor))
+				{
+					ActorToClassMap.Remove(Actor);
+					Actor->Destroy();
+				}
+			}
+			Pool.InactiveActors.Empty();
 		}
 	}
 }

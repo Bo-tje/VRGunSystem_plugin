@@ -50,6 +50,11 @@ bool UVRInternalMagazineComponent::GetRound_Implementation(UProjectileData*& Out
 	return false;
 }
 
+bool UVRInternalMagazineComponent::HasRound_Implementation() const
+{
+	return !IsEmpty();
+}
+
 void UVRInternalMagazineComponent::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	if (IsFull())

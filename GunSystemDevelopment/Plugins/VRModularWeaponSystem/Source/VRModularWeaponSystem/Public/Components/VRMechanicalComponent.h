@@ -60,7 +60,10 @@ public:
 	TObjectPtr<USoundBase> MovementSound;
 
 	UPROPERTY(EditAnywhere, Category = "VR Plugin | Mechanical | Events")
-	TObjectPtr<USoundBase> LimitReachedSound;
+	TObjectPtr<USoundBase> CockedSound;
+
+	UPROPERTY(EditAnywhere, Category = "VR Plugin | Mechanical | Events")
+	TObjectPtr<USoundBase> SlapSound;
 
 	UPROPERTY(EditAnywhere, Category = "VR Plugin | Mechanical | Events")
 	TObjectPtr<UHapticFeedbackEffect_Base> LimitReachedHapticEffect;
@@ -96,6 +99,12 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "VR Plugin | Mechanical | State")
 	void SetIsLocked(bool bNewLocked);
 
+	UPROPERTY(BlueprintReadWrite, Category = "VR Plugin | Mechanical | State")
+	bool bIsCocked = false;
+
+	UFUNCTION(BlueprintCallable, Category = "VR Plugin | Mechanical | State")
+	void SetIsCocked(bool bNewCocked);
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Plugin | Mechanical | Physics")
 	bool bUseSimulatedInertia = false;
 
@@ -105,10 +114,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "VR Plugin | Mechanical | Physics")
 	void AddMomentum(float MomentumAmount);
 
-	UPROPERTY(EditAnywhere, Category = "VR Plugin | Mechanical | Events")
+	UPROPERTY(EditAnywhere, Category = "VR Plugin | Mechanical | Events", meta = (Categories = "VRModularWeaponSystem.Event"))
 	FGameplayTag OnReachedMaxTag;
 	
-	UPROPERTY(EditAnywhere, Category = "VR Plugin | Mechanical | Events")
+	UPROPERTY(EditAnywhere, Category = "VR Plugin | Mechanical | Events", meta = (Categories = "VRModularWeaponSystem.Event"))
 	FGameplayTag OnReachedMinTag;
 
 	UPROPERTY(BlueprintAssignable, Category = "VR Plugin | Mechanical")

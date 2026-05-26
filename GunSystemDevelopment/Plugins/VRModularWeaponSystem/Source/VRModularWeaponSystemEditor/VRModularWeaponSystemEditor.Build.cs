@@ -36,7 +36,11 @@ public class VRModularWeaponSystemEditor : ModuleRules
 				"SlateCore",
 				"UnrealEd",
 				"ComponentVisualizers",
-				"InputCore"
+				"InputCore",
+				"AdvancedPreviewScene",
+				"PropertyEditor",
+				"EditorStyle",
+				"Projects"
 			}
 			);
 		

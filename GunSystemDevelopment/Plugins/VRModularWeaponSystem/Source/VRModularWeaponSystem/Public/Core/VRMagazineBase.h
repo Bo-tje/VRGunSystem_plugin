@@ -27,6 +27,7 @@ public:
 
 	// IVRRoundProvider
 	virtual bool GetRound_Implementation(UProjectileData*& OutRound) override;
+	virtual bool HasRound_Implementation() const override;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	TObjectPtr<UVRGrabComponent> GrabComponent;

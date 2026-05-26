@@ -5,6 +5,8 @@
 #include "Data/VRWeaponData.h"
 #include "Kismet/GameplayStatics.h"
 #include "Core/VRWeaponBase.h"
+#include "NiagaraFunctionLibrary.h"
+#include "NiagaraSystem.h"
 
 EStateTreeRunStatus FSTTask_PlayWeaponFeedback::EnterState(FStateTreeExecutionContext& Context, const FStateTreeTransitionResult& Transition) const
 {
@@ -24,7 +26,11 @@ EStateTreeRunStatus FSTTask_PlayWeaponFeedback::EnterState(FStateTreeExecutionCo
 	USoundBase* SoundToPlay = SoundOverride;
 	if (!SoundToPlay)
 	{
-		if (bIsDryFire)
+		if (bIsReload)
+		{
+			SoundToPlay = Weapon->WeaponData->ReloadSound;
+		}
+		else if (bIsDryFire)
 		{
 			SoundToPlay = Weapon->WeaponData->DryFireSound;
 		}
@@ -60,13 +66,13 @@ EStateTreeRunStatus FSTTask_PlayWeaponFeedback::EnterState(FStateTreeExecutionCo
 		Weapon->FeedbackComponent->PlayFiringFeedback(HapticToPlay, Scale);
 	}
 
-	// 3. Play Muzzle Flash (only if not dry firing)
-	if (!bIsDryFire)
+	// 3. Play Muzzle Flash (only if not dry firing and not reloading)
+	if (!bIsDryFire && !bIsReload)
 	{
-		UParticleSystem* FlashToPlay = Stats.MuzzleFlashOverride ? Stats.MuzzleFlashOverride : Weapon->WeaponData->MuzzleFlash;
+		UNiagaraSystem* FlashToPlay = Stats.MuzzleFlashOverride ? Stats.MuzzleFlashOverride : Weapon->WeaponData->MuzzleFlash;
 		if (FlashToPlay)
 		{
-			UGameplayStatics::SpawnEmitterAtLocation(Weapon->GetWorld(), FlashToPlay, MuzzleTransform);
+			UNiagaraFunctionLibrary::SpawnSystemAtLocation(Weapon->GetWorld(), FlashToPlay, MuzzleTransform.GetLocation(), MuzzleTransform.GetRotation().Rotator());
 		}
 	}
 

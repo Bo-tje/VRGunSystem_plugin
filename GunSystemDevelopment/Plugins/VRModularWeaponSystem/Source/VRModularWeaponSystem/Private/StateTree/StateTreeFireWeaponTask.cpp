@@ -38,19 +38,24 @@ EStateTreeRunStatus FSTTask_FireWeapon::EnterState(FStateTreeExecutionContext& C
 	
 	if (Weapon)
 	{
+		bool bHasRoundProviders = false;
 		for (UActorComponent* Component : Weapon->CachedRoundProviders)
 		{
 			if (Component && !Component->IsA<UVRChamberComponent>())
 			{
+				bHasRoundProviders = true;
 				if (IVRRoundProvider::Execute_GetRound(Component, RoundToFire))
 				{
 					FireComponent->HandleFiring(RoundToFire);
 					return EStateTreeRunStatus::Succeeded;
 				}
-
-				FireComponent->HandleDryFire();
-				return EStateTreeRunStatus::Failed;
 			}
+		}
+
+		if (bHasRoundProviders)
+		{
+			FireComponent->HandleDryFire();
+			return EStateTreeRunStatus::Failed;
 		}
 	}
 	

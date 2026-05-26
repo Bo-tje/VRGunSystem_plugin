@@ -28,14 +28,15 @@ public:
 
 	// IVRRoundProvider
 	virtual bool GetRound_Implementation(UProjectileData*& OutRound) override;
+	virtual bool HasRound_Implementation() const override;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Weapon | Internal Magazine")
 	int32 MaxCapacity = 5;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Weapon | Internal Magazine")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Weapon | Internal Magazine", meta = (Categories = "VRModularWeaponSystem.Ammo"))
 	FGameplayTag CompatibleAmmoTag;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Weapon | Internal Magazine")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Weapon | Internal Magazine", meta = (Categories = "VRModularWeaponSystem.State"))
 	FGameplayTagContainer RequiredWeaponStateTags;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Weapon | Internal Magazine")

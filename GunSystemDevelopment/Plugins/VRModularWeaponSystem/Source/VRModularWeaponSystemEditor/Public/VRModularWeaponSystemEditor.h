@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Modules/ModuleManager.h"
+#include "IAssetTypeActions.h"
 
 class FVRModularWeaponSystemEditorModule : public IModuleInterface
 {
@@ -13,4 +14,5 @@ public:
 	
 private:
 	TArray<FName> RegisteredComponentClassNames;
+	TSharedPtr<IAssetTypeActions> VRWeaponDataAssetActions;
 };

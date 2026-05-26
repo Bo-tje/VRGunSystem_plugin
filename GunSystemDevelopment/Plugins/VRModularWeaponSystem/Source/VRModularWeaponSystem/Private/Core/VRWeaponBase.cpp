@@ -14,6 +14,10 @@
 #include "Components/VRMagwellComponent.h"
 #include "Data/VRWeaponStats.h"
 #include "Interaction/VRInteractor.h"
+#include "Components/VRAttachmentPointComponent.h"
+#include "Core/VRAttachmentActor.h"
+#include "Kismet/GameplayStatics.h"
+
 
 AVRWeaponBase::AVRWeaponBase()
 {
@@ -168,6 +172,27 @@ void AVRWeaponBase::UpdateCalculatedStats()
 	{
 		if (UVRWeaponStatModifier* Modifier = IVRWeaponComponentInterface::Execute_GetStatModifier(Component))
 		{
+			CalculatedStats.FireRate += Modifier->FireRateOffset;
+			CalculatedStats.RecoilMultiplier *= Modifier->RecoilMultiplier;
+			CalculatedStats.DamageMultiplier *= Modifier->DamageMultiplier;
+			CalculatedStats.BulletVelocityMultiplier *= Modifier->BulletVelocityMultiplier;
+			CalculatedStats.ReloadSpeedMultiplier *= Modifier->ReloadSpeedMultiplier;
+			CalculatedStats.SpreadMultiplier *= Modifier->SpreadMultiplier;
+			CalculatedStats.PelletCountOffset += Modifier->PelletCountOffset;
+
+			if (Modifier->MuzzleFlashOverride) CalculatedStats.MuzzleFlashOverride = Modifier->MuzzleFlashOverride;
+			if (Modifier->FireSoundOverride) CalculatedStats.FireSoundOverride = Modifier->FireSoundOverride;
+		}
+	}
+
+	TArray<UVRAttachmentPointComponent*> AttachmentPoints;
+	GetComponents(AttachmentPoints);
+
+	for (UVRAttachmentPointComponent* Point : AttachmentPoints)
+	{
+		if (Point && Point->CurrentAttachment && Point->CurrentAttachment->StatModifier)
+		{
+			UVRWeaponStatModifier* Modifier = Point->CurrentAttachment->StatModifier;
 			CalculatedStats.FireRate += Modifier->FireRateOffset;
 			CalculatedStats.RecoilMultiplier *= Modifier->RecoilMultiplier;
 			CalculatedStats.DamageMultiplier *= Modifier->DamageMultiplier;
@@ -483,6 +508,10 @@ void AVRWeaponBase::StartAction_Implementation(UObject* Interactor, float Action
 	{
 		IVRWeaponInterface::Execute_SecondaryAction(this);
 	}
+	else if (ActionTag.MatchesTag(VRNativeTags::Reload))
+	{
+		IVRWeaponInterface::Execute_Reload(this);
+	}
 	
 	if (ActionTag.MatchesTag(VRNativeTags::Trigger) && ActionValue > 0.8f)
 	{
@@ -522,6 +551,13 @@ void AVRWeaponBase::StopAction_Implementation(UObject* Interactor, FGameplayTag 
 	else if (ActionTag.MatchesTag(VRNativeTags::SecondaryInput) || ActionTag.MatchesTag(VRNativeTags::SecondaryInputReleased))
 	{
 		IVRWeaponInterface::Execute_ReleaseSecondaryAction(this);
+	}
+	else if (ActionTag.MatchesTag(VRNativeTags::Reload) || ActionTag.MatchesTag(VRNativeTags::ReloadReleased))
+	{
+		if (StateTreeComponent)
+		{
+			StateTreeComponent->SendStateTreeEvent(VRNativeTags::ReloadReleased);
+		}
 	}
 }
 
@@ -580,6 +616,19 @@ void AVRWeaponBase::SecondaryAction_Implementation()
 void AVRWeaponBase::ReleaseSecondaryAction_Implementation()
 {
 	if (StateTreeComponent) StateTreeComponent->SendStateTreeEvent(VRNativeTags::SecondaryInputReleased);
+}
+
+void AVRWeaponBase::Reload_Implementation()
+{
+	if (StateTreeComponent)
+	{
+		StateTreeComponent->SendStateTreeEvent(VRNativeTags::Reload);
+	}
+
+	if (WeaponData && WeaponData->ReloadSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, WeaponData->ReloadSound, GetActorLocation());
+	}
 }
 
 bool AVRWeaponBase::IsTriggerPulled_Implementation() const

@@ -4,6 +4,8 @@
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Data/ProjectileData.h"
 #include "Kismet/GameplayStatics.h"
+#include "NiagaraFunctionLibrary.h"
+#include "NiagaraSystem.h"
 
 AVRProjectileBase::AVRProjectileBase()
 {
@@ -76,8 +78,8 @@ AVRProjectileBase* AVRProjectileBase::SpawnProjectileFromData(const UObject* Wor
 
 	if (AVRProjectileBase* VRProjectile = Cast<AVRProjectileBase>(SpawnedActor))
 	{
-		if (InOwner) VRProjectile->SetOwner(InOwner);
-		if (InInstigator) VRProjectile->SetInstigator(InInstigator);
+		VRProjectile->SetOwner(InOwner);
+		VRProjectile->SetInstigator(InInstigator);
 
 		VRProjectile->InitializeProjectile(InData);
 		return VRProjectile;
@@ -153,7 +155,7 @@ void AVRProjectileBase::OnProjectileStop(const FHitResult& ImpactResult)
 
 		if (ProjectileData->ImpactEffect)
 		{
-			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ProjectileData->ImpactEffect, ImpactResult.ImpactPoint, ImpactResult.ImpactNormal.Rotation());
+			UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), ProjectileData->ImpactEffect, ImpactResult.ImpactPoint, ImpactResult.ImpactNormal.Rotation());
 		}
 	}
 
@@ -168,6 +170,8 @@ void AVRProjectileBase::OnProjectileStop(const FHitResult& ImpactResult)
 		// Return to pool if pooler is available
 		if (UUnrealObjectPooler* Pooler = World->GetSubsystem<UUnrealObjectPooler>())
 		{
+			SetOwner(nullptr);
+			SetInstigator(nullptr);
 			Pooler->ReturnObjectToPool(this);
 			return;
 		}

@@ -9,7 +9,8 @@ namespace VRNativeTags
 	UE_DEFINE_GAMEPLAY_TAG(PrimaryInputReleased, "VRModularWeaponSystem.Interaction.PrimaryInputReleased");
 	UE_DEFINE_GAMEPLAY_TAG(SecondaryInput, "VRModularWeaponSystem.Interaction.SecondaryInput");
 	UE_DEFINE_GAMEPLAY_TAG(SecondaryInputReleased, "VRModularWeaponSystem.Interaction.SecondaryInputReleased");
-	
+	UE_DEFINE_GAMEPLAY_TAG(Reload, "VRModularWeaponSystem.Interaction.Reload");
+	UE_DEFINE_GAMEPLAY_TAG(ReloadReleased, "VRModularWeaponSystem.Interaction.ReloadReleased");
 
 #pragma endregion
 	

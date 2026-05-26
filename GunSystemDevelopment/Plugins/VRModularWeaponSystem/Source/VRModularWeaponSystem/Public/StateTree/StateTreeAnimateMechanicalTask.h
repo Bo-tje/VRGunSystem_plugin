@@ -45,4 +45,10 @@ struct VRMODULARWEAPONSYSTEM_API FSTTask_AnimateMechanical : public FStateTreeTa
 
 	UPROPERTY(EditAnywhere, Category = "Parameter", meta = (EditCondition = "bSetDirectValue"))
 	float NewValue = 0.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Parameter")
+	bool bSetCockedState = false;
+
+	UPROPERTY(EditAnywhere, Category = "Parameter", meta = (EditCondition = "bSetCockedState"))
+	bool bNewCockedValue = false;
 };

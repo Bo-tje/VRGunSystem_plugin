@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
 #include "GameplayTagContainer.h"
+#include "NiagaraSystem.h"
 #include "Data/VRWeaponStats.h"
 #include "VRWeaponData.generated.h"
 
@@ -22,7 +23,7 @@ class VRMODULARWEAPONSYSTEM_API UVRWeaponComponentSettings : public UObject
 	
 public:
 	/** Any input tags added here will automatically be routed to this component when the weapon receives them. */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (Categories = "VRModularWeaponSystem.Interaction"))
 	FGameplayTagContainer BindToInputTags;
 };
 
@@ -36,6 +37,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Grab Settings")
 	TObjectPtr<UHapticFeedbackEffect_Base> GrabHapticEffect;
 	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Grab Settings | Audio")
+	TObjectPtr<USoundBase> GrabSound;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Grab Settings")
 	float HapticScale = 1.0f;
 
@@ -53,11 +57,11 @@ public:
 	float BreakDistance = 25.0f;
 
 	/** A tag that can be read by the Interactor's Animation Blueprint to trigger a specific hand pose. */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Grab Settings")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Grab Settings", meta = (Categories = "VRModularWeaponSystem.AnimPose"))
 	FGameplayTag AnimationGrabPoseTag;
 
 	/** A tag for the Animation Blueprint to trigger a hand pose when hovering. */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Grab Settings")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Grab Settings", meta = (Categories = "VRModularWeaponSystem.AnimPose"))
 	FGameplayTag AnimationHoverPoseTag;
 
 	/** Higher priority grabs take precedence when multiple components overlap. */
@@ -155,14 +159,17 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mechanical | Haptics")
 	TObjectPtr<UHapticFeedbackEffect_Base> LimitReachedHapticEffect;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mechanical | Events")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mechanical | Events", meta = (Categories = "VRModularWeaponSystem.Event"))
 	FGameplayTag OnReachedMaxTag;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mechanical | Events")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mechanical | Events", meta = (Categories = "VRModularWeaponSystem.Event"))
 	FGameplayTag OnReachedMinTag;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mechanical | Audio")
-	TObjectPtr<USoundBase> LimitReachedSound;
+	TObjectPtr<USoundBase> CockedSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mechanical | Audio")
+	TObjectPtr<USoundBase> SlapSound;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mechanical | Audio")
 	TObjectPtr<USoundBase> MovementSound;
@@ -226,7 +233,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Magwell Settings")
 	float InsertRadius = 15.0f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Magwell Settings")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Magwell Settings", meta = (Categories = "VRModularWeaponSystem.Magazine"))
 	FGameplayTag CompatibleMagazinesTag;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Magwell Settings | Feedback")
@@ -368,7 +375,10 @@ public:
 	bool bAutoPlayWeaponFeedback = true;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Visuals")
-	TObjectPtr<UParticleSystem> MuzzleFlash;
+	TObjectPtr<UNiagaraSystem> MuzzleFlash;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Visuals")
+	TObjectPtr<UNiagaraSystem> ChamberSmoke;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Visuals")
 	TObjectPtr<USoundBase> FireSound;
@@ -382,7 +392,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Visuals")
 	TObjectPtr<UHapticFeedbackEffect_Base> FireHapticEffect;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta=(GetOptions="GetAvailableComponentNames"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta=(GetOptions="GetAvailableComponentNames", Categories="VRModularWeaponSystem.Interaction"))
 	TMap<FGameplayTag, FName> InputTagToComponentName;
 
 	UFUNCTION(CallInEditor)

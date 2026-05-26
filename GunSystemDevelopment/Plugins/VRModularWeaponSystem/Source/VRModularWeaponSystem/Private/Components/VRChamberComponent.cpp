@@ -11,6 +11,8 @@
 #include "Interaction/VRInteractor.h"
 #include "Kismet/GameplayStatics.h"
 #include "UnrealObjectPooler.h"
+#include "NiagaraFunctionLibrary.h"
+#include "NiagaraSystem.h"
 
 UVRChamberComponent::UVRChamberComponent()
 {
@@ -49,6 +51,11 @@ bool UVRChamberComponent::GetRound_Implementation(UProjectileData*& OutRound)
 {
 	OutRound = LoadedProjectile;
 	return TryGiveBullet();
+}
+
+bool UVRChamberComponent::HasRound_Implementation() const
+{
+	return IsRoundReady();
 }
 
 void UVRChamberComponent::BeginPlay()
@@ -106,6 +113,11 @@ UProjectileData* UVRChamberComponent::TryEject()
 	if (EjectedRound)
 	{
 		OnRoundEjected.Broadcast(EjectedRound);
+
+		if (PreviousChamberState == VRNativeTags::Chamber_SpentCasing)
+		{
+			SpawnChamberSmoke();
+		}
 
 		UStaticMesh* CasingMesh = (PreviousChamberState == VRNativeTags::Chamber_SpentCasing) ? EjectedRound->SpentCasingMesh : EjectedRound->LiveRoundMesh;
 
@@ -268,4 +280,26 @@ void UVRChamberComponent::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AA
 		// Destroy the physical round actor
 		RoundActor->Destroy();
 	}
+}
+
+void UVRChamberComponent::SpawnChamberSmoke()
+{
+	UNiagaraSystem* SmokeToSpawn = ChamberSmokeNiagara ? ChamberSmokeNiagara : (WeaponData ? WeaponData->ChamberSmoke : nullptr);
+	if (SmokeToSpawn)
+	{
+		if (UWorld* World = GetWorld())
+		{
+			FTransform SpawnTransform = GetChamberSmokeTransform();
+			UNiagaraFunctionLibrary::SpawnSystemAtLocation(World, SmokeToSpawn, SpawnTransform.GetLocation(), SpawnTransform.GetRotation().Rotator());
+		}
+	}
+}
+
+FTransform UVRChamberComponent::GetChamberSmokeTransform() const
+{
+	FTransform ComponentTransform = GetComponentTransform();
+	FVector WorldOffset = ComponentTransform.TransformVectorNoScale(ChamberSmokeOffset);
+	FQuat WorldRotation = ComponentTransform.GetRotation() * ChamberSmokeRotation.Quaternion();
+	
+	return FTransform(WorldRotation, ComponentTransform.GetLocation() + WorldOffset);
 }

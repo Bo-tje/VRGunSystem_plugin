@@ -30,6 +30,7 @@ public:
 
 	// IVRRoundProvider
 	virtual bool GetRound_Implementation(UProjectileData*& OutRound) override;
+	virtual bool HasRound_Implementation() const override;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VR Weapon | Magwell")
 	TObjectPtr<AVRMagazineBase> AttachedMagazine;
@@ -37,7 +38,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Weapon | Magwell")
 	FName MagazineSocketName = TEXT("Magwell");
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Weapon | Magwell")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Weapon | Magwell", meta = (Categories = "VRModularWeaponSystem.Magazine"))
 	FGameplayTag CompatibleMagazinesTag;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Weapon | Magwell")

@@ -44,19 +44,6 @@ bool UVRAttachmentPointComponent::TryAttach(AVRAttachmentActor* AttachmentActor)
 	if (AVRWeaponBase* Weapon = Cast<AVRWeaponBase>(GetOwner()))
 	{
 		Weapon->UpdateCalculatedStats();
-
-		// Apply modifiers manually since UpdateCalculatedStats only checks CachedWeaponComponents
-		if (CurrentAttachment->StatModifier)
-		{
-			Weapon->CalculatedStats.FireRate += CurrentAttachment->StatModifier->FireRateOffset;
-			Weapon->CalculatedStats.RecoilMultiplier *= CurrentAttachment->StatModifier->RecoilMultiplier;
-			Weapon->CalculatedStats.DamageMultiplier *= CurrentAttachment->StatModifier->DamageMultiplier;
-			Weapon->CalculatedStats.BulletVelocityMultiplier *= CurrentAttachment->StatModifier->BulletVelocityMultiplier;
-			Weapon->CalculatedStats.ReloadSpeedMultiplier *= CurrentAttachment->StatModifier->ReloadSpeedMultiplier;
-
-			if (CurrentAttachment->StatModifier->MuzzleFlashOverride) Weapon->CalculatedStats.MuzzleFlashOverride = CurrentAttachment->StatModifier->MuzzleFlashOverride;
-			if (CurrentAttachment->StatModifier->FireSoundOverride) Weapon->CalculatedStats.FireSoundOverride = CurrentAttachment->StatModifier->FireSoundOverride;
-		}
 	}
 
 	return true;

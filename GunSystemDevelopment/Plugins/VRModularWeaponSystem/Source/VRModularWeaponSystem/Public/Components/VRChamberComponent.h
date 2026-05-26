@@ -9,6 +9,7 @@
 #include "VRChamberComponent.generated.h"
 
 class UProjectileData;
+class UNiagaraSystem;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnChamberStateChanged, FGameplayTag, NewState);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnRoundLoaded, UProjectileData*, LoadedRound);
@@ -26,6 +27,7 @@ public:
 
 	// --- IVRRoundProvider ---
 	virtual bool GetRound_Implementation(UProjectileData*& OutRound) override;
+	virtual bool HasRound_Implementation() const override;
 
 	// --- IVRWeaponComponentInterface ---
 	virtual void InitializeComponent_Implementation(UVRWeaponData* InData) override;
@@ -97,10 +99,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Weapon | Chamber | Manual Loading")
 	bool bAllowManualLoading = false;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Weapon | Chamber | Manual Loading")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Weapon | Chamber | Manual Loading", meta = (Categories = "VRModularWeaponSystem.Ammo"))
 	FGameplayTag CompatibleAmmoTag;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Weapon | Chamber | Manual Loading")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Weapon | Chamber | Manual Loading", meta = (Categories = "VRModularWeaponSystem.State"))
 	FGameplayTagContainer RequiredWeaponStateTags;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Weapon | Chamber | Manual Loading")
@@ -115,6 +117,21 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	TObjectPtr<class USphereComponent> LoadDetectionSphere;
 	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Weapon | Chamber | Smoke")
+	TObjectPtr<UNiagaraSystem> ChamberSmokeNiagara;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Weapon | Chamber | Smoke")
+	FVector ChamberSmokeOffset = FVector::ZeroVector;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Weapon | Chamber | Smoke")
+	FRotator ChamberSmokeRotation = FRotator::ZeroRotator;
+
+	UFUNCTION(BlueprintCallable, Category = "VR Weapon | Chamber | Smoke")
+	void SpawnChamberSmoke();
+
+	UFUNCTION(BlueprintPure, Category = "VR Weapon | Chamber | Smoke")
+	FTransform GetChamberSmokeTransform() const;
+
 	void SetChamberState(FGameplayTag NewState);
 
 protected:

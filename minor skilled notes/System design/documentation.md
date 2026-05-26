@@ -27,12 +27,13 @@ The base actor for all weapons in the system. It serves as a container that hold
 - **Key Functions:**
   - `InitializeWeapon()`: Distributes `WeaponData` to all child components implementing `IVRWeaponComponentInterface`.
   - `ApplyWeaponDataVisuals()`: Dynamically spawns `UStaticMeshComponent`s and logical components based on `WeaponData`, snapping them via sockets and automatically enabling collision welding.
-  - `UpdateCalculatedStats()`: Recalculates stats based on attachments and modifiers.
+  - `UpdateCalculatedStats()`: Recalculates stats dynamically based on all attached modules and attachment points.
   - `GetDynamicComponentByName()`: Retrieves dynamically injected custom components.
   - `GetCurrentFireMode()`: Returns the currently active `FVRFireMode`.
   - `CycleFireMode(bool bBackward)`: Cycles through the available fire modes.
   - `SetFireModeIndex(int32 NewIndex)`: Directly sets the active fire mode index.
-- **Implementation:** Implements `IVRWeaponInterface` to handle primary/secondary inputs and weapon state, as well as `IVRInteractableInterface` for VR interaction routing.
+  - `Reload()`: Sends a reload state tree event and plays the configured `ReloadSound`.
+- **Implementation:** Implements `IVRWeaponInterface` (including inputs, dry fires, and reloads) and `IVRInteractableInterface` for VR interaction routing.
 
 ### `UVRChamberComponent` (Scene Component)
 Manages the round currently in the firing position.
@@ -57,13 +58,13 @@ Manages the round currently in the firing position.
 - **Implementation:** Implements `IVRWeaponComponentInterface` and `IVRRoundProvider`.
 
 ### `UVRFireComponent` (Scene Component)
-Handles the actual firing logic, including hitscan or projectile spawning.
+Handles the actual firing logic, including hitscan or projectile spawning. Modernized in V1 to spawn dynamic Niagara particles rather than legacy cascade systems.
 
 - **Key Properties:**
   - `MuzzleSocketName`: `FName` - Socket on the mesh where shots originate.
   - `FireHapticScale` / `DryFireHapticScale`: `float` - Haptic feedback multipliers.
 - **Functions:**
-  - `HandleFiring(UProjectileData* ProjectileData)`: Executes the shot logic using the provided projectile data.
+  - `HandleFiring(UProjectileData* ProjectileData)`: Executes the shot logic, spawning a Niagara muzzle flash and launching projectiles.
   - `HandleDryFire()`: Executes dry firing logic when no round is present in the chamber.
   - `GetMuzzleTransform()`: Returns the world transform of the muzzle socket.
 - **Delegates (Blueprint Assignable):**
@@ -92,7 +93,9 @@ Manages the interaction between the weapon and the VR hands (Interactors). It in
   - `ThrowMultiplier`: `float` - Multiplier for velocity when throwing.
   - `GrabPoseTag` / `HoverPoseTag`: `FGameplayTag` - Tags used to tell the Animation Blueprint which hand pose to use when hovering or grabbed.
   - `GrabHapticEffect`: `UHapticFeedbackEffect_Base*` - Haptic played on grab.
+  - `GrabSound`: `USoundBase*` - Sound played on grab.
   - `HapticScale` / `bLoopHaptics`: `float` / `bool` - Determines how grabbing haptics are played.
+  - `bShowDebugGizmos`: `bool` - Draws RGB coordinate system axes at Left/Right anchor offsets in PIE.
 - **Functions:**
   - `TryGrab(UVRInteractor* Interactor)`: Attempts to grab the component with the given interactor.
   - `TryRelease()`: Releases the component from the current interactor.
@@ -135,17 +138,18 @@ Handles moving mechanical parts on the weapon, such as slides, triggers, or brea
 - **Implementation:** Implements `IVRWeaponComponentInterface`. It correctly calculates initial offsets via `CalculateRawHandValue` for both `Linear` (distance-based) and `Rotational` (angle-based with wrap-around safety) movement types.
 
 ### `UVRAttachmentPointComponent` (Scene Component)
-Handles physical modular attachments by securely snapping and registering physical `AVRAttachmentActor` objects to the weapon.
+Handles physical modular attachments by securely snapping and registering physical `AVRAttachmentActor` objects to the weapon. Snapping is deferred until the player releases the attachment inside the overlap radius.
 - **Key Properties:**
   - `SocketName`: `FName` - The socket this point is bound to.
   - `CurrentAttachment`: `AVRAttachmentActor*` - The attachment currently slotted in.
 - **Functions:**
-  - `TryAttach()` / `Detach()`: Physically mounts or removes an attachment from the weapon.
+  - `TryAttach()` / `Detach()`: Physically mounts or removes an attachment from the weapon. Updates weapon calculated stats.
 
 ### `AVRAttachmentActor` (Actor)
 A physical, grabbable object representing an attachment (e.g. scopes, grips).
 - **Key Properties:**
   - `StatModifier`: `UVRWeaponStatModifier*` - Modifiers injected into the weapon's `CalculatedStats` when attached.
+  - `bIsHeld`: `bool` - True if the attachment is currently held. Snapping is ignored while this is true.
 
 ### `UVRMagwellComponent` (Scene Component)
 Handles magazine detection, snapping logic, and ejection.
@@ -174,13 +178,27 @@ Physical grabbable magazine object that holds ammo and handles visual bullet mes
 - **Delegates:**
   - `OnAmmoEmpty`
 
+### `UVRInternalMagazineComponent` (Scene Component)
+Represents an internal tube magazine (e.g. for shotguns) or internal box magazine (e.g. for bolt-action/hunting rifles). It allows individual bullets or shells to be pushed manually into the weapon.
+- **Key Properties:**
+  - `MaxCapacity`: `int32` - The maximum number of rounds the internal magazine can hold.
+  - `CompatibleAmmoTag`: `FGameplayTag` - Filters the types of ammunition compatible with this magazine.
+  - `RequiredWeaponStateTags`: `FGameplayTagContainer` - Weapon state conditions required to allow manual insertion.
+  - `LoadDetectionSphere`: `USphereComponent*` - Trigger volume detecting overlapping `AVRRoundActor`s.
+  - `LoadSound` / `LoadHaptic`: Audio and haptic feedback played upon successful insertion.
+  - `LoadedRounds`: `TArray<UProjectileData*>` - The internal ammunition stack.
+- **Functions:**
+  - `GetRound(UProjectileData*& OutRound)`: Pulls the next round from the magazine (implements `IVRRoundProvider` for integration with standard StateTree tasks).
+  - `HasRound()`: Returns true if the magazine is not empty.
+  - `OnOverlapBegin(...)`: Callback that detects and consumes an overlapping `AVRRoundActor`.
+
 ### `AVRProjectileBase` (Actor)
-Physical bullet/projectile representation spawned into the world when the weapon is not using hitscan.
+Physical bullet/projectile representation spawned into the world when the weapon is not using hitscan. Spawns Niagara system impact effects.
 - **Key Properties:**
   - `ProjectileMovement`: `UProjectileMovementComponent*` - Drives the ballistics.
   - `CollisionComponent`: `USphereComponent*` - Physics boundaries.
 - **Functions:**
-  - `InitializeProjectile()`, `OnProjectileStop()`
+  - `InitializeProjectile()`, `OnProjectileStop()`: Handles impact physics, spawning Niagara visual effects, and returns actor to pool after clearing owner/instigator references to avoid memory leaks.
 
 ### `AVREjectedCasing` (Actor)
 Physics-driven shell casing spawned upon ejection.
@@ -189,6 +207,13 @@ Physics-driven shell casing spawned upon ejection.
   - `LifeTime`: `float` - Duration in seconds before automatic fading and destruction.
 - **Functions:**
   - `InitializeCasing(UStaticMesh* Mesh, FVector Impulse)`: Assigns the casing mesh and applies velocity force.
+
+### `AVRRoundActor` (Actor)
+Physical grabbable representation of a single live round or shell casing. It allows players to manually feed ammunition directly into a weapon's chamber or loading gate.
+- **Key Properties:**
+  - `ProjectileData`: `UProjectileData*` - The data asset specifying projectile behavior, compatibility, and visual mesh.
+  - `GrabComponent`: `UVRGrabComponent*` - Roots the actor and enables VR grabbing/interaction.
+  - `RoundMesh`: `UStaticMeshComponent*` - Renders the physical ammunition mesh (defaults to `ProjectileData->LiveRoundMesh`).
 
 ### `UVRInteractor` (Scene Component)
 The component on the VR pawn/hand that initiates interactions with `UVRGrabComponent`.
@@ -232,11 +257,11 @@ Defines the base configuration for a weapon. See the [[System design/System desi
   - `WeaponParts`: Array of `FVRWeaponPart`. Enforces purely data-driven structural construction using soft object pointers (`TSoftObjectPtr<UStaticMesh>`) and explicit Sockets/Offsets to bypass the blueprint editor.
   - `AdditionalComponents`: Array of `FVRWeaponDynamicComponent` for dynamically injecting arbitrary extra Actor Components (like `UVRGrabComponent` or logic nodes) directly from the Data Asset.
   - `DefaultProjectile`: The standard projectile this weapon uses.
-  - `FireSound`, `DryFireSound`, `ReloadSound`, `MuzzleFlash`, `FireHapticEffect`.
+  - `FireSound`, `DryFireSound`, `ReloadSound`, `MuzzleFlash` (Niagara), `FireHapticEffect`.
 
 ### Component Settings Architecture
 Settings for dynamically injected components are managed via subclasses of `UVRWeaponComponentSettings`, which are instantiated directly within `UVRWeaponData` (inside the `AdditionalComponents` array):
-- **`UVRGrabSettings`**: Configures grab haptics, throw multipliers, snap spheres, `BoxExtents`, `MaxGrabDistance`, `GrabPriority`, and the `GrabPoseTag`/`HoverPoseTag` for animation routing.
+- **`UVRGrabSettings`**: Configures grab haptics, throw multipliers, snap spheres, `BoxExtents`, `MaxGrabDistance`, `GrabPriority`, `GrabSound`, and the `GrabPoseTag`/`HoverPoseTag` for animation routing.
 - **`UVRFireSettings`**: Defines muzzle socket names, specific fire/dry-fire haptic scaling, `FireModes` (array of `FVRFireMode`), `RoundsPerMinute`, `BurstCount`, and `bIsAutomatic`.
 - **`UVRMechanicalSettings`**: Fully configures a mechanical part. Includes `MechanicalMovementType` (Linear/Rotational), `LocalAxis`, `MaxRange`, `bHasReturnSpring`, `RestingValue`, `HapticTickThreshold`, physics inertia settings (`bUseSimulatedInertia`, `InertiaMultiplier`), realistic slap impact thresholds, and `LinkedComponent`.
 - **`UVRMagwellSettings`**: Defines `MagazineSocketName`, `CompatibleMagazinesTag`, `InsertRadius`, `bEjectOnRelease`, and magwell-specific sounds/haptics (`InsertSound`, `EjectSound`, `InsertHapticEffect`).
@@ -324,6 +349,7 @@ The weapon logic is driven by a State Tree using the `VR Weapon State Tree Schem
   - Parameter: `bInfiniteAmmo` - Option to chamber indefinitely.
 - **`FSTTask_PlayWeaponFeedback`**:
   - Executes dynamic haptics and audio decoupled from firing logic. Supports overrides (`HapticOverride`, `SoundOverride`).
+  - Parameter: `bIsReload` - Play reload sound and silence muzzle flash.
 - **`FSTTask_AnimateMechanical`**:
   - Procedurally applies momentum or sets resting states for a specified `UVRMechanicalComponent` (e.g., locking the slide back on empty).
 - **`FSTTask_CycleFireMode`**:
@@ -331,9 +357,40 @@ The weapon logic is driven by a State Tree using the `VR Weapon State Tree Schem
 
 ---
 
+## Editor Tooling
+
+The plugin contains a dedicated Unreal Engine editor module (`VRModularWeaponSystemEditor`) that provides custom Slate-based asset editor tooling to streamline configuring weapons and analyzing their stats.
+
+### `FVRWeaponDataAssetEditor` (Asset Editor Toolkit)
+A custom editor toolkit that opens when double-clicking a `UVRWeaponData` asset. It organizes the interface into three main docking tabs:
+- **Properties Tab:** Houses the standard Details view for editing properties, settings, components, and parts lists.
+- **Live 3D Preview Tab (`SVRWeaponPreviewViewport`):** Uses an advanced preview scene to assemble and render the modular meshes defined in the data asset. Updates and centers the camera automatically whenever properties change.
+- **Stat Dashboard Tab (`SVRWeaponStatVisualizer`):** Shows comparative stats (Base Stats vs. Final Stats after dynamic modifiers from attachments/parts are computed). Features styled progress bars and performance deltas.
+
+---
+
 ## Native Gameplay Tags
 
 Defined in `VRNativeTags.h`:
-- **Input:** `Trigger`, `PrimaryInput`, `SecondaryInput`
+- **Input:** `Trigger`, `PrimaryInput`, `SecondaryInput`, `Reload`, `ReloadReleased`
 - **Weapon states:** `Idle`, `Firing`, `Reloading`, `Empty`, `Jammed`
 - **Chamber states:** `Chamber_Empty`, `Chamber_RoundReady`, `Chamber_SpentCasing`, `Chamber_Jammed`
+
+---
+
+## Editor Gameplay Tag Restrictions
+
+To improve developer UX and prevent configuration errors, several editable `FGameplayTag` and `FGameplayTagContainer` fields are restricted using the `Categories` metadata specifier. This ensures that the details panel dropdown only displays valid tags in context:
+
+| Component / Asset | Property | Restricted Category | Description |
+| :--- | :--- | :--- | :--- |
+| **`UVRWeaponComponentSettings`** (and subclasses) | `BindToInputTags` | `VRModularWeaponSystem.Interaction` | Maps controller input actions to mechanical actions. |
+| **`UVRGrabComponent`** / **`UVRGrabSettings`** | `GrabPoseTag` / `HoverPoseTag` | `VRModularWeaponSystem.AnimPose` | Tells the animation blueprint which hand poses to play. |
+| **`UVRMechanicalComponent`** / **`UVRMechanicalSettings`** | `OnReachedMaxTag` / `OnReachedMinTag` | `VRModularWeaponSystem.Event` | Broadcasts events when mechanical parts reach limits. |
+| **`UVRMagwellComponent`** / **`UVRMagwellSettings`** | `CompatibleMagazinesTag` | `VRModularWeaponSystem.Magazine` | Defines which magazine types can be inserted. |
+| **`UMagazineData`** | `MagazineType` | `VRModularWeaponSystem.Magazine` | Self-identifying tag of the magazine asset. |
+| **`UProjectileData`** | `AmmoTags` | `VRModularWeaponSystem.Ammo` | Self-identifying tag of the ammunition type. |
+| **`UVRChamberComponent`** / **`UVRInternalMagazine`** | `CompatibleAmmoTag` | `VRModularWeaponSystem.Ammo` | Filters which ammunition types can be loaded. |
+| **`UVRChamberComponent`** / **`UVRInternalMagazine`** | `RequiredWeaponStateTags` | `VRModularWeaponSystem.State` | Restricts manual loading to specific weapon states. |
+| **`UVRWeaponData`** | `InputTagToComponentName` (Keys) | `VRModularWeaponSystem.Interaction` | Maps input actions directly to component names. |
+
