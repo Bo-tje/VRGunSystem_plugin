@@ -111,6 +111,21 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Plugin | Mechanical | Physics", meta = (EditCondition = "bUseSimulatedInertia"))
 	float InertiaMultiplier = 1.0f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Plugin | Mechanical | State")
+	float LockReleaseThreshold = 0.03f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Plugin | Mechanical | Physics", meta = (EditCondition = "bUseSimulatedInertia"))
+	float InertiaFriction = 8.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Plugin | Mechanical | Physics", meta = (EditCondition = "bUseSimulatedInertia"))
+	float InertiaLinearSensitivity = -0.0005f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Plugin | Mechanical | Physics", meta = (EditCondition = "bUseSimulatedInertia"))
+	float InertiaRotationalSensitivity = -0.001f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Plugin | Mechanical | Physics", meta = (EditCondition = "bUseSimulatedInertia"))
+	float InertiaMaxAcceleration = 20000.0f;
+
 	UFUNCTION(BlueprintCallable, Category = "VR Plugin | Mechanical | Physics")
 	void AddMomentum(float MomentumAmount);
 

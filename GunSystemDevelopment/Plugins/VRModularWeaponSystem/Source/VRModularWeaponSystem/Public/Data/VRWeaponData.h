@@ -46,6 +46,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Grab Settings")
 	float ThrowMultiplier = 1.2f;
 
+	/** Number of frames of velocity history to average when throwing the weapon. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Grab Settings")
+	int32 ThrowVelocityBufferHistory = 10;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Grab Settings")
 	bool bUseSocketSnap = false;
 
@@ -191,6 +195,26 @@ public:
 	/** Minimum simulated momentum required to play limit reached sound/haptics. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mechanical | Audio", meta = (EditCondition = "bUseSimulatedInertia"))
 	float SlapMomentumThreshold = 0.5f;
+
+	/** Normalized distance threshold beyond slide lock required to trigger a slide release when pulling further back. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mechanical | State")
+	float LockReleaseThreshold = 0.03f;
+
+	/** Friction deceleration coefficient for simulated mechanical inertia. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mechanical | Physics", meta = (EditCondition = "bUseSimulatedInertia"))
+	float InertiaFriction = 8.0f;
+
+	/** Physics inertia linear sensitivity scaling. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mechanical | Physics", meta = (EditCondition = "bUseSimulatedInertia"))
+	float InertiaLinearSensitivity = -0.0005f;
+
+	/** Physics inertia rotational sensitivity scaling. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mechanical | Physics", meta = (EditCondition = "bUseSimulatedInertia"))
+	float InertiaRotationalSensitivity = -0.001f;
+
+	/** Maximum parent motion acceleration cap clamped for inertia calculations. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mechanical | Physics", meta = (EditCondition = "bUseSimulatedInertia"))
+	float InertiaMaxAcceleration = 20000.0f;
 };
 
 

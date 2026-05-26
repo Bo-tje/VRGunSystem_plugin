@@ -1,4 +1,4 @@
-﻿import os
+import os
 import glob
 import re
 import json
@@ -30,19 +30,10 @@ for root, dirs, files in os.walk(base_path):
             with open(filepath, 'r', encoding='utf-8') as f:
                 content = f.read()
             
-            # Find class or struct definitions
-            # Example: class VRMODULARWEAPONSYSTEM_API UVRChamberComponent : public USceneComponent
-            class_matches = re.finditer(r'(?:class|struct) \w*_API (\w+)', content)
-            # Also catch ones without API macro like UINTERFACE etc if any
-            if not re.search(r'(?:class|struct) \w*_API (\w+)', content):
-                class_matches = re.finditer(r'class (\w+) *: *public', content)
-            
-            # Or just simpler:
+            # Find class or struct definitions (filtering out forward declarations by requiring colon or brace)
             class_names = []
-            for match in re.finditer(r'(?:class|struct)\s+(?:[A-Z0-9_]+_API\s+)?([A-Z]\w+)', content):
+            for match in re.finditer(r'(?:class|struct)\s+(?:[A-Z0-9_]+_API\s+)?([A-Z]\w+)\s*(?::|{)', content):
                 name = match.group(1)
-                # Filter out standard forward declarations usually separated by semicolon
-                # But regex might be tricky, let's just use the first match per file as primary
                 if name not in class_names and not name.endswith('API'):
                     class_names.append(name)
             

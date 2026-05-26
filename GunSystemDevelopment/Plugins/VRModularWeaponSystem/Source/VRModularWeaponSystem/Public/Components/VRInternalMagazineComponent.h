@@ -48,6 +48,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Weapon | Internal Magazine | Feedback")
 	TObjectPtr<class UHapticFeedbackEffect_Base> LoadHaptic;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Weapon | Internal Magazine | Feedback")
+	float LoadHapticScale = 1.0f;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	TObjectPtr<USphereComponent> LoadDetectionSphere;
 

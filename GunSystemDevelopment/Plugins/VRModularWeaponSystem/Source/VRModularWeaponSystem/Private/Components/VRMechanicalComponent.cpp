@@ -282,10 +282,10 @@ void UVRMechanicalComponent::CalculateInertia(float DeltaTime)
 		return;
 	}
 
-	// Constants for inertia sensitivity
-	const float LinearSensitivity = -0.0005f;
-	const float RotationalSensitivity = -0.001f;
-	const float MaxAccel = 20000.0f;
+	// Sensitivity values loaded dynamically
+	const float LinearSensitivity = InertiaLinearSensitivity;
+	const float RotationalSensitivity = InertiaRotationalSensitivity;
+	const float MaxAccel = InertiaMaxAcceleration;
 
 	float Force = 0.0f;
 	const FVector WorldAxis = GetComponentTransform().TransformVectorNoScale(LocalAxis.GetSafeNormal());
@@ -333,7 +333,7 @@ void UVRMechanicalComponent::CalculateInertia(float DeltaTime)
 		SetNormalizedValue(ProposedValue);
 	}
 	
-	CurrentMomentum = FMath::FInterpTo(CurrentMomentum, 0.0f, DeltaTime, 8.0f); // Friction
+	CurrentMomentum = FMath::FInterpTo(CurrentMomentum, 0.0f, DeltaTime, InertiaFriction); // Friction
 }
 
 void UVRMechanicalComponent::SetIsLocked(bool bNewLocked)
@@ -388,7 +388,7 @@ void UVRMechanicalComponent::UpdateFromHandLocation(FVector HandWorldLocation)
 
 		// Unlock condition: if pulled further back by a small threshold.
 		// This handles slides locked at < 1.0, as well as overtravel past 1.0 when locked at 1.0.
-		const float UnlockDelta = 0.03f;
+		const float UnlockDelta = LockReleaseThreshold;
 		if (ProposedValue > GrabbedNormalizedValue + UnlockDelta)
 		{
 			SetIsLocked(false);
@@ -488,6 +488,12 @@ void UVRMechanicalComponent::ApplyMechanicalSettings(UVRMechanicalSettings* Sett
 	SlapReleaseDistanceThreshold = Settings->SlapReleaseDistanceThreshold;
 	SlapMomentumThreshold = Settings->SlapMomentumThreshold;
 	LinkedComponent = Settings->LinkedComponent;
+
+	LockReleaseThreshold = Settings->LockReleaseThreshold;
+	InertiaFriction = Settings->InertiaFriction;
+	InertiaLinearSensitivity = Settings->InertiaLinearSensitivity;
+	InertiaRotationalSensitivity = Settings->InertiaRotationalSensitivity;
+	InertiaMaxAcceleration = Settings->InertiaMaxAcceleration;
 }
 
 void UVRMechanicalComponent::OnGrabbed(AActor* InteractingActor)

@@ -13,7 +13,7 @@ AVRProjectileBase::AVRProjectileBase()
 
 	CollisionComponent = CreateDefaultSubobject<USphereComponent>(TEXT("CollisionComponent"));
 	CollisionComponent->InitSphereRadius(2.0f);
-	CollisionComponent->BodyInstance.SetCollisionProfileName("Projectile");
+	CollisionComponent->BodyInstance.SetCollisionProfileName("BlockAllDynamic");
 	CollisionComponent->SetWalkableSlopeOverride(FWalkableSlopeOverride(WalkableSlope_Unwalkable, 0.f));
 	CollisionComponent->CanCharacterStepUpOn = ECB_No;
 	RootComponent = CollisionComponent;
@@ -99,11 +99,15 @@ void AVRProjectileBase::InitializeProjectile(UProjectileData* Data)
 			ProjectileMovement->InitialSpeed = ProjectileData->InitialSpeed;
 			ProjectileMovement->MaxSpeed = ProjectileData->InitialSpeed;
 			ProjectileMovement->ProjectileGravityScale = ProjectileData->GravityScale;
+			
+			// Re-bind the updated component for pooled actors to ensure clean simulation state
+			ProjectileMovement->SetUpdatedComponent(CollisionComponent);
+			
+			// Set the initial velocity in the forward direction
 			ProjectileMovement->Velocity = GetActorForwardVector() * ProjectileData->InitialSpeed;
 			
 			// Re-activate and reset the movement component for pooled actors
 			ProjectileMovement->Activate(true);
-			ProjectileMovement->UpdateComponentVelocity();
 		}
 
 		if (ProjectileMesh && ProjectileData->LiveRoundMesh)
@@ -117,20 +121,37 @@ void AVRProjectileBase::InitializeProjectile(UProjectileData* Data)
 		{
 			CollisionComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 
-			// Prevent bullet from colliding with the weapon that fired it or its attachments
+			// Prevent bullet from colliding with the weapon, its attachments, hands, or character
 			if (GetOwner())
 			{
 				TArray<AActor*> IgnoredActors;
-				GetOwner()->GetAttachedActors(IgnoredActors, true);
-				IgnoredActors.Add(GetOwner());
+				
+				// 1. Traverse up the attachment hierarchy (ignores weapon, hand meshes, player character)
+				AActor* CurrentAncestor = GetOwner();
+				while (CurrentAncestor)
+				{
+					IgnoredActors.Add(CurrentAncestor);
+					CurrentAncestor = CurrentAncestor->GetAttachParentActor();
+				}
+				
+				// 2. Add any attachments to the weapon (sights, magazines, silencers, etc.)
+				TArray<AActor*> AttachedActors;
+				GetOwner()->GetAttachedActors(AttachedActors, true);
+				IgnoredActors.Append(AttachedActors);
+				
+				// 3. Add instigator if not already added
 				if (GetInstigator())
 				{
-					IgnoredActors.Add(GetInstigator());
+					IgnoredActors.AddUnique(GetInstigator());
 				}
 
+				// 4. Set ignore list systems to avoid immediate self-collision
 				for (AActor* ActorToIgnore : IgnoredActors)
 				{
-					CollisionComponent->IgnoreActorWhenMoving(ActorToIgnore, true);
+					if (ActorToIgnore)
+					{
+						CollisionComponent->IgnoreActorWhenMoving(ActorToIgnore, true);
+					}
 				}
 			}
 		}

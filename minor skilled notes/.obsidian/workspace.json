@@ -232,12 +232,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Weekly/weekly reflection.md",
+                "file": "System design/documentation.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "weekly reflection"
+              "title": "documentation"
             }
           }
         ],
@@ -273,7 +273,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "",
+                "query": "tag:#vr-weapon-system",
                 "matchingCase": false,
                 "explainSearch": false,
                 "collapseAll": false,
@@ -333,12 +333,12 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "QA.md",
+                "file": "System design/documentation.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "Outgoing links from QA"
+              "title": "Outgoing links from documentation"
             }
           },
           {
@@ -396,7 +396,7 @@
             }
           }
         ],
-        "currentTab": 5
+        "currentTab": 2
       }
     ],
     "direction": "horizontal",
@@ -419,45 +419,44 @@
   },
   "active": "088c1a3ed7d20f56",
   "lastOpenFiles": [
-    "System design/documentation.md",
     "System design/System design.md",
+    "C++ notes.md",
     "Documentation.md",
-    "review of filosofie.md",
+    "System design/documentation.md",
+    "System design/System design chart (in-development).canvas",
+    "System design/System design chart.png",
+    "Docs/VR Target System.md",
+    "Docs/Dynamic multicast delagates.md",
+    "market analysis/analyzing other products.md",
+    "Planning/Goal mindmap.png",
+    "Planning/Goal mindmap.canvas",
+    "Planning/Logs.md",
     "Weekly/weekly reflection.md",
+    "review of filosofie.md",
     "System design/System design research.md",
     "QA's/QA 3.md",
     "QA's/QA 2.md",
     "QA's/QA 1.md",
     "System design/System design chart (in-development).png",
-    "System design/System design chart.png",
-    "System design/System design chart (in-development).canvas",
     "System design/System design chart (pre-development).canvas",
     "unreal notes.md",
     "QA3.m4a",
     "Other possibilities.md",
-    "C++ notes.md",
     "Docs/State tree.md",
     "QA's",
     "QA 1.md",
     "17 apr om 14-36.m4a",
-    "market analysis/analyzing other products.md",
     "System 1.md",
     "market analysis/Analysed systems/Untitled.md",
     "market analysis/Analysed systems",
     "market analysis",
-    "Planning/Goal mindmap.canvas",
-    "Planning/Goal mindmap.png",
-    "Planning/Logs.md",
     "Docs",
-    "Docs/Dynamic multicast delagates.md",
     "copilot/copilot-conversations/summarise_this_note@20260317_142420.md",
     "copilot/copilot-conversations/sumarise_this_note@20260317_142118.md",
     "copilot/copilot-conversations",
     "copilot/copilot-custom-prompts/Clip Web Page.md",
     "copilot/copilot-custom-prompts/Clip YouTube Transcript.md",
     "copilot/copilot-custom-prompts/Rewrite as tweet thread.md",
-    "copilot/copilot-custom-prompts/Rewrite as tweet.md",
-    "copilot/copilot-custom-prompts/Remove URLs.md",
     "copilot/copilot-custom-prompts",
     "copilot",
     "System design",

@@ -357,7 +357,7 @@ void UVRGrabComponent::CalculateVelocity(float DeltaTime)
 		if (CalculatedVelocity.Size() < 5000.0f) 
 		{
 			VelocityBuffer.Add(CalculatedVelocity);
-			if (VelocityBuffer.Num() > 10) VelocityBuffer.RemoveAt(0);
+			if (VelocityBuffer.Num() > ThrowVelocityBufferHistory) VelocityBuffer.RemoveAt(0);
 		}
 
 		LastPosition = NewPosition;
@@ -405,6 +405,7 @@ void UVRGrabComponent::InitializeComponentWithSettings_Implementation(UVRWeaponD
 		GrabSound = GrabSettings->GrabSound;
 		HapticScale = GrabSettings->HapticScale;
 		ThrowMultiplier = GrabSettings->ThrowMultiplier;
+		ThrowVelocityBufferHistory = GrabSettings->ThrowVelocityBufferHistory;
 		bSnapToInteractor = GrabSettings->bUseSocketSnap;
 		MaxGrabDistance = GrabSettings->MaxGrabDistance;
 		BreakDistance = GrabSettings->BreakDistance;

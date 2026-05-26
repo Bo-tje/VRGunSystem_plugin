@@ -249,47 +249,160 @@ A specialized component that runs the State Tree logic for the weapon. It automa
 
 ### `UVRWeaponData`
 Defines the base configuration for a weapon. See the [[System design/System design research#4. Data Pillar: Data-Driven Configuration|Data Pillar]] for the design rationale.
-- `FireRate`: Shots per minute.
-  - `bUseHitscan`: Toggle between hitscan and physical projectiles.
-  - `RecoilAmount`: Scalar mapping for recoil implementation.
-  - `BaseStats`: `FVRWeaponStats` - The default baseline RPG-like stats before component modifiers are applied.
-  - `CompatibleMagazinesTag`: Filter tag for finding correct magazines.
-  - `WeaponParts`: Array of `FVRWeaponPart`. Enforces purely data-driven structural construction using soft object pointers (`TSoftObjectPtr<UStaticMesh>`) and explicit Sockets/Offsets to bypass the blueprint editor.
-  - `AdditionalComponents`: Array of `FVRWeaponDynamicComponent` for dynamically injecting arbitrary extra Actor Components (like `UVRGrabComponent` or logic nodes) directly from the Data Asset.
-  - `DefaultProjectile`: The standard projectile this weapon uses.
-  - `FireSound`, `DryFireSound`, `ReloadSound`, `MuzzleFlash` (Niagara), `FireHapticEffect`.
+
+| Property | Type | Category | Description |
+| :--- | :--- | :--- | :--- |
+| `WeaponName` | `FString` | `Weapon Info` | User-facing display name of the weapon. |
+| `StateTree` | `UStateTree*` | `VR Weapon \| Logic` | The State Tree that drives the logic states of the weapon. |
+| `BaseStats` | `FVRWeaponStats` | `Default Weapon Stats` | Baselines for RPG stats (firing rate, recoil stiffness, etc.). |
+| `bUseHitscan` | `bool` | `Default Weapon Stats` | Toggle between hitscan (line traces) and physical projectile spawning. |
+| `DefaultProjectile` | `UProjectileData*` | `Default Weapon Stats` | Fallback projectile data asset to fire if no specific round is chambered. |
+| `FireModes` | `TArray<FVRFireMode>` | `Default Weapon Stats` | List of fire modes (Rounds Per Minute, Burst Count, Automatic toggle). |
+| `WeaponParts` | `TArray<FVRWeaponPart>` | `Weapon Composition` | Static mesh components representing the structural shape of the gun. |
+| `AdditionalComponents` | `TArray<FVRWeaponDynamicComponent>` | `Weapon Composition` | Dynamic components (e.g. grab components, slides, chambers) attached at construction. |
+| `bAutoPlayWeaponFeedback` | `bool` | `Weapon Visuals` | If true, weapon automatically plays audio/vibrations/muzzle flashes on fire. |
+| `MuzzleFlash` | `UNiagaraSystem*` | `Weapon Visuals` | Default Niagara system particle to play at the muzzle. |
+| `ChamberSmoke` | `UNiagaraSystem*` | `Weapon Visuals` | Default Niagara system particle to play at the chamber upon ejection. |
+| `FireSound` | `USoundBase*` | `Weapon Visuals` | Sound played when shooting. |
+| `DryFireSound` | `USoundBase*` | `Weapon Visuals` | Sound played on an empty trigger pull. |
+| `ReloadSound` | `USoundBase*` | `Weapon Visuals` | Sound played upon button-press reload. |
+| `FireHapticEffect` | `UHapticFeedbackEffect_Base*` | `Weapon Visuals` | Haptic effect sent to controllers upon shooting. |
+| `InputTagToComponentName` | `TMap<FGameplayTag, FName>` | `Input` | Routes specific Controller Input Tags to specific Mechanical Components by name. |
 
 ### Component Settings Architecture
 Settings for dynamically injected components are managed via subclasses of `UVRWeaponComponentSettings`, which are instantiated directly within `UVRWeaponData` (inside the `AdditionalComponents` array):
-- **`UVRGrabSettings`**: Configures grab haptics, throw multipliers, snap spheres, `BoxExtents`, `MaxGrabDistance`, `GrabPriority`, `GrabSound`, and the `GrabPoseTag`/`HoverPoseTag` for animation routing.
-- **`UVRFireSettings`**: Defines muzzle socket names, specific fire/dry-fire haptic scaling, `FireModes` (array of `FVRFireMode`), `RoundsPerMinute`, `BurstCount`, and `bIsAutomatic`.
-- **`UVRMechanicalSettings`**: Fully configures a mechanical part. Includes `MechanicalMovementType` (Linear/Rotational), `LocalAxis`, `MaxRange`, `bHasReturnSpring`, `RestingValue`, `HapticTickThreshold`, physics inertia settings (`bUseSimulatedInertia`, `InertiaMultiplier`), realistic slap impact thresholds, and `LinkedComponent`.
-- **`UVRMagwellSettings`**: Defines `MagazineSocketName`, `CompatibleMagazinesTag`, `InsertRadius`, `bEjectOnRelease`, and magwell-specific sounds/haptics (`InsertSound`, `EjectSound`, `InsertHapticEffect`).
+
+#### **`UVRGrabSettings`**
+Configures grab haptics, throw multipliers, snap spheres, extents, and socket transforms for hands.
+
+| Property | Type | Category | Description |
+| :--- | :--- | :--- | :--- |
+| `GrabHapticEffect` | `UHapticFeedbackEffect_Base*` | `Grab Settings` | Haptic feedback profile played on controller when grabbing. |
+| `GrabSound` | `USoundBase*` | `Grab Settings \| Audio` | Sound effect played when grabbing this component. |
+| `HapticScale` | `float` | `Grab Settings` | Scaling multiplier for the haptic effect strength. |
+| `ThrowMultiplier` | `float` | `Grab Settings` | Physics velocity multiplier applied when throwing the grabbed actor. |
+| `ThrowVelocityBufferHistory` | `int32` | `Grab Settings` | Frame history buffer length to calculate average throwing velocity. |
+| `bUseSocketSnap` | `bool` | `Grab Settings` | Snaps the hand to the specified visual sockets if enabled. |
+| `MaxGrabDistance` | `float` | `Grab Settings` | Reach aura distance in centimeters from the grip surface to allow grabbing. |
+| `BreakDistance` | `float` | `Grab Settings` | Maximum stretch distance in centimeters before hand grip breaks. |
+| `AnimationGrabPoseTag` | `FGameplayTag` | `Grab Settings` | Left/Right animation blueprint pose tag used when grabbed. |
+| `AnimationHoverPoseTag` | `FGameplayTag` | `Grab Settings` | Left/Right animation blueprint pose tag used when hovering hands. |
+| `GrabPriority` | `int32` | `Grab Settings` | Grab priority hierarchy when multiple components overlap the same hand. |
+| `BoxExtents` | `FVector` | `Grab Settings \| Collision` | Spatial bounding box dimensions of the grabbable zone. |
+| `bIsMainGrip` | `bool` | `Grab Settings` | Designates the primary hand grip for haptic scaling calculations. |
+| `bAttachOwnerOnGrab` | `bool` | `Grab Settings` | If true, attaches the weapon root to the hand. Must be false for slides/bolts. |
+| `GripSocketName` | `FName` | `Grab Settings \| Socket` | Default snap socket on the weapon mesh. |
+| `RightHandGripSocketName` | `FName` | `Grab Settings \| Socket` | Right hand specific socket snap target. |
+| `LeftHandGripSocketName` | `FName` | `Grab Settings \| Socket` | Left hand specific socket snap target. |
+| `GripRotationOffset` | `FRotator` | `Grab Settings \| Socket` | Rotation fine-tuning offset applied post-snap. |
+| `RightHandRotationOffset` | `FRotator` | `Grab Settings \| Socket` | Right hand specific rotation offset. |
+| `LeftHandRotationOffset` | `FRotator` | `Grab Settings \| Socket` | Left hand specific rotation offset. |
+| `bUseSmoothGrab` | `bool` | `Grab Settings \| Feel` | Interpolates the weapon into the hand smoothly instead of snapping. |
+| `GrabLerpSpeed` | `float` | `Grab Settings \| Feel` | Speed of the smooth grab interpolation. |
+
+#### **`UVRMechanicalSettings`**
+Fully configures a mechanical part (such as a slide, trigger, or bolt), including bounds, return springs, inertia physics, and limits haptic/audio feedback.
+
+| Property | Type | Category | Description |
+| :--- | :--- | :--- | :--- |
+| `MechanicalMovementType` | `EMechanicalMovementType` | `Mechanical` | Movement path geometry: `Linear` (slide/bolt) or `Rotational` (hinge/latch). |
+| `LocalAxis` | `FVector` | `Mechanical` | Axis of movement vector in local component space. |
+| `MaxRange` | `float` | `Mechanical` | Total displacement (cm) or rotational angle (deg) allowed. |
+| `bInvertDirection` | `bool` | `Mechanical` | Flips the direction relative to controller drag offsets. |
+| `bIsLocked` | `bool` | `Mechanical \| State` | If true, bypasses return springs to stay in place (e.g. empty slide locks). |
+| `bUseSimulatedInertia` | `bool` | `Mechanical \| Physics` | Enables physics momentum (allows bolts to be flicked/racked by arm movement). |
+| `InertiaMultiplier` | `float` | `Mechanical \| Physics` | Scaling factor for simulated momentum/inertia. |
+| `bHasReturnSpring` | `bool` | `Mechanical` | Drives mechanical part back to `RestingValue` when released. |
+| `ReturnSpeed` | `float` | `Mechanical` | Rate of return spring interpolation. |
+| `RestingValue` | `float` | `Mechanical` | Spring target value (0.0 to 1.0). |
+| `LinkedComponent` | `FName` | `Mechanical` | Syncs movement with another mechanical part (e.g., pulling slides pulls triggers). |
+| `LimitReachedHapticEffect` | `UHapticFeedbackEffect_Base*` | `Mechanical \| Haptics` | Haptic profile triggered when slamming limits. |
+| `OnReachedMaxTag` | `FGameplayTag` | `Mechanical \| Events` | Tag event broadcasted when value reaches 1.0 (Locked/Back). |
+| `OnReachedMinTag` | `FGameplayTag` | `Mechanical \| Events` | Tag event broadcasted when value reaches 0.0 (Forward/Rest). |
+| `CockedSound` | `USoundBase*` | `Mechanical \| Audio` | Audio effect triggered when cocking threshold is crossed (1.0). |
+| `SlapSound` | `USoundBase*` | `Mechanical \| Audio` | Audio effect triggered when spring snaps forward to 0.0. |
+| `MovementSound` | `USoundBase*` | `Mechanical \| Audio` | Audio played dynamically during drag movement ticks. |
+| `MovementHapticEffect` | `UHapticFeedbackEffect_Base*` | `Mechanical \| Haptics` | Haptic played dynamically during drag movement ticks. |
+| `HapticTickThreshold` | `float` | `Mechanical \| Haptics` | Distance interval between haptic pulses during slide movement. |
+| `SlapVelocityThreshold` | `float` | `Mechanical \| Audio` | Minimum velocity required to trigger slap audio when dragging manually. |
+| `SlapReleaseDistanceThreshold` | `float` | `Mechanical \| Audio` | Minimum return distance required to trigger snap audio on spring release. |
+| `SlapMomentumThreshold` | `float` | `Mechanical \| Audio` | Minimum momentum required to trigger slap audio from inertia. |
+| `LockReleaseThreshold` | `float` | `Mechanical \| State` | Distance (overtravel) past lock position required to unlock the slide. |
+| `InertiaFriction` | `float` | `Mechanical \| Physics` | Deceleration friction applied to simulated inertia momentum. |
+| `InertiaLinearSensitivity` | `float` | `Mechanical \| Physics` | Physics acceleration multiplier for linear mechanical inertia. |
+| `InertiaRotationalSensitivity` | `float` | `Mechanical \| Physics` | Physics acceleration multiplier for rotational mechanical inertia. |
+| `InertiaMaxAcceleration` | `float` | `Mechanical \| Physics` | Clamps max parent movement acceleration passed to inertia physics. |
+
+#### **`UVRMagwellSettings`**
+Defines the magazine socket, ejection drop socket, compatible tag filters, and loading haptic/audio cues.
+
+| Property | Type | Category | Description |
+| :--- | :--- | :--- | :--- |
+| `MagazineSocketName` | `FName` | `Magwell Settings` | Snap socket name on the parent mesh. |
+| `DropZoneSocketName` | `FName` | `Magwell Settings` | Socket name representing where ejected magazines drop out. |
+| `bEjectOnRelease` | `bool` | `Magwell Settings` | Ejects the magazine if let go before it is fully inserted. |
+| `GrabRadius` | `float` | `Magwell Settings` | Reach radius to grab an inserted magazine from the magwell. |
+| `InsertRadius` | `float` | `Magwell Settings` | Overlap radius in centimeters to detect and snap compatible magazines. |
+| `CompatibleMagazinesTag` | `FGameplayTag` | `Magwell Settings` | Compatibility gameplay tag filter. |
+| `InsertSound` | `USoundBase*` | `Magwell Settings \| Feedback` | Audio clip played upon magazine snap. |
+| `EjectSound` | `USoundBase*` | `Magwell Settings \| Feedback` | Audio clip played upon magazine release. |
+| `HoverHapticEffect` | `UHapticFeedbackEffect_Base*` | `Magwell Settings \| Feedback` | Controller haptic pulse when hovering magazine near the magwell. |
+| `InsertHapticEffect` | `UHapticFeedbackEffect_Base*` | `Magwell Settings \| Feedback` | Controller haptic pulse upon magazine lock. |
+| `EjectHapticEffect` | `UHapticFeedbackEffect_Base*` | `Magwell Settings \| Feedback` | Controller haptic pulse upon magazine release. |
 
 ### `UProjectileData`
 Defines the properties of a bullet/round.
-- `AmmoTags`: Identifying gameplay tags for compatibility.
-- `Damage` / `HitscanDamage`: Damage dealt on impact (based on execution type).
-- `InitialSpeed` / `GravityScale`: Properties for physics projectiles.
-- `ProjectileClass`: The spawnable actor when using physical projectiles.
-- `HitscanRange`: Distance check for raycast variants.
-- `LiveRoundMesh` / `SpentCasingMesh`: Visual representations.
-- `ImpactEffect` / `ImpactSound`: Visual/Audio played on hit.
-- `MuzzleFlashOverride` / `FireSoundOverride`: Potential overrides when fired.
-- `PelletCount`: Number of pellets fired per shot (defaults to 1).
-- `SpreadAngle`: Cone spread angle in degrees (defaults to 0.0).
+
+| Property | Type | Category | Description |
+| :--- | :--- | :--- | :--- |
+| `DisplayName` | `FText` | `Ammo \| Identity` | User-facing name of the round. |
+| `AmmoTags` | `FGameplayTagContainer` | `Ammo \| Identity` | Compatibility gameplay tags (e.g. `Ammo.9mm`). |
+| `ProjectileClass` | `TSubclassOf<AActor>` | `Ammo \| Physical Projectile` | Bullet class spawned (when `bUseHitscan` is false). |
+| `InitialSpeed` | `float` | `Ammo \| Physical Projectile` | Ballistic initial velocity in cm/s. |
+| `GravityScale` | `float` | `Ammo \| Physical Projectile` | Ballistic gravity multiplier. |
+| `Damage` | `float` | `Ammo \| Physical Projectile` | Damage dealt on bullet hit. |
+| `HitscanRange` | `float` | `Ammo \| Hitscan` | Limit reach distance of raycast. |
+| `HitscanDamage` | `float` | `Ammo \| Hitscan` | Damage dealt on raycast hit. |
+| `PelletCount` | `int32` | `Ammo \| Multi-Projectile` | Number of sub-projectiles/pellets fired (shotgun). |
+| `SpreadAngle` | `float` | `Ammo \| Multi-Projectile` | Firing spread angle cone in degrees. |
+| `LiveRoundMesh` | `UStaticMesh*` | `Ammo \| Visuals` | Visual static mesh of a live chambered cartridge. |
+| `SpentCasingMesh` | `UStaticMesh*` | `Ammo \| Visuals` | Visual static mesh of a spent casing/shell. |
+| `MuzzleFlashOverride` | `UNiagaraSystem*` | `Ammo \| Visuals` | Unique muzzle flash Niagara system (overrides weapon default). |
+| `ImpactEffect` | `UNiagaraSystem*` | `Ammo \| Visuals` | Impact particle Niagara system spawned on hit. |
+| `FireSoundOverride` | `USoundBase*` | `Ammo \| Audio` | Sound effect (overrides weapon default fire sound). |
+| `ImpactSound` | `USoundBase*` | `Ammo \| Audio` | Sound effect played on hit location. |
 
 ### `UMagazineData`
 Defines the base properties of a magazine.
-- `MaxAmmo`: Maximum rounds the magazine can hold.
-- `MagazineType`: Gameplay tag defining compatibility.
-- `MagazineMesh`: The static mesh representing the physical magazine.
+
+| Property | Type | Category | Description |
+| :--- | :--- | :--- | :--- |
+| `MaxAmmo` | `int32` | `Magazine Data` | Total cartridge capacity. |
+| `MagazineType` | `FGameplayTag` | `Magazine Data` | Compatibility filter tag. |
+| `MagazineMesh` | `UStaticMesh*` | `Magazine Data` | Visual static mesh of the magazine. |
+| `ProjectileData` | `UProjectileData*` | `Magazine Data` | The ammunition round asset this magazine holds. |
 
 ### `FVRWeaponStats`
 A structural grouping for defining and dynamically modifying weapon characteristics (RPG-like stat system).
-- **Properties:** `FireRate`, `FireRateOffset`, `RecoilMultiplier`, `DamageMultiplier`, `ReloadSpeedMultiplier`, `BulletVelocityMultiplier`, `SpreadMultiplier`, `PelletCountOffset`.
-- **Advanced Recoil Simulation:** `RecoilYaw`, `RecoilPitch`, `RecoilSpringStiffness`, `RecoilSpringDamping`.
-- **Overrides:** `MuzzleFlashOverride`, `FireSoundOverride`.
+
+| Property | Type | Category | Description |
+| :--- | :--- | :--- | :--- |
+| `FireRate` | `float` | `Stats` | Firing speed in rounds per minute. |
+| `RecoilMultiplier` | `float` | `Stats` | Recoil rotation intensity multiplier. |
+| `DamageMultiplier` | `float` | `Stats` | Damage output scaling multiplier. |
+| `BulletVelocityMultiplier` | `float` | `Stats` | Bullet physics velocity multiplier. |
+| `ReloadSpeedMultiplier` | `float` | `Stats` | Reload animation speed multiplier. |
+| `SpreadMultiplier` | `float` | `Stats\|Spread` | Firing spread cone angle multiplier. |
+| `PelletCountOffset` | `int32` | `Stats\|Spread` | Flat pellet count offset modifier. |
+| `RecoilPitch` | `float` | `Stats\|Recoil` | Upward pitch recoil rotation impulse per shot. |
+| `RecoilYaw` | `float` | `Stats\|Recoil` | Side-to-side yaw recoil rotation random boundary per shot. |
+| `RecoilSpringStiffness` | `float` | `Stats\|Recoil` | Stiffness parameter of the procedural recoil recovery spring. |
+| `RecoilSpringDamping` | `float` | `Stats\|Recoil` | Damping/friction parameter of the recovery spring. |
+| `RecoilDecaySpeed` | `float` | `Stats\|Recoil` | Return speed of target recoil offsets to center. |
+| `MuzzleFlashOverride` | `UNiagaraSystem*` | `Visuals` | Dynamic muzzle flash Niagara system override. |
+| `FireSoundOverride` | `USoundBase*` | `Visuals` | Firing audio override. |
+
+---
 
 ---
 

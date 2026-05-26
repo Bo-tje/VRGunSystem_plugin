@@ -652,7 +652,7 @@ void AVRWeaponBase::Tick(float DeltaTime)
 		CurrentRecoilOffset += RecoilVelocity * DeltaTime;
 
 		// Decay target offset back to zero over time to reset
-		TargetRecoilOffset = FMath::RInterpTo(TargetRecoilOffset, FRotator::ZeroRotator, DeltaTime, 10.0f);
+		TargetRecoilOffset = FMath::RInterpTo(TargetRecoilOffset, FRotator::ZeroRotator, DeltaTime, CalculatedStats.RecoilDecaySpeed);
 	}
 
 	// 2. Two-Handed "Virtual Stock" Stabilization

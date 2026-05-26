@@ -47,6 +47,9 @@ struct FVRWeaponStats
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats|Recoil")
 	float RecoilSpringDamping = 4.0f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats|Recoil")
+	float RecoilDecaySpeed = 10.0f;
+
 
 	// Overrides
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visuals")

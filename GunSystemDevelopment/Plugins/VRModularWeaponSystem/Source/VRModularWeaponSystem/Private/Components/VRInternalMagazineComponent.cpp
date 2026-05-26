@@ -105,7 +105,7 @@ void UVRInternalMagazineComponent::OnOverlapBegin(UPrimitiveComponent* Overlappe
 	// Play haptics
 	if (HoldingInteractor && LoadHaptic)
 	{
-		HoldingInteractor->PlayHapticFeedback(LoadHaptic, 1.0f, false);
+		HoldingInteractor->PlayHapticFeedback(LoadHaptic, LoadHapticScale, false);
 	}
 
 	// Destroy the physical round actor

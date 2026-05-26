@@ -111,6 +111,10 @@ public:
 	
 	UPROPERTY(EditAnywhere, Category = " VR Plugin | VR Interaction")
 	float ThrowMultiplier = 1.2f;
+
+	/** Number of frames of velocity history to average when throwing the weapon. */
+	UPROPERTY(EditAnywhere, Category = " VR Plugin | VR Interaction")
+	int32 ThrowVelocityBufferHistory = 10;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Plugin | Setup")
 	bool bSnapToInteractor = true;

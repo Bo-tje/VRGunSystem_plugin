@@ -274,7 +274,7 @@ void UVRChamberComponent::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AA
 		// Play haptics
 		if (HoldingInteractor && ManualLoadHaptic)
 		{
-			HoldingInteractor->PlayHapticFeedback(ManualLoadHaptic, 1.0f, false);
+			HoldingInteractor->PlayHapticFeedback(ManualLoadHaptic, ManualLoadHapticScale, false);
 		}
 
 		// Destroy the physical round actor
