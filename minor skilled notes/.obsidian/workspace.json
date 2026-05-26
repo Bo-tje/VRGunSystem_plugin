@@ -232,12 +232,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "System design/documentation.md",
+                "file": "Weekly/weekly reflection.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "documentation"
+              "title": "weekly reflection"
             }
           }
         ],
@@ -419,8 +419,8 @@
   },
   "active": "088c1a3ed7d20f56",
   "lastOpenFiles": [
-    "System design/System design.md",
     "System design/documentation.md",
+    "System design/System design.md",
     "Documentation.md",
     "review of filosofie.md",
     "Weekly/weekly reflection.md",
