@@ -232,16 +232,30 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "System design/documentation.md",
+                "file": "System design/System design.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "documentation"
+              "title": "System design"
+            }
+          },
+          {
+            "id": "73f0bdc4b8ea7ea1",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "asset credits.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "asset credits"
             }
           }
         ],
-        "currentTab": 16
+        "currentTab": 17
       }
     ],
     "direction": "vertical"
@@ -417,32 +431,34 @@
       "smart-connections:Smart Lookup: Open lookup view": false
     }
   },
-  "active": "088c1a3ed7d20f56",
+  "active": "73f0bdc4b8ea7ea1",
   "lastOpenFiles": [
+    "Weekly/weekly reflection.md",
+    "asset credits.md",
     "System design/System design.md",
-    "C++ notes.md",
+    "as",
+    "System design/VR Target System.md",
+    "Docs/State tree.md",
+    "Docs/Dynamic multicast delagates.md",
+    "System design/review of filosofie.md",
+    "unreal notes.md",
+    "Other possibilities.md",
     "Documentation.md",
+    "C++ notes.md",
+    "QA's/QA 3.md",
+    "QA's/QA3.m4a",
     "System design/documentation.md",
     "System design/System design chart (in-development).canvas",
     "System design/System design chart.png",
-    "Docs/VR Target System.md",
-    "Docs/Dynamic multicast delagates.md",
     "market analysis/analyzing other products.md",
     "Planning/Goal mindmap.png",
     "Planning/Goal mindmap.canvas",
     "Planning/Logs.md",
-    "Weekly/weekly reflection.md",
-    "review of filosofie.md",
     "System design/System design research.md",
-    "QA's/QA 3.md",
     "QA's/QA 2.md",
     "QA's/QA 1.md",
     "System design/System design chart (in-development).png",
     "System design/System design chart (pre-development).canvas",
-    "unreal notes.md",
-    "QA3.m4a",
-    "Other possibilities.md",
-    "Docs/State tree.md",
     "QA's",
     "QA 1.md",
     "17 apr om 14-36.m4a",
@@ -459,7 +475,6 @@
     "copilot/copilot-custom-prompts/Rewrite as tweet thread.md",
     "copilot/copilot-custom-prompts",
     "copilot",
-    "System design",
     "@Goal mindmap.canvas"
   ]
 }

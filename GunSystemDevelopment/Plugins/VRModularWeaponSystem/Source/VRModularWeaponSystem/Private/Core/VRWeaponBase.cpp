@@ -503,19 +503,21 @@ void AVRWeaponBase::StartAction_Implementation(UObject* Interactor, float Action
 	if (ActionTag.MatchesTag(VRNativeTags::PrimaryInput))
 	{
 		IVRWeaponInterface::Execute_PrimaryAction(this);
+		if (StateTreeComponent) StateTreeComponent->SendStateTreeEvent(ActionTag);
 	}
 	else if (ActionTag.MatchesTag(VRNativeTags::SecondaryInput))
 	{
 		IVRWeaponInterface::Execute_SecondaryAction(this);
-	}
-	else if (ActionTag.MatchesTag(VRNativeTags::Reload))
-	{
-		IVRWeaponInterface::Execute_Reload(this);
+		if (StateTreeComponent) StateTreeComponent->SendStateTreeEvent(ActionTag);
 	}
 	
 	if (ActionTag.MatchesTag(VRNativeTags::Trigger) && ActionValue > 0.8f)
 	{
-		IVRWeaponInterface::Execute_PullTrigger(this);
+		if (!bIsTriggerPulled)
+		{
+			IVRWeaponInterface::Execute_PullTrigger(this);
+			if (StateTreeComponent) StateTreeComponent->SendStateTreeEvent(ActionTag);
+		}
 	}
 }
 
@@ -540,24 +542,17 @@ void AVRWeaponBase::StopAction_Implementation(UObject* Interactor, FGameplayTag 
 		if (!TargetMech->bHasReturnSpring) TargetMech->SetNormalizedValue(0.0f);
 	}
 
-	if (ActionTag.MatchesTag(VRNativeTags::Trigger) || ActionTag.MatchesTag(VRNativeTags::TriggerReleased))
+	if (ActionTag.MatchesTag(VRNativeTags::Trigger))
 	{
 		IVRWeaponInterface::Execute_ReleaseTrigger(this);
 	}
-	else if (ActionTag.MatchesTag(VRNativeTags::PrimaryInput) || ActionTag.MatchesTag(VRNativeTags::PrimaryInputReleased))
+	else if (ActionTag.MatchesTag(VRNativeTags::PrimaryInput))
 	{
 		IVRWeaponInterface::Execute_ReleasePrimaryAction(this);
 	}
-	else if (ActionTag.MatchesTag(VRNativeTags::SecondaryInput) || ActionTag.MatchesTag(VRNativeTags::SecondaryInputReleased))
+	else if (ActionTag.MatchesTag(VRNativeTags::SecondaryInput))
 	{
 		IVRWeaponInterface::Execute_ReleaseSecondaryAction(this);
-	}
-	else if (ActionTag.MatchesTag(VRNativeTags::Reload) || ActionTag.MatchesTag(VRNativeTags::ReloadReleased))
-	{
-		if (StateTreeComponent)
-		{
-			StateTreeComponent->SendStateTreeEvent(VRNativeTags::ReloadReleased);
-		}
 	}
 }
 
@@ -591,7 +586,6 @@ void AVRWeaponBase::ReleaseTrigger_Implementation()
 {
 	if (!bIsTriggerPulled) return;
 	bIsTriggerPulled = false;
-	if (StateTreeComponent) StateTreeComponent->SendStateTreeEvent(VRNativeTags::TriggerReleased);
 }
 
 void AVRWeaponBase::PrimaryAction_Implementation()
@@ -605,7 +599,6 @@ void AVRWeaponBase::PrimaryAction_Implementation()
 
 void AVRWeaponBase::ReleasePrimaryAction_Implementation()
 {
-	if (StateTreeComponent) StateTreeComponent->SendStateTreeEvent(VRNativeTags::PrimaryInputReleased);
 }
 
 void AVRWeaponBase::SecondaryAction_Implementation()
@@ -615,15 +608,10 @@ void AVRWeaponBase::SecondaryAction_Implementation()
 
 void AVRWeaponBase::ReleaseSecondaryAction_Implementation()
 {
-	if (StateTreeComponent) StateTreeComponent->SendStateTreeEvent(VRNativeTags::SecondaryInputReleased);
 }
 
 void AVRWeaponBase::Reload_Implementation()
 {
-	if (StateTreeComponent)
-	{
-		StateTreeComponent->SendStateTreeEvent(VRNativeTags::Reload);
-	}
 
 	if (WeaponData && WeaponData->ReloadSound)
 	{

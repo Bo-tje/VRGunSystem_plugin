@@ -38,7 +38,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Weapon | Magwell")
 	FName MagazineSocketName = TEXT("Magwell");
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Weapon | Magwell", meta = (Categories = "VRModularWeaponSystem.Magazine"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Weapon | Magwell", meta = (Categories = "VRModularWeaponSystem.MagazineType"))
 	FGameplayTag CompatibleMagazinesTag;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Weapon | Magwell")

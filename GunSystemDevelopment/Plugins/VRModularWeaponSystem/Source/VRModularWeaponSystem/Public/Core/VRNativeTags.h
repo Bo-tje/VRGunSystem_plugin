@@ -7,13 +7,13 @@ namespace  VRNativeTags
 #pragma region Input actions
 	
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Trigger);
-	UE_DECLARE_GAMEPLAY_TAG_EXTERN(TriggerReleased);
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(PrimaryInput);
-	UE_DECLARE_GAMEPLAY_TAG_EXTERN(PrimaryInputReleased);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(PrimaryInput_Left);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(PrimaryInput_Right);
+
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(SecondaryInput);
-	UE_DECLARE_GAMEPLAY_TAG_EXTERN(SecondaryInputReleased);
-	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Reload);
-	UE_DECLARE_GAMEPLAY_TAG_EXTERN(ReloadReleased);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(SecondaryInput_Left);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(SecondaryInput_Right);
 
 #pragma endregion
 	
@@ -32,5 +32,12 @@ namespace  VRNativeTags
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Mechanical_Min);
 	
 #pragma endregion
+
+#pragma region Magazine types
+
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(MagazineType);
+
+#pragma endregion
 	
 };
+

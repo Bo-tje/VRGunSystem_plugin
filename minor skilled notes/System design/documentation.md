@@ -269,8 +269,10 @@ Defines the base configuration for a weapon. See the [[System design/System desi
 | `FireHapticEffect` | `UHapticFeedbackEffect_Base*` | `Weapon Visuals` | Haptic effect sent to controllers upon shooting. |
 | `InputTagToComponentName` | `TMap<FGameplayTag, FName>` | `Input` | Routes specific Controller Input Tags to specific Mechanical Components by name. |
 
-### Component Settings Architecture
+#### Component Settings Architecture
 Settings for dynamically injected components are managed via subclasses of `UVRWeaponComponentSettings`, which are instantiated directly within `UVRWeaponData` (inside the `AdditionalComponents` array):
+- **`UVRGrabSettings`**: Configures grab haptics, throw multipliers, snap spheres, `BoxExtents`, `MaxGrabDistance`, `GrabPriority`, the `GrabPoseTag`/`HoverPoseTag` for animation routing, and `StateTreeEventRouting` for custom data-driven State Tree events.
+- **`UVRFireSettings`**: Defines muzzle socket names, specific fire/dry-fire haptic scaling, `FireModes` (array of `FVRFireMode`), `RoundsPerMinute`, `BurstCount`, and `bIsAutomatic`.
 
 #### **`UVRGrabSettings`**
 Configures grab haptics, throw multipliers, snap spheres, extents, and socket transforms for hands.
@@ -299,6 +301,7 @@ Configures grab haptics, throw multipliers, snap spheres, extents, and socket tr
 | `LeftHandRotationOffset` | `FRotator` | `Grab Settings \| Socket` | Left hand specific rotation offset. |
 | `bUseSmoothGrab` | `bool` | `Grab Settings \| Feel` | Interpolates the weapon into the hand smoothly instead of snapping. |
 | `GrabLerpSpeed` | `float` | `Grab Settings \| Feel` | Speed of the smooth grab interpolation. |
+| `StateTreeEventRouting` | `TMap<FGameplayTag, FGameplayTag>` | `Grab Settings \| Routing` | Maps specific interaction tags (e.g., PrimaryInput) to State Tree events. |
 
 #### **`UVRMechanicalSettings`**
 Fully configures a mechanical part (such as a slide, trigger, or bolt), including bounds, return springs, inertia physics, and limits haptic/audio feedback.
@@ -369,6 +372,7 @@ Defines the properties of a bullet/round.
 | `SpentCasingMesh` | `UStaticMesh*` | `Ammo \| Visuals` | Visual static mesh of a spent casing/shell. |
 | `MuzzleFlashOverride` | `UNiagaraSystem*` | `Ammo \| Visuals` | Unique muzzle flash Niagara system (overrides weapon default). |
 | `ImpactEffect` | `UNiagaraSystem*` | `Ammo \| Visuals` | Impact particle Niagara system spawned on hit. |
+| `TrailEffect` | `UNiagaraSystem*` | `Ammo \| Visuals` | Niagara particle system spawned as a bullet tracer or laser trail. |
 | `FireSoundOverride` | `USoundBase*` | `Ammo \| Audio` | Sound effect (overrides weapon default fire sound). |
 | `ImpactSound` | `USoundBase*` | `Ammo \| Audio` | Sound effect played on hit location. |
 
@@ -500,8 +504,8 @@ To improve developer UX and prevent configuration errors, several editable `FGam
 | **`UVRWeaponComponentSettings`** (and subclasses) | `BindToInputTags` | `VRModularWeaponSystem.Interaction` | Maps controller input actions to mechanical actions. |
 | **`UVRGrabComponent`** / **`UVRGrabSettings`** | `GrabPoseTag` / `HoverPoseTag` | `VRModularWeaponSystem.AnimPose` | Tells the animation blueprint which hand poses to play. |
 | **`UVRMechanicalComponent`** / **`UVRMechanicalSettings`** | `OnReachedMaxTag` / `OnReachedMinTag` | `VRModularWeaponSystem.Event` | Broadcasts events when mechanical parts reach limits. |
-| **`UVRMagwellComponent`** / **`UVRMagwellSettings`** | `CompatibleMagazinesTag` | `VRModularWeaponSystem.Magazine` | Defines which magazine types can be inserted. |
-| **`UMagazineData`** | `MagazineType` | `VRModularWeaponSystem.Magazine` | Self-identifying tag of the magazine asset. |
+| **`UVRMagwellComponent`** / **`UVRMagwellSettings`** | `CompatibleMagazinesTag` | `VRModularWeaponSystem.MagazineType` | Defines which magazine types can be inserted. |
+| **`UMagazineData`** | `MagazineType` | `VRModularWeaponSystem.MagazineType` | Self-identifying tag of the magazine asset. |
 | **`UProjectileData`** | `AmmoTags` | `VRModularWeaponSystem.Ammo` | Self-identifying tag of the ammunition type. |
 | **`UVRChamberComponent`** / **`UVRInternalMagazine`** | `CompatibleAmmoTag` | `VRModularWeaponSystem.Ammo` | Filters which ammunition types can be loaded. |
 | **`UVRChamberComponent`** / **`UVRInternalMagazine`** | `RequiredWeaponStateTags` | `VRModularWeaponSystem.State` | Restricts manual loading to specific weapon states. |

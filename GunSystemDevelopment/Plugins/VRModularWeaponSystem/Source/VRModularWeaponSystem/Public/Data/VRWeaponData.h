@@ -72,6 +72,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Grab Settings")
 	int32 GrabPriority = 0;
 
+	/** Any input tags added here will trigger the specified State Tree Event directly on the weapon. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Grab Settings | Routing")
+	TMap<FGameplayTag, FGameplayTag> StateTreeEventRouting;
+
 	/** The exact dimensions of the grabbable area. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Grab Settings | Collision")
 	FVector BoxExtents = FVector(5.0f, 5.0f, 5.0f);
@@ -257,7 +261,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Magwell Settings")
 	float InsertRadius = 15.0f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Magwell Settings", meta = (Categories = "VRModularWeaponSystem.Magazine"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Magwell Settings", meta = (Categories = "VRModularWeaponSystem.MagazineType"))
 	FGameplayTag CompatibleMagazinesTag;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Magwell Settings | Feedback")

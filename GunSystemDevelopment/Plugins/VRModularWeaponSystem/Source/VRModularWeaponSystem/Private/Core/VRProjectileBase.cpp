@@ -6,6 +6,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "NiagaraFunctionLibrary.h"
 #include "NiagaraSystem.h"
+#include "NiagaraComponent.h"
 
 AVRProjectileBase::AVRProjectileBase()
 {
@@ -21,6 +22,10 @@ AVRProjectileBase::AVRProjectileBase()
 	ProjectileMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ProjectileMesh"));
 	ProjectileMesh->SetupAttachment(RootComponent);
 	ProjectileMesh->SetCollisionProfileName("NoCollision");
+
+	TrailComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("TrailComponent"));
+	TrailComponent->SetupAttachment(RootComponent);
+	TrailComponent->bAutoActivate = false;
 
 	ProjectileMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovement"));
 	ProjectileMovement->UpdatedComponent = CollisionComponent;
@@ -115,6 +120,21 @@ void AVRProjectileBase::InitializeProjectile(UProjectileData* Data)
 			ProjectileMesh->SetStaticMesh(ProjectileData->LiveRoundMesh);
 		}
 
+		if (TrailComponent)
+		{
+			if (ProjectileData->TrailEffect)
+			{
+				TrailComponent->SetAsset(ProjectileData->TrailEffect);
+				TrailComponent->ResetSystem();
+				TrailComponent->Activate(true);
+			}
+			else
+			{
+				TrailComponent->Deactivate();
+				TrailComponent->SetAsset(nullptr);
+			}
+		}
+
 		// Ensure actor is visible and collision is active (since pooler might have hidden/disabled it)
 		SetActorHiddenInGame(false);
 		if (CollisionComponent)
@@ -184,6 +204,11 @@ void AVRProjectileBase::OnProjectileStop(const FHitResult& ImpactResult)
 	if (ProjectileMovement)
 	{
 		ProjectileMovement->Deactivate();
+	}
+
+	if (TrailComponent)
+	{
+		TrailComponent->Deactivate();
 	}
 
 	if (UWorld* World = GetWorld())

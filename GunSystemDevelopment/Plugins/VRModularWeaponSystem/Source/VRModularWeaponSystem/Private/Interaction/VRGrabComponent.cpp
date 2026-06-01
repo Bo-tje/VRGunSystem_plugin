@@ -8,6 +8,8 @@
 #include "Core/VRNativeTags.h"
 #include "Data/VRWeaponData.h"
 #include "Kismet/GameplayStatics.h"
+#include "Core/VRWeaponBase.h"
+#include "Components/VRWeaponStateTreeComponent.h"
 #include "DrawDebugHelpers.h"
 
 UVRGrabComponent::UVRGrabComponent()
@@ -142,25 +144,44 @@ void UVRGrabComponent::OnHoverEnd_Implementation(UObject* Interactor)
 
 void UVRGrabComponent::StartAction_Implementation(UObject* Interactor, float ActionValue, FGameplayTag ActionTag)
 {
-	if (AActor* MyOwner = GetOwner())
+	// Only route core input events to the weapon itself if this is the main grip
+	if (bIsMainGrip)
 	{
-		if (MyOwner->Implements<UVRInteractableInterface>())
+		if (AActor* MyOwner = GetOwner())
 		{
-			IVRInteractableInterface::Execute_StartAction(MyOwner, Interactor, ActionValue, ActionTag);
+			if (MyOwner->Implements<UVRInteractableInterface>())
+			{
+				IVRInteractableInterface::Execute_StartAction(MyOwner, Interactor, ActionValue, ActionTag);
+			}
+		}
+	}
+
+	// Check for local State Tree Event routing (Custom Data Asset Functionality)
+	if (StateTreeEventRouting.Contains(ActionTag))
+	{
+		if (AActor* MyOwner = GetOwner())
+		{
+			if (AVRWeaponBase* Weapon = Cast<AVRWeaponBase>(MyOwner))
+			{
+				if (Weapon->StateTreeComponent)
+				{
+					Weapon->StateTreeComponent->SendStateTreeEvent(StateTreeEventRouting[ActionTag]);
+				}
+			}
 		}
 	}
 
 	StartAction.Broadcast(Interactor, ActionValue, ActionTag);
 
-	if (ActionTag.MatchesTagExact(VRNativeTags::Trigger))
+	if (ActionTag.MatchesTag(VRNativeTags::Trigger))
 	{
 		OnTriggerStart.Broadcast(Interactor, ActionValue);
 	}
-	else if (ActionTag.MatchesTagExact(VRNativeTags::PrimaryInput))
+	else if (ActionTag.MatchesTag(VRNativeTags::PrimaryInput))
 	{
 		OnPrimaryActionStart.Broadcast(Interactor, ActionValue);
 	}
-	else if (ActionTag.MatchesTagExact(VRNativeTags::SecondaryInput))
+	else if (ActionTag.MatchesTag(VRNativeTags::SecondaryInput))
 	{
 		OnSecondaryActionStart.Broadcast(Interactor, ActionValue);
 	}
@@ -168,25 +189,29 @@ void UVRGrabComponent::StartAction_Implementation(UObject* Interactor, float Act
 
 void UVRGrabComponent::StopAction_Implementation(UObject* Interactor, FGameplayTag ActionTag)
 {
-	if (AActor* MyOwner = GetOwner())
+	// Only route core input events to the weapon itself if this is the main grip
+	if (bIsMainGrip)
 	{
-		if (MyOwner->Implements<UVRInteractableInterface>())
+		if (AActor* MyOwner = GetOwner())
 		{
-			IVRInteractableInterface::Execute_StopAction(MyOwner, Interactor, ActionTag);
+			if (MyOwner->Implements<UVRInteractableInterface>())
+			{
+				IVRInteractableInterface::Execute_StopAction(MyOwner, Interactor, ActionTag);
+			}
 		}
 	}
 
 	StopAction.Broadcast(Interactor, ActionTag);
 
-	if (ActionTag.MatchesTagExact(VRNativeTags::TriggerReleased))
+	if (ActionTag.MatchesTag(VRNativeTags::Trigger))
 	{
 		OnTriggerStop.Broadcast(Interactor);
 	}
-	else if (ActionTag.MatchesTagExact(VRNativeTags::PrimaryInputReleased))
+	else if (ActionTag.MatchesTag(VRNativeTags::PrimaryInput))
 	{
 		OnPrimaryActionStop.Broadcast(Interactor);
 	}
-	else if (ActionTag.MatchesTagExact(VRNativeTags::SecondaryInputReleased))
+	else if (ActionTag.MatchesTag(VRNativeTags::SecondaryInput))
 	{
 		OnSecondaryActionStop.Broadcast(Interactor);
 	}
@@ -423,6 +448,7 @@ void UVRGrabComponent::InitializeComponentWithSettings_Implementation(UVRWeaponD
 		LeftHandRotationOffset = GrabSettings->LeftHandRotationOffset;
 		bUseSmoothGrab = GrabSettings->bUseSmoothGrab;
 		GrabLerpSpeed = GrabSettings->GrabLerpSpeed;
+		StateTreeEventRouting = GrabSettings->StateTreeEventRouting;
 
 		SetBoxExtent(GrabSettings->BoxExtents);
 	}

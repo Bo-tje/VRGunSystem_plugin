@@ -61,6 +61,9 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Ammo | Visuals")
     TObjectPtr<UNiagaraSystem> ImpactEffect;
 
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Ammo | Visuals")
+    TObjectPtr<UNiagaraSystem> TrailEffect;
+
     // --- Audio ---
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Ammo | Audio")
     TObjectPtr<USoundBase> FireSoundOverride;

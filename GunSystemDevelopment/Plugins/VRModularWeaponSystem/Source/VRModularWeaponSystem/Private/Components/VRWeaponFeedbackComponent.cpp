@@ -16,7 +16,16 @@ void UVRWeaponFeedbackComponent::BeginPlay()
 
 void UVRWeaponFeedbackComponent::PlayFiringFeedback(UHapticFeedbackEffect_Base* HapticEffect, float BaseScale)
 {
-	if (!WeaponOwner || !HapticEffect) return;
+	if (!WeaponOwner) return;
+
+	// Inject Procedural Recoil Kick
+	FVRWeaponStats Stats = WeaponOwner->GetCalculatedStats();
+	float Pitch = Stats.RecoilPitch * Stats.RecoilMultiplier;
+	float Yaw = FMath::RandRange(-Stats.RecoilYaw, Stats.RecoilYaw) * Stats.RecoilMultiplier;
+	
+	WeaponOwner->TargetRecoilOffset += FRotator(Pitch, Yaw, 0.0f);
+
+	if (!HapticEffect) return;
 
 	TArray<UVRInteractor*> Interactors = WeaponOwner->GetHoldingInteractors();
 	UVRInteractor* Primary = GetPrimaryInteractor();

@@ -21,7 +21,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Magazine Data")
 	int32 MaxAmmo;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Magazine Data", meta = (Categories = "VRModularWeaponSystem.Magazine"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Magazine Data", meta = (Categories = "VRModularWeaponSystem.MagazineType"))
 	FGameplayTag MagazineType;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Magazine Data")

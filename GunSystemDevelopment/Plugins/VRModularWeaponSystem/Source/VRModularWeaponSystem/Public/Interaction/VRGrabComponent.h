@@ -186,6 +186,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Plugin | Setup")
 	float GrabLerpSpeed = 15.0f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Plugin | Interaction")
+	TMap<FGameplayTag, FGameplayTag> StateTreeEventRouting;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VR Plugin | Setup")
 	bool bShowDebugGizmos = false;
 

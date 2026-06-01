@@ -4,13 +4,14 @@
 namespace VRNativeTags
 {
 	UE_DEFINE_GAMEPLAY_TAG(Trigger, "VRModularWeaponSystem.Interaction.Trigger");
-	UE_DEFINE_GAMEPLAY_TAG(TriggerReleased, "VRModularWeaponSystem.Interaction.TriggerReleased");
+	
 	UE_DEFINE_GAMEPLAY_TAG(PrimaryInput, "VRModularWeaponSystem.Interaction.PrimaryInput");
-	UE_DEFINE_GAMEPLAY_TAG(PrimaryInputReleased, "VRModularWeaponSystem.Interaction.PrimaryInputReleased");
+	UE_DEFINE_GAMEPLAY_TAG(PrimaryInput_Left, "VRModularWeaponSystem.Interaction.PrimaryInput.Left");
+	UE_DEFINE_GAMEPLAY_TAG(PrimaryInput_Right, "VRModularWeaponSystem.Interaction.PrimaryInput.Right");
+	
 	UE_DEFINE_GAMEPLAY_TAG(SecondaryInput, "VRModularWeaponSystem.Interaction.SecondaryInput");
-	UE_DEFINE_GAMEPLAY_TAG(SecondaryInputReleased, "VRModularWeaponSystem.Interaction.SecondaryInputReleased");
-	UE_DEFINE_GAMEPLAY_TAG(Reload, "VRModularWeaponSystem.Interaction.Reload");
-	UE_DEFINE_GAMEPLAY_TAG(ReloadReleased, "VRModularWeaponSystem.Interaction.ReloadReleased");
+	UE_DEFINE_GAMEPLAY_TAG(SecondaryInput_Left, "VRModularWeaponSystem.Interaction.SecondaryInput.Left");
+	UE_DEFINE_GAMEPLAY_TAG(SecondaryInput_Right, "VRModularWeaponSystem.Interaction.SecondaryInput.Right");
 
 #pragma endregion
 	
@@ -27,6 +28,12 @@ namespace VRNativeTags
 	
 	UE_DEFINE_GAMEPLAY_TAG(Event_Mechanical_Max, "VRModularWeaponSystem.Event.Mechanical.Max");
 	UE_DEFINE_GAMEPLAY_TAG(Event_Mechanical_Min, "VRModularWeaponSystem.Event.Mechanical.Min");
+
+#pragma endregion
+
+#pragma region Magazine types
+
+	UE_DEFINE_GAMEPLAY_TAG(MagazineType, "VRModularWeaponSystem.MagazineType");
 
 #pragma endregion
 }
